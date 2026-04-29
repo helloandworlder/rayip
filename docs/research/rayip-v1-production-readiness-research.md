@@ -127,8 +127,8 @@ Bundle 内必须有 manifest，例如：
 
 ```json
 {
-  "bundle_version": "rayip-runtime-v26.3.27.1",
-  "xray_version": "v26.3.27-rayip.1",
+  "bundle_version": "rayip-runtime-v26.3.27.2",
+  "xray_version": "v26.3.27-rayip.2",
   "extension_abi": "rayip.runtime.v1",
   "build_id": "2026-04-30T00:00:00Z",
   "binary_sha256": "sha256:...",
