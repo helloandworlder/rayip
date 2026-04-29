@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+:root {
+  color: #1f2430;
+  background: #f3f4f6;
+  font-family:
+    "PingFang SC", "Microsoft YaHei", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.field {
+  height: 36px;
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #d8dde8;
+  background: #ffffff;
+  padding: 0 10px;
+  color: #1f2430;
+  outline: none;
+}
+
+.field:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
