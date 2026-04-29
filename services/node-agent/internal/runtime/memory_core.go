@@ -226,10 +226,6 @@ func (c *MemoryCore) RecordTrafficAt(proxyAccountID string, direction Direction,
 	if action == "" {
 		action = AbuseActionReportOnly
 	}
-	if action == AbuseActionDisableAndReport {
-		account.Status = AccountStatusDisabled
-		c.accounts[proxyAccountID] = account
-	}
 	return &AbuseEvent{
 		ProxyAccountID: proxyAccountID,
 		RuntimeEmail:   account.RuntimeEmail,

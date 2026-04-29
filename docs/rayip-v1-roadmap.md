@@ -69,7 +69,8 @@ RayIP 的商业承诺是：
 - NodeAgent ZTP bootstrap、Runtime 自发现和能力协商。
 - `UpsertAccount`、`DeleteAccount`、`DisableAccount`、`UpdatePolicy`、`GetUsage`、`GetDigest`。
 - XrayCore 内账号级限速、智能公平限速、连接数限制、流量统计、滥用检测和 digest。
-- NodeAgent 到 XrayCore 的本机 gRPC Xray API / 扩展 API。
+- NodeAgent 到 XrayCore 的本机 gRPC Xray API / 扩展 API；托管 XrayCore 每次启动随机 loopback gRPC 端口，先探测、失败换端口重试。
+- 账号禁用、限速、连接数、合规和滥用处置由平台云控决策后下发；NodeAgent/XrayCore 只执行策略和上报事件。
 - 管理端 Runtime Lab。
 
 退出：
@@ -78,7 +79,8 @@ RayIP 的商业承诺是：
 - API 能对 Bundle、扩展 ABI、hash、capabilities 做准入，失败节点不可售。
 - 管理员可创建真实测试代理。
 - 测试代理可连接。
-- 固定限速、智能公平限速、连接数、流量统计、滥用禁用/上报可验证。
+- 固定限速、智能公平限速、连接数、流量统计、滥用上报和平台下发禁用/限速可验证。
+- NodeAgent 托管 XrayCore 不使用固定 `10085` 默认端口，不与 3x-ui / XrayTool gRPC 冲突。
 - 同一 generation 重复 apply 不产生副作用。
 
 ### T3：可靠增量下发通道

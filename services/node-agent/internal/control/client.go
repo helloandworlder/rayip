@@ -16,19 +16,23 @@ import (
 
 type Client struct {
 	cfg      config.Config
+	endpoint *runtime.Endpoint
 	runtime  *runtime.Manager
 	discover func() (runtime.DiscoveryInfo, error)
 	log      *zap.Logger
 }
 
-func NewClient(cfg config.Config, manager *runtime.Manager, log *zap.Logger) *Client {
+func NewClient(cfg config.Config, endpoint *runtime.Endpoint, manager *runtime.Manager, log *zap.Logger) *Client {
 	return &Client{
-		cfg:     cfg,
-		runtime: manager,
+		cfg:      cfg,
+		endpoint: endpoint,
+		runtime:  manager,
 		discover: func() (runtime.DiscoveryInfo, error) {
 			return runtime.Discover(runtime.DiscoveryConfig{
 				AgentVersion: cfg.Runtime.AgentVersion,
 				ManifestPath: cfg.Runtime.ManifestPath,
+				CoreMode:     cfg.Runtime.CoreMode,
+				XrayGRPCAddr: endpoint.GRPCAddr(),
 			})
 		},
 		log: log,

@@ -119,9 +119,14 @@ RAYIP_AGENT_NODE_CODE=local-home-001
 RAYIP_AGENT_ENROLLMENT_TOKEN=one-time-or-rotatable-bootstrap-token
 RAYIP_AGENT_API_GRPC_ADDR=api.example.com:9090
 RAYIP_AGENT_RUNTIME_BUNDLE_DIR=/opt/rayip/runtime
+RAYIP_AGENT_RUNTIME_CORE_MODE=xray
+RAYIP_AGENT_RUNTIME_XRAY_GRPC_ADDR=auto
+RAYIP_AGENT_RUNTIME_XRAY_AUTO_START=true
 ```
 
-不在 `.env` 中放 Runtime 版本、capabilities、限速池、滥用阈值、合规策略。这些属于自发现状态或控制面期望策略，必须由 Runtime discovery 和 API 动态下发产生。
+不在 `.env` 中放 Runtime 版本、capabilities、限速池、账号禁用状态、滥用阈值、合规策略。这些属于自发现状态或控制面期望策略，必须由 Runtime discovery 和 API 动态下发产生。
+
+`RAYIP_AGENT_RUNTIME_XRAY_GRPC_ADDR=auto` 是生产默认值。NodeAgent 每次启动托管 XrayCore 时必须随机分配本机环回 gRPC 端口，启动前探测端口是否可监听；如果启动或 RayIP RuntimeService 探活失败，必须停止该 XrayCore 进程并更换新端口重试。NodeAgent 不使用固定 `10085` 作为默认值，避免与 3x-ui、旧 XrayTool 或其他本机 XrayCore gRPC 冲突。
 
 ## 5. XrayCore 职责
 
@@ -132,7 +137,9 @@ XrayCore 是数据面 Runtime。
 - 按账号限速。
 - 按账号限制连接数。
 - 按账号统计流量。
+- 只执行平台下发的账号状态、限速、连接数和合规策略。
 - 通过 gRPC Xray API / 扩展 API 暴露 NodeAgent 所需的运行时控制能力。
+- 发现滥用时只产出结构化事件和证据，不在 XrayCore 或 NodeAgent 本地自行禁用账号或改变限速；禁用、限速、人工审核、上报动作由平台云控决策后再下发。
 
 NodeAgent 把 XrayCore 当作 Runtime 引擎，不把它当业务数据库。NodeAgent 管理 XrayCore 的主路径是 gRPC Xray API / 扩展 API，不以拼接配置文件、重启进程作为日常账号变更路径。
 
@@ -155,7 +162,7 @@ API 到 NodeAgent：
 NodeAgent 到 XrayCore：
 
 - gRPC Xray API / 扩展 API
-- 本机环回或 Unix socket
+- 本机环回或 Unix socket；托管 XrayCore 默认每次启动随机端口并先探测，失败换端口重试
 - 必须增量 apply 账号、限速策略、连接数策略、流量读取、健康检查
 - 配置文件只用于启动基础 Runtime，不用于日常订单下发
 

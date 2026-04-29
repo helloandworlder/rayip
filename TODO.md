@@ -20,7 +20,9 @@ V1 只做：
 - Runtime 未确认前，客户不能看到代理凭据。
 - Postgres 是根源状态，Redis 是实时状态，NATS JetStream 是持久任务队列。
 - NodeAgent 与魔改 XrayCore 作为 Runtime Bundle 一起安装、升级、回滚。
-- NodeAgent `.env` 只保留 bootstrap 必要项；Runtime 版本、能力、限速池、滥用阈值和合规策略必须通过自发现、协商和控制面动态下发获得。
+- NodeAgent `.env` 只保留 bootstrap 必要项；Runtime 版本、能力、限速池、账号禁用状态、滥用阈值和合规策略必须通过自发现、协商和控制面动态下发获得。
+- 托管 XrayCore gRPC 端口必须采用 `auto` 随机模式：每次启动先探测本机环回端口，启动或探活失败就换端口重试，避免与 3x-ui、旧 XrayTool 或其他 XrayCore 冲突。
+- 账号 Disabled、限速、连接数、合规和滥用处置必须由平台云控决策并下发；NodeAgent/XrayCore 只执行策略和上报事件，不做本地业务决策。
 - Runtime Bundle 是签名供应链资产；生产节点必须校验 manifest、hash、签名和 minimum allowed version。
 - 用户面板必须对齐 `frontend_design/` 的 RocketIP / IPIPD 风格：左侧分组导航、顶部余额和充值、紧凑购买页、强复制/导出/续费操作。
 
@@ -97,7 +99,7 @@ Task 完成定义：
 - Capability Negotiation：NodeAgent 从 manifest + XrayCore 扩展 API 自发现能力，API 返回 `ACCEPTED / NEEDS_UPGRADE / QUARANTINED / UNSUPPORTED_CAPABILITY / DIGEST_MISMATCH`。
 - XrayCore：实现或验证 `UpsertAccount`、`DeleteAccount`、`DisableAccount`、`UpdatePolicy`、`GetUsage`、`GetDigest`。
 - XrayCore：实现账号级 token bucket、智能公平限速、连接数限制、usage stats、abuse event、runtime digest。
-- NodeAgent：本机 gRPC Xray API / 扩展 API client，管理 XrayCore 进程和 Runtime health。
+- NodeAgent：本机 gRPC Xray API / 扩展 API client，管理 XrayCore 进程、随机 gRPC 端口探测/重试和 Runtime health。
 - API：Runtime Lab 接口，允许管理员创建测试账号、更新策略、禁用账号、读取流量和 digest。
 - 管理面板：Runtime Lab 页面，展示测试代理、策略、流量、digest、apply 结果。
 - DB：runtime lab 测试记录、runtime_apply_results、node_runtime_capabilities、runtime_bundle_versions 的最小结构。
@@ -114,7 +116,8 @@ Task 完成定义：
 - [ ] XrayCore 内基于优先级、固定限速和短期流量消耗的智能公平限速生效。
 - [ ] XrayCore 内账号级连接数限制生效。
 - [ ] XrayCore 可返回账号级上下行流量。
-- [ ] XrayCore 可上报滥用事件，API 可按策略禁用、限速、上报或人工审核。
+- [ ] XrayCore 可上报滥用事件，但不本地禁用或改限速；API 可按策略禁用、限速、上报或人工审核并通过 RuntimeCommand 下发。
+- [ ] NodeAgent 启动托管 XrayCore 时使用随机 loopback gRPC 端口，端口占用或探活失败会换端口重试。
 - [ ] 重复 apply 同一 generation 不产生副作用。
 
 ### T3：可靠增量下发通道

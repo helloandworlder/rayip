@@ -63,7 +63,7 @@ func TestMemoryCoreFixedRateLimitAndFairShare(t *testing.T) {
 	}
 }
 
-func TestMemoryCoreAbuseDetectionDisablesAccount(t *testing.T) {
+func TestMemoryCoreAbuseDetectionReportsWithoutLocalDisable(t *testing.T) {
 	core := runtime.NewMemoryCore()
 	now := time.Unix(100, 0)
 	_ = core.UpsertAccount(context.Background(), runtime.Account{
@@ -80,7 +80,7 @@ func TestMemoryCoreAbuseDetectionDisablesAccount(t *testing.T) {
 		t.Fatalf("abuse event = %#v, want disable and report", event)
 	}
 	account, ok := core.Account("acct-1")
-	if !ok || account.Status != runtime.AccountStatusDisabled {
-		t.Fatalf("account status = %#v ok=%v, want disabled", account, ok)
+	if !ok || account.Status != runtime.AccountStatusEnabled {
+		t.Fatalf("account status = %#v ok=%v, want cloud-control-only disable", account, ok)
 	}
 }

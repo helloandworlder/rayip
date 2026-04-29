@@ -1,12 +1,16 @@
 package runtime_test
 
 import (
+	"context"
+	"net"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 
+	runtimev1 "github.com/rayip/rayip/packages/proto/gen/go/rayip/runtime/v1"
 	"github.com/rayip/rayip/services/node-agent/internal/runtime"
+	"google.golang.org/grpc"
 )
 
 func TestDiscoverReadsRuntimeManifest(t *testing.T) {
@@ -54,5 +58,74 @@ func TestDiscoverFallsBackToBootstrapUnknownWhenManifestMissing(t *testing.T) {
 	}
 	if len(info.Capabilities) != 0 {
 		t.Fatalf("fallback capabilities = %#v, want empty", info.Capabilities)
+	}
+}
+
+func TestDiscoverOverridesManifestWithXrayExtension(t *testing.T) {
+	addr, cleanup := runtimeDiscoveryServer(t)
+	defer cleanup()
+	dir := t.TempDir()
+	manifest := filepath.Join(dir, "runtime-manifest.json")
+	if err := os.WriteFile(manifest, []byte(`{
+		"bundle_version": "rayip-runtime-v26.3.27.1",
+		"xray_version": "v26.3.27-rayip.1",
+		"extension_abi": "stale",
+		"binary_sha256": "sha256:binary",
+		"manifest_sha256": "sha256:manifest",
+		"capabilities": ["stale-capability"]
+	}`), 0o600); err != nil {
+		t.Fatalf("write manifest: %v", err)
+	}
+
+	info, err := runtime.Discover(runtime.DiscoveryConfig{
+		AgentVersion: "agent-1",
+		ManifestPath: manifest,
+		CoreMode:     "xray",
+		XrayGRPCAddr: addr,
+	})
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+	if info.ExtensionABI != "rayip.runtime.v1" {
+		t.Fatalf("extension abi = %q, want rayip.runtime.v1", info.ExtensionABI)
+	}
+	if !reflect.DeepEqual(info.Capabilities, []string{"socks5", "rayip-runtime"}) {
+		t.Fatalf("capabilities = %#v", info.Capabilities)
+	}
+	if info.RuntimeDigest != "digest-1" || info.LastGoodGeneration != 9 {
+		t.Fatalf("runtime digest/generation not discovered: %#v", info)
+	}
+}
+
+type discoveryRuntimeServer struct {
+	runtimev1.UnimplementedRuntimeServiceServer
+}
+
+func (s discoveryRuntimeServer) GetCapabilities(context.Context, *runtimev1.GetCapabilitiesRequest) (*runtimev1.GetCapabilitiesResponse, error) {
+	return &runtimev1.GetCapabilitiesResponse{
+		ExtensionAbi: "rayip.runtime.v1",
+		Capabilities: []string{"socks5", "rayip-runtime"},
+		Digest: &runtimev1.Digest{
+			MaxGeneration: 9,
+			Hash:          "digest-1",
+		},
+	}, nil
+}
+
+func runtimeDiscoveryServer(t *testing.T) (string, func()) {
+	t.Helper()
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("net.Listen() error = %v", err)
+	}
+	server := grpc.NewServer()
+	runtimev1.RegisterRuntimeServiceServer(server, discoveryRuntimeServer{})
+	go func() {
+		_ = server.Serve(listener)
+	}()
+
+	return listener.Addr().String(), func() {
+		server.Stop()
+		_ = listener.Close()
 	}
 }

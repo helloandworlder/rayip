@@ -1,14 +1,26 @@
 package runtime
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"net"
 	"os"
+	"strings"
+	"time"
+
+	runtimev1 "github.com/rayip/rayip/packages/proto/gen/go/rayip/runtime/v1"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
+
+var runtimeDialContext func(context.Context, string) (net.Conn, error)
 
 type DiscoveryConfig struct {
 	AgentVersion string
 	ManifestPath string
+	CoreMode     string
+	XrayGRPCAddr string
 }
 
 type DiscoveryInfo struct {
@@ -32,6 +44,9 @@ func Discover(cfg DiscoveryConfig) (DiscoveryInfo, error) {
 	}
 	payload, err := os.ReadFile(cfg.ManifestPath)
 	if errors.Is(err, os.ErrNotExist) {
+		if strings.EqualFold(cfg.CoreMode, "xray") {
+			return mergeXrayExtension(cfg, info)
+		}
 		return info, nil
 	}
 	if err != nil {
@@ -64,6 +79,60 @@ func Discover(cfg DiscoveryConfig) (DiscoveryInfo, error) {
 	info.LastGoodGeneration = manifest.LastGoodGeneration
 	if manifest.Capabilities != nil {
 		info.Capabilities = manifest.Capabilities
+	}
+	if strings.EqualFold(cfg.CoreMode, "xray") {
+		return mergeXrayExtension(cfg, info)
+	}
+	return info, nil
+}
+
+func mergeXrayExtension(cfg DiscoveryConfig, info DiscoveryInfo) (DiscoveryInfo, error) {
+	discovered, err := discoverXrayExtension(cfg.XrayGRPCAddr)
+	if err != nil {
+		return DiscoveryInfo{}, err
+	}
+	if discovered.ExtensionABI != "" {
+		info.ExtensionABI = discovered.ExtensionABI
+	}
+	if discovered.Capabilities != nil {
+		info.Capabilities = discovered.Capabilities
+	}
+	if discovered.RuntimeDigest != "" {
+		info.RuntimeDigest = discovered.RuntimeDigest
+	}
+	if discovered.LastGoodGeneration > 0 {
+		info.LastGoodGeneration = discovered.LastGoodGeneration
+	}
+	return info, nil
+}
+
+func discoverXrayExtension(addr string) (DiscoveryInfo, error) {
+	if addr == "" {
+		return DiscoveryInfo{}, errors.New("xray runtime gRPC addr is required")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
+	if runtimeDialContext != nil {
+		opts = append(opts, grpc.WithContextDialer(runtimeDialContext))
+	}
+	conn, err := grpc.NewClient(addr, opts...)
+	if err != nil {
+		return DiscoveryInfo{}, err
+	}
+	defer conn.Close()
+	response, err := runtimev1.NewRuntimeServiceClient(conn).GetCapabilities(ctx, &runtimev1.GetCapabilitiesRequest{})
+	if err != nil {
+		return DiscoveryInfo{}, err
+	}
+	digest := response.GetDigest()
+	info := DiscoveryInfo{
+		ExtensionABI:  response.GetExtensionAbi(),
+		Capabilities:  response.GetCapabilities(),
+		RuntimeDigest: digest.GetHash(),
+	}
+	if digest != nil {
+		info.LastGoodGeneration = digest.GetMaxGeneration()
 	}
 	return info, nil
 }

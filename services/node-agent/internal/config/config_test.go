@@ -27,6 +27,15 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.Runtime.ManifestPath == "" {
 		t.Fatal("runtime manifest path should have a default")
 	}
+	if cfg.Runtime.CoreMode != "xray" {
+		t.Fatalf("runtime core mode = %q, want xray", cfg.Runtime.CoreMode)
+	}
+	if cfg.Runtime.XrayBinaryPath == "" || cfg.Runtime.XrayConfigPath == "" {
+		t.Fatalf("xray runtime paths should have defaults: %#v", cfg.Runtime)
+	}
+	if cfg.Runtime.XrayGRPCAddr != "auto" {
+		t.Fatalf("xray grpc addr = %q, want auto", cfg.Runtime.XrayGRPCAddr)
+	}
 }
 
 func TestLoadEnvOverrides(t *testing.T) {
@@ -34,6 +43,10 @@ func TestLoadEnvOverrides(t *testing.T) {
 	t.Setenv("RAYIP_AGENT_API_GRPC_ADDR", "api.internal:9090")
 	t.Setenv("RAYIP_AGENT_ENROLLMENT_TOKEN", "token-1")
 	t.Setenv("RAYIP_AGENT_RUNTIME_BUNDLE_DIR", "/opt/rayip/runtime")
+	t.Setenv("RAYIP_AGENT_RUNTIME_CORE_MODE", "xray")
+	t.Setenv("RAYIP_AGENT_RUNTIME_XRAY_GRPC_ADDR", "127.0.0.1:10085")
+	t.Setenv("RAYIP_AGENT_RUNTIME_XRAY_BINARY_PATH", "/opt/rayip/runtime/xray")
+	t.Setenv("RAYIP_AGENT_RUNTIME_XRAY_CONFIG_PATH", "/opt/rayip/runtime/config.json")
 
 	cfg, err := config.Load()
 	if err != nil {
@@ -54,5 +67,11 @@ func TestLoadEnvOverrides(t *testing.T) {
 	}
 	if cfg.Runtime.ManifestPath != "/opt/rayip/runtime/runtime-manifest.json" {
 		t.Fatalf("runtime manifest path = %q, want manifest inside bundle dir", cfg.Runtime.ManifestPath)
+	}
+	if cfg.Runtime.CoreMode != "xray" || cfg.Runtime.XrayGRPCAddr != "127.0.0.1:10085" {
+		t.Fatalf("runtime core config = %#v", cfg.Runtime)
+	}
+	if cfg.Runtime.XrayBinaryPath != "/opt/rayip/runtime/xray" || cfg.Runtime.XrayConfigPath != "/opt/rayip/runtime/config.json" {
+		t.Fatalf("runtime xray paths = %#v", cfg.Runtime)
 	}
 }

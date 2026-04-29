@@ -7,7 +7,8 @@ proto:
 	protoc -I packages/proto/proto \
 		--go_out=packages/proto/gen/go --go_opt=paths=source_relative \
 		--go-grpc_out=packages/proto/gen/go --go-grpc_opt=paths=source_relative \
-		packages/proto/proto/rayip/control/v1/control.proto
+		packages/proto/proto/rayip/control/v1/control.proto \
+		packages/proto/proto/rayip/runtime/v1/runtime.proto
 
 infra-up:
 	docker compose up -d postgres redis nats

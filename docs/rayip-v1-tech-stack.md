@@ -148,16 +148,18 @@ Bootstrap `.env` 只配置：
 - API gRPC 地址
 - Runtime Bundle 目录
 
-Runtime 版本、capabilities、限速池、滥用阈值、合规规则不写入 `.env`，必须通过自发现和控制面策略下发获得。
+Runtime 版本、capabilities、限速池、账号禁用状态、滥用阈值、合规规则不写入 `.env`，必须通过自发现和控制面策略下发获得。
 
 NodeAgent 与 XrayCore：
 
 - NodeAgent 使用 gRPC Xray API / 扩展 API 控制 XrayCore。
 - XrayCore gRPC API 只监听本机环回或 Unix socket。
+- 托管 XrayCore 的 gRPC API 默认使用 `auto` 随机端口；NodeAgent 每次启动前先探测端口，启动或探活失败就换端口重试，避免与 3x-ui、XrayTool 或其他本机 XrayCore 冲突。
 - 所有订单生命周期变更都通过增量 gRPC apply 完成。
 - 日常订单下发不通过写配置文件加重启完成。
 - 配置文件只用于启动基础 inbound、API listener 和基础 Runtime 参数。
 - NodeAgent 通过 XrayCore 扩展 API 获取真实 capabilities、extension ABI、账号 digest 和 abuse events。
+- 账号 Disabled、限速、连接数、合规处置和滥用处置由平台云控决策并下发；NodeAgent 与 XrayCore 只执行策略和上报事件，不做本地业务决策。
 - Runtime 下发使用 `version_info + nonce + ACK/NACK + last_good_generation` 语义。
 
 ## 4. 前端

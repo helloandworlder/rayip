@@ -26,9 +26,14 @@ type APIConfig struct {
 }
 
 type RuntimeConfig struct {
-	AgentVersion string
-	BundleDir    string
-	ManifestPath string
+	AgentVersion   string
+	BundleDir      string
+	ManifestPath   string
+	CoreMode       string
+	XrayGRPCAddr   string
+	XrayBinaryPath string
+	XrayConfigPath string
+	XrayAutoStart  bool
 }
 
 type LeaseConfig struct {
@@ -53,10 +58,18 @@ func Load() (Config, error) {
 	v.SetDefault("api.grpc_addr", "127.0.0.1:9090")
 	v.SetDefault("runtime.agent_version", "dev-agent")
 	v.SetDefault("runtime.bundle_dir", "/opt/rayip/runtime")
+	v.SetDefault("runtime.core_mode", "xray")
+	v.SetDefault("runtime.xray_grpc_addr", "auto")
+	v.SetDefault("runtime.xray_binary_path", "./third_party/xray-core/xray")
+	v.SetDefault("runtime.xray_auto_start", true)
 	v.SetDefault("lease.interval", "10s")
 	v.SetDefault("lease.ttl", "45s")
 
 	bundleDir := v.GetString("runtime.bundle_dir")
+	configPath := v.GetString("runtime.xray_config_path")
+	if configPath == "" {
+		configPath = filepath.Join(bundleDir, "xray-runtime.json")
+	}
 	return Config{
 		Node: NodeConfig{
 			Code:            v.GetString("node.code"),
@@ -64,9 +77,14 @@ func Load() (Config, error) {
 		},
 		API: APIConfig{GRPCAddr: v.GetString("api.grpc_addr")},
 		Runtime: RuntimeConfig{
-			AgentVersion: v.GetString("runtime.agent_version"),
-			BundleDir:    bundleDir,
-			ManifestPath: filepath.Join(bundleDir, "runtime-manifest.json"),
+			AgentVersion:   v.GetString("runtime.agent_version"),
+			BundleDir:      bundleDir,
+			ManifestPath:   filepath.Join(bundleDir, "runtime-manifest.json"),
+			CoreMode:       v.GetString("runtime.core_mode"),
+			XrayGRPCAddr:   v.GetString("runtime.xray_grpc_addr"),
+			XrayBinaryPath: v.GetString("runtime.xray_binary_path"),
+			XrayConfigPath: configPath,
+			XrayAutoStart:  v.GetBool("runtime.xray_auto_start"),
 		},
 		Lease: LeaseConfig{
 			Interval: v.GetDuration("lease.interval"),
