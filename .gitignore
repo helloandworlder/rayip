@@ -1,0 +1,40 @@
+# macOS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+
+# Env
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# Node
+node_modules/
+dist/
+build/
+.turbo/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# Go
+bin/
+*.test
+*.out
+coverage.out
+
+# Runtime data
+tmp/
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Railway / deploy local cache
+.railway/
