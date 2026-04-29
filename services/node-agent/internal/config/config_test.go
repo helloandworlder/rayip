@@ -1,0 +1,58 @@
+package config_test
+
+import (
+	"testing"
+
+	"github.com/rayip/rayip/services/node-agent/internal/config"
+)
+
+func TestLoadDefaults(t *testing.T) {
+	t.Setenv("RAYIP_AGENT_NODE_CODE", "")
+	t.Setenv("RAYIP_AGENT_API_GRPC_ADDR", "")
+
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.Node.Code == "" {
+		t.Fatal("node code should have a stable default")
+	}
+	if cfg.API.GRPCAddr != "127.0.0.1:9090" {
+		t.Fatalf("API gRPC addr = %q, want 127.0.0.1:9090", cfg.API.GRPCAddr)
+	}
+	if cfg.Runtime.BundleDir == "" {
+		t.Fatal("runtime bundle dir should have a default")
+	}
+	if cfg.Runtime.ManifestPath == "" {
+		t.Fatal("runtime manifest path should have a default")
+	}
+}
+
+func TestLoadEnvOverrides(t *testing.T) {
+	t.Setenv("RAYIP_AGENT_NODE_CODE", "nyc-home-001")
+	t.Setenv("RAYIP_AGENT_API_GRPC_ADDR", "api.internal:9090")
+	t.Setenv("RAYIP_AGENT_ENROLLMENT_TOKEN", "token-1")
+	t.Setenv("RAYIP_AGENT_RUNTIME_BUNDLE_DIR", "/opt/rayip/runtime")
+
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.Node.Code != "nyc-home-001" {
+		t.Fatalf("node code = %q, want nyc-home-001", cfg.Node.Code)
+	}
+	if cfg.API.GRPCAddr != "api.internal:9090" {
+		t.Fatalf("API gRPC addr = %q, want api.internal:9090", cfg.API.GRPCAddr)
+	}
+	if cfg.Node.EnrollmentToken != "token-1" {
+		t.Fatalf("enrollment token = %q, want token-1", cfg.Node.EnrollmentToken)
+	}
+	if cfg.Runtime.BundleDir != "/opt/rayip/runtime" {
+		t.Fatalf("runtime bundle dir = %q, want /opt/rayip/runtime", cfg.Runtime.BundleDir)
+	}
+	if cfg.Runtime.ManifestPath != "/opt/rayip/runtime/runtime-manifest.json" {
+		t.Fatalf("runtime manifest path = %q, want manifest inside bundle dir", cfg.Runtime.ManifestPath)
+	}
+}

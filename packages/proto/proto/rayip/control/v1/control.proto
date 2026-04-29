@@ -1,0 +1,204 @@
+syntax = "proto3";
+
+package rayip.control.v1;
+
+option go_package = "github.com/rayip/rayip/packages/proto/gen/go/rayip/control/v1;controlv1";
+
+service NodeControlService {
+  rpc Connect(stream AgentEnvelope) returns (stream ControlEnvelope);
+}
+
+message AgentEnvelope {
+  string request_id = 1;
+
+  oneof payload {
+    AgentHello hello = 10;
+    LeaseRenewal lease = 11;
+    MetricSnapshot metrics = 12;
+    TerminalFrame terminal_frame = 13;
+    RuntimeResult runtime_result = 14;
+  }
+}
+
+message ControlEnvelope {
+  string request_id = 1;
+
+  oneof payload {
+    AgentWelcome welcome = 10;
+    ControlAck ack = 11;
+    ControlPing ping = 12;
+    RuntimeCommand runtime_command = 13;
+  }
+}
+
+message AgentHello {
+  string node_code = 1;
+  string enrollment_token = 2;
+  string agent_version = 3;
+  string xray_version = 4;
+  string bundle_version = 5;
+  repeated string capabilities = 6;
+  uint64 sequence = 7;
+  int64 lease_ttl_seconds = 8;
+  RuntimeObservation runtime = 9;
+}
+
+message LeaseRenewal {
+  string node_id = 1;
+  string node_code = 2;
+  string session_id = 3;
+  string agent_version = 4;
+  string xray_version = 5;
+  string bundle_version = 6;
+  repeated string capabilities = 7;
+  uint64 sequence = 8;
+  int64 lease_ttl_seconds = 9;
+  RuntimeObservation runtime = 10;
+}
+
+message MetricSnapshot {
+  string node_id = 1;
+  double cpu_percent = 2;
+  double ram_percent = 3;
+  uint64 active_connections = 4;
+  uint64 rx_bytes_per_second = 5;
+  uint64 tx_bytes_per_second = 6;
+}
+
+message TerminalFrame {
+  string session_id = 1;
+  bytes data = 2;
+  bool closed = 3;
+}
+
+message AgentWelcome {
+  string node_id = 1;
+  string session_id = 2;
+  int64 lease_ttl_seconds = 3;
+  string api_instance_id = 4;
+  RuntimeVerdict runtime_verdict = 5;
+}
+
+message ControlAck {
+  string code = 1;
+  string message = 2;
+}
+
+message ControlPing {
+  int64 unix_milli = 1;
+}
+
+message RuntimeObservation {
+  string agent_version = 1;
+  string xray_version = 2;
+  string bundle_version = 3;
+  string extension_abi = 4;
+  repeated string capabilities = 5;
+  string binary_sha256 = 6;
+  string manifest_sha256 = 7;
+  string runtime_digest = 8;
+  uint64 last_good_generation = 9;
+}
+
+message RuntimeVerdict {
+  RuntimeVerdictStatus status = 1;
+  string reason_code = 2;
+  string message = 3;
+  repeated string required_capabilities = 4;
+  string required_extension_abi = 5;
+}
+
+enum RuntimeVerdictStatus {
+  RUNTIME_VERDICT_STATUS_UNSPECIFIED = 0;
+  RUNTIME_VERDICT_STATUS_ACCEPTED = 1;
+  RUNTIME_VERDICT_STATUS_NEEDS_UPGRADE = 2;
+  RUNTIME_VERDICT_STATUS_QUARANTINED = 3;
+  RUNTIME_VERDICT_STATUS_UNSUPPORTED_CAPABILITY = 4;
+  RUNTIME_VERDICT_STATUS_DIGEST_MISMATCH = 5;
+}
+
+message RuntimeCommand {
+  string command_id = 1;
+  string node_id = 2;
+  RuntimeOperation operation = 3;
+  RuntimeAccount account = 4;
+  uint64 desired_generation = 5;
+  int64 deadline_unix_ms = 6;
+}
+
+enum RuntimeOperation {
+  RUNTIME_OPERATION_UNSPECIFIED = 0;
+  RUNTIME_OPERATION_UPSERT = 1;
+  RUNTIME_OPERATION_DELETE = 2;
+  RUNTIME_OPERATION_DISABLE = 3;
+  RUNTIME_OPERATION_UPDATE_POLICY = 4;
+  RUNTIME_OPERATION_GET_USAGE = 5;
+  RUNTIME_OPERATION_GET_DIGEST = 6;
+  RUNTIME_OPERATION_PROBE = 7;
+}
+
+message RuntimeAccount {
+  string proxy_account_id = 1;
+  string runtime_email = 2;
+  RuntimeProtocol protocol = 3;
+  string listen_ip = 4;
+  uint32 port = 5;
+  string username = 6;
+  string password = 7;
+  int64 expires_at_unix_ms = 8;
+  uint64 egress_limit_bps = 9;
+  uint64 ingress_limit_bps = 10;
+  uint32 max_connections = 11;
+  RuntimeAccountStatus status = 12;
+  uint64 policy_version = 13;
+  uint64 desired_generation = 14;
+}
+
+enum RuntimeProtocol {
+  RUNTIME_PROTOCOL_UNSPECIFIED = 0;
+  RUNTIME_PROTOCOL_SOCKS5 = 1;
+  RUNTIME_PROTOCOL_HTTP = 2;
+}
+
+enum RuntimeAccountStatus {
+  RUNTIME_ACCOUNT_STATUS_UNSPECIFIED = 0;
+  RUNTIME_ACCOUNT_STATUS_ENABLED = 1;
+  RUNTIME_ACCOUNT_STATUS_DISABLED = 2;
+  RUNTIME_ACCOUNT_STATUS_DELETED = 3;
+}
+
+message RuntimeResult {
+  string command_id = 1;
+  RuntimeResultStatus status = 2;
+  string error_code = 3;
+  string error_message = 4;
+  uint64 applied_generation = 5;
+  RuntimeUsage usage = 6;
+  RuntimeDigest digest = 7;
+}
+
+enum RuntimeResultStatus {
+  RUNTIME_RESULT_STATUS_UNSPECIFIED = 0;
+  RUNTIME_RESULT_STATUS_SUCCESS = 1;
+  RUNTIME_RESULT_STATUS_FAILED = 2;
+  RUNTIME_RESULT_STATUS_SKIPPED = 3;
+  RUNTIME_RESULT_STATUS_DUPLICATE = 4;
+}
+
+message RuntimeUsage {
+  string proxy_account_id = 1;
+  string runtime_email = 2;
+  uint64 rx_bytes = 3;
+  uint64 tx_bytes = 4;
+  uint64 active_connections = 5;
+  uint64 rx_bytes_per_second = 6;
+  uint64 tx_bytes_per_second = 7;
+}
+
+message RuntimeDigest {
+  uint64 account_count = 1;
+  uint64 enabled_count = 2;
+  uint64 disabled_count = 3;
+  uint64 max_generation = 4;
+  string hash = 5;
+}
