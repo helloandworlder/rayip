@@ -7,6 +7,9 @@ import (
 
 	runtimev1 "github.com/rayip/rayip/packages/proto/gen/go/rayip/runtime/v1"
 	"github.com/rayip/rayip/services/node-agent/internal/runtime"
+	handlercmd "github.com/xtls/xray-core/app/proxyman/command"
+	"github.com/xtls/xray-core/common/protocol"
+	"github.com/xtls/xray-core/core"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
@@ -14,13 +17,19 @@ import (
 
 func TestXrayCoreMapsAccountPolicyAndDigest(t *testing.T) {
 	fake := &fakeRuntimeServer{policies: map[string]*runtimev1.AccountPolicy{}}
-	client, cleanup := runtimeClient(t, fake)
+	handler := &fakeHandlerServer{inbounds: map[string]*core.InboundHandlerConfig{}, users: map[string]*protocol.User{}}
+	client, handlerClient, cleanup := runtimeClient(t, fake, handler)
 	defer cleanup()
 
-	core := runtime.NewXrayCoreWithClient(client)
+	core := runtime.NewXrayCoreWithClients(client, handlerClient)
 	if err := core.UpsertAccount(context.Background(), runtime.Account{
 		ProxyAccountID:    "acct-1",
 		RuntimeEmail:      "email-1",
+		Protocol:          runtime.ProtocolSOCKS5,
+		ListenIP:          "127.0.0.1",
+		Port:              18080,
+		Username:          "customer",
+		Password:          "secret",
 		EgressLimitBPS:    1024,
 		IngressLimitBPS:   2048,
 		MaxConnections:    2,
@@ -35,6 +44,9 @@ func TestXrayCoreMapsAccountPolicyAndDigest(t *testing.T) {
 
 	if got := fake.policies["email-1"]; got.GetEgressLimitBps() != 1024 || got.GetMaxConnections() != 2 {
 		t.Fatalf("unexpected policy: %#v", got)
+	}
+	if len(handler.inbounds) != 1 || handler.users["email-1"] == nil {
+		t.Fatalf("handler state = inbounds %#v users %#v", handler.inbounds, handler.users)
 	}
 
 	usage, err := core.Usage(context.Background(), "acct-1")
@@ -58,6 +70,9 @@ func TestXrayCoreMapsAccountPolicyAndDigest(t *testing.T) {
 	}
 	if got := fake.policies["email-1"]; !got.GetDisabled() || got.GetEgressLimitBps() != 1024 || got.GetMaxConnections() != 2 {
 		t.Fatalf("disable did not preserve policy: %#v", got)
+	}
+	if handler.users["email-1"] != nil {
+		t.Fatalf("handler user after disable = %#v, want removed", handler.users["email-1"])
 	}
 }
 
@@ -104,11 +119,45 @@ func (s *fakeRuntimeServer) digest() *runtimev1.Digest {
 	return digest
 }
 
-func runtimeClient(t *testing.T, server runtimev1.RuntimeServiceServer) (runtimev1.RuntimeServiceClient, func()) {
+type fakeHandlerServer struct {
+	handlercmd.UnimplementedHandlerServiceServer
+	inbounds map[string]*core.InboundHandlerConfig
+	users    map[string]*protocol.User
+}
+
+func (s *fakeHandlerServer) ListInbounds(context.Context, *handlercmd.ListInboundsRequest) (*handlercmd.ListInboundsResponse, error) {
+	response := &handlercmd.ListInboundsResponse{}
+	for _, inbound := range s.inbounds {
+		response.Inbounds = append(response.Inbounds, inbound)
+	}
+	return response, nil
+}
+
+func (s *fakeHandlerServer) AddInbound(_ context.Context, request *handlercmd.AddInboundRequest) (*handlercmd.AddInboundResponse, error) {
+	s.inbounds[request.GetInbound().GetTag()] = request.GetInbound()
+	return &handlercmd.AddInboundResponse{}, nil
+}
+
+func (s *fakeHandlerServer) AlterInbound(_ context.Context, request *handlercmd.AlterInboundRequest) (*handlercmd.AlterInboundResponse, error) {
+	instance, err := request.GetOperation().GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	switch op := instance.(type) {
+	case *handlercmd.AddUserOperation:
+		s.users[op.GetUser().GetEmail()] = op.GetUser()
+	case *handlercmd.RemoveUserOperation:
+		delete(s.users, op.GetEmail())
+	}
+	return &handlercmd.AlterInboundResponse{}, nil
+}
+
+func runtimeClient(t *testing.T, server runtimev1.RuntimeServiceServer, handler handlercmd.HandlerServiceServer) (runtimev1.RuntimeServiceClient, handlercmd.HandlerServiceClient, func()) {
 	t.Helper()
 	listener := bufconn.Listen(1024 * 1024)
 	grpcServer := grpc.NewServer()
 	runtimev1.RegisterRuntimeServiceServer(grpcServer, server)
+	handlercmd.RegisterHandlerServiceServer(grpcServer, handler)
 	go func() {
 		_ = grpcServer.Serve(listener)
 	}()
@@ -123,7 +172,7 @@ func runtimeClient(t *testing.T, server runtimev1.RuntimeServiceServer) (runtime
 	if err != nil {
 		t.Fatalf("DialContext() error = %v", err)
 	}
-	return runtimev1.NewRuntimeServiceClient(conn), func() {
+	return runtimev1.NewRuntimeServiceClient(conn), handlercmd.NewHandlerServiceClient(conn), func() {
 		_ = conn.Close()
 		grpcServer.Stop()
 		_ = listener.Close()
