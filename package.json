@@ -1,0 +1,20 @@
+{
+  "name": "rayip",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.2",
+  "scripts": {
+    "dev:user": "pnpm --filter @rayip/user-web dev",
+    "dev:admin": "pnpm --filter @rayip/admin-web dev",
+    "build": "pnpm -r --filter './apps/*' build",
+    "typecheck": "pnpm -r --filter './apps/*' typecheck"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.17",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4"
+  }
+}

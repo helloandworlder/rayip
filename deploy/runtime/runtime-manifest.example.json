@@ -1,0 +1,20 @@
+{
+  "bundle_version": "rayip-runtime-v26.3.27.1",
+  "xray_version": "v26.3.27-rayip.1",
+  "extension_abi": "rayip.runtime.v1",
+  "build_id": "2026-04-30T00:00:00Z",
+  "binary_sha256": "sha256:replace-with-release-binary-hash",
+  "manifest_sha256": "sha256:replace-with-canonical-manifest-hash",
+  "signature": "replace-with-cosign-or-tuf-signature",
+  "capabilities": [
+    "socks5",
+    "http",
+    "rayip-runtime",
+    "account-rate-limit",
+    "smart-fair-limit",
+    "connection-limit",
+    "usage-stats",
+    "abuse-detection",
+    "runtime-digest"
+  ]
+}
