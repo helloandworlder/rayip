@@ -100,7 +100,7 @@ func (r *MemoryRepository) LatestNodeRevision(_ context.Context, nodeID string) 
 	defer r.mu.RUnlock()
 	for i := len(r.results) - 1; i >= 0; i-- {
 		result := r.results[i]
-		if result.NodeID != nodeID || result.LastGoodRevision == 0 {
+		if result.NodeID != nodeID {
 			continue
 		}
 		return result.LastGoodRevision, true, nil
