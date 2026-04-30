@@ -14,7 +14,7 @@ import (
 const (
 	RuntimeStreamName   = "RAYIP_RUNTIME"
 	RuntimeApplySubject = "rayip.runtime.apply.v1"
-	RuntimeConsumerName = "runtime-apply-worker"
+	RuntimeConsumerName = "runtime-apply-worker-v2"
 	RuntimeQueueName    = "runtime-apply-workers"
 	outboxPublishPeriod = 2 * time.Second
 )

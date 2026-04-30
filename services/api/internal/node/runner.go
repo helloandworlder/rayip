@@ -13,7 +13,7 @@ import (
 const (
 	ScanStreamName     = "RAYIP_NODE_SCAN"
 	ScanSubject        = "rayip.node.scan.v1"
-	ScanConsumerName   = "node-scan-worker"
+	ScanConsumerName   = "node-scan-worker-v2"
 	ScanQueueName      = "node-scan-workers"
 	scanSchedulePeriod = 30 * time.Second
 )

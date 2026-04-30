@@ -22,7 +22,7 @@ func NewSQLDB(cfg config.Config) (*sql.DB, error) {
 func NewEntClient(sqlDB *sql.DB, cfg config.Config) *apiEnt.Client {
 	driver := entsql.OpenDB(dialect.Postgres, sqlDB)
 	options := []apiEnt.Option{apiEnt.Driver(driver)}
-	if cfg.Service.Env != "prod" {
+	if cfg.Service.Env != "prod" && cfg.Service.Env != "production" {
 		options = append(options, apiEnt.Debug())
 	}
 	return apiEnt.NewClient(options...)
