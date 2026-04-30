@@ -42,6 +42,60 @@ services:
       timeout: 3s
       retries: 20
 
+  api:
+    image: alpine:3.20
+    platform: linux/arm64/v8
+    working_dir: /workspace
+    command: ["/workspace/.docker-bin/rayip-api"]
+    environment:
+      RAYIP_HTTP_ADDR: :8080
+      RAYIP_GRPC_ADDR: :9090
+      RAYIP_POSTGRES_DSN: postgres://rayip:rayip@postgres:5432/rayip?sslmode=disable
+      RAYIP_POSTGRES_RUN_MIGRATIONS: "true"
+      RAYIP_REDIS_ADDR: redis:6379
+      RAYIP_NATS_URL: nats://nats:4222
+      RAYIP_NODE_ENROLLMENT_TOKEN: dev-enrollment-token
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    volumes:
+      - .:/workspace
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+
+  node-agent:
+    image: alpine:3.20
+    platform: linux/arm64/v8
+    working_dir: /workspace
+    command: ["/workspace/.docker-bin/rayip-node-agent"]
+    environment:
+      RAYIP_AGENT_NODE_CODE: local-home-001
+      RAYIP_AGENT_ENROLLMENT_TOKEN: dev-enrollment-token
+      RAYIP_AGENT_API_GRPC_ADDR: dns:///api:9090
+      RAYIP_AGENT_RUNTIME_BUNDLE_DIR: /tmp/rayip-runtime
+      RAYIP_AGENT_RUNTIME_CORE_MODE: xray
+      RAYIP_AGENT_RUNTIME_XRAY_GRPC_ADDR: auto
+      RAYIP_AGENT_RUNTIME_XRAY_BINARY_PATH: /workspace/.docker-bin/rayip-xray
+      RAYIP_AGENT_RUNTIME_XRAY_AUTO_START: "true"
+      RAYIP_AGENT_PROBE_PUBLIC_IP_URL: https://api.ipify.org
+      RAYIP_AGENT_PROBE_SCAN_HOST: host.docker.internal
+      RAYIP_AGENT_PROBE_PORT: "18080"
+      RAYIP_AGENT_PROBE_PROTOCOLS: SOCKS5,HTTP
+      RAYIP_AGENT_LEASE_INTERVAL: 2s
+      RAYIP_AGENT_LEASE_TTL: 12s
+    ports:
+      - "18080:18080"
+      - "18081:18081"
+    volumes:
+      - .:/workspace
+    depends_on:
+      - api
+
 volumes:
   postgres-data:
   redis-data:

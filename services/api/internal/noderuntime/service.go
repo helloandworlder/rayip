@@ -27,6 +27,21 @@ func (s *Service) UpsertStatus(ctx context.Context, input StatusInput) (Status, 
 	if input.NodeID == "" {
 		return Status{}, errors.New("node_id is required")
 	}
+	if current, ok, err := s.repo.GetStatus(ctx, input.NodeID); err != nil {
+		return Status{}, err
+	} else if ok {
+		input.ExpectedRevision = maxUint64(input.ExpectedRevision, current.ExpectedRevision)
+		input.CurrentRevision = maxUint64(input.CurrentRevision, current.CurrentRevision)
+		input.LastGoodRevision = maxUint64(input.LastGoodRevision, current.LastGoodRevision)
+		if input.ExpectedDigestHash == "" {
+			input.ExpectedDigestHash = current.ExpectedDigestHash
+		}
+		if input.AccountCount == 0 && input.RuntimeDigestHash != "" && input.RuntimeDigestHash == current.RuntimeDigestHash {
+			input.AccountCount = current.AccountCount
+		}
+		input.ManualHold = input.ManualHold || current.ManualHold
+		input.ComplianceHold = input.ComplianceHold || current.ComplianceHold
+	}
 	status := Status{
 		NodeID:             input.NodeID,
 		LeaseOnline:        input.LeaseOnline,
@@ -38,6 +53,7 @@ func (s *Service) UpsertStatus(ctx context.Context, input StatusInput) (Status, 
 		RuntimeDigestHash:  input.RuntimeDigestHash,
 		AccountCount:       input.AccountCount,
 		Capabilities:       append([]string(nil), input.Capabilities...),
+		CandidatePublicIPs: append([]string(nil), input.CandidatePublicIPs...),
 		ManifestHash:       input.ManifestHash,
 		BinaryHash:         input.BinaryHash,
 		ExtensionABI:       input.ExtensionABI,
@@ -127,6 +143,9 @@ func evaluateUnsellableReasons(input StatusInput) []UnsellableReason {
 	if input.CurrentRevision < input.ExpectedRevision || input.LastGoodRevision < input.ExpectedRevision {
 		reasons = append(reasons, UnsellableRuntimeLagging)
 	}
+	if len(input.CandidatePublicIPs) == 0 {
+		reasons = append(reasons, UnsellableNoCandidatePublicIP)
+	}
 	if input.ManualHold {
 		reasons = append(reasons, UnsellableManualHold)
 	}
@@ -150,4 +169,11 @@ func missingCapability(actual []string, required []string) bool {
 		}
 	}
 	return false
+}
+
+func maxUint64(a uint64, b uint64) uint64 {
+	if a > b {
+		return a
+	}
+	return b
 }

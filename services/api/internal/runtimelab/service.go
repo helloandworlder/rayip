@@ -34,6 +34,16 @@ func NewService(repo Repository, dispatcher Dispatcher, now func() time.Time) *S
 	return &Service{repo: repo, dispatcher: dispatcher, now: now}
 }
 
+func (s *Service) SaveApplyResult(ctx context.Context, result ApplyResult) error {
+	if result.ApplyID == "" {
+		return errors.New("apply_id is required")
+	}
+	if result.CreatedAt.IsZero() {
+		result.CreatedAt = s.now().UTC()
+	}
+	return s.repo.SaveApplyResult(ctx, result)
+}
+
 func (s *Service) CreateAccount(ctx context.Context, input CreateAccountInput) (Account, ApplyResult, error) {
 	if input.NodeID == "" {
 		return Account{}, ApplyResult{}, errors.New("node_id is required")

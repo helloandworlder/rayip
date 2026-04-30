@@ -265,7 +265,9 @@ func upsertState(ctx context.Context, tx *apiEnt.Tx, state ResourceState) error 
 func appendChange(ctx context.Context, tx *apiEnt.Tx, nodeID string, resourceName string, action ChangeAction, revision uint64, now time.Time) (ChangeLogEntry, OutboxEvent, error) {
 	maxSeq, err := tx.RuntimeChangeLog.Query().
 		Where(entChange.NodeID(nodeID)).
-		Aggregate(apiEnt.Max(entChange.FieldSeq)).
+		Aggregate(func(s *sql.Selector) string {
+			return "COALESCE(" + apiEnt.Max(entChange.FieldSeq)(s) + ", 0)"
+		}).
 		Int(ctx)
 	if err != nil {
 		return ChangeLogEntry{}, OutboxEvent{}, err

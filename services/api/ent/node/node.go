@@ -25,6 +25,26 @@ const (
 	FieldXrayVersion = "xray_version"
 	// FieldCapabilities holds the string denoting the capabilities field in the database.
 	FieldCapabilities = "capabilities"
+	// FieldPublicIP holds the string denoting the public_ip field in the database.
+	FieldPublicIP = "public_ip"
+	// FieldCandidatePublicIps holds the string denoting the candidate_public_ips field in the database.
+	FieldCandidatePublicIps = "candidate_public_ips"
+	// FieldScanHost holds the string denoting the scan_host field in the database.
+	FieldScanHost = "scan_host"
+	// FieldProbePort holds the string denoting the probe_port field in the database.
+	FieldProbePort = "probe_port"
+	// FieldProbeProtocols holds the string denoting the probe_protocols field in the database.
+	FieldProbeProtocols = "probe_protocols"
+	// FieldProbeCheckedAt holds the string denoting the probe_checked_at field in the database.
+	FieldProbeCheckedAt = "probe_checked_at"
+	// FieldLastScanStatus holds the string denoting the last_scan_status field in the database.
+	FieldLastScanStatus = "last_scan_status"
+	// FieldLastScanError holds the string denoting the last_scan_error field in the database.
+	FieldLastScanError = "last_scan_error"
+	// FieldLastScanLatencyMs holds the string denoting the last_scan_latency_ms field in the database.
+	FieldLastScanLatencyMs = "last_scan_latency_ms"
+	// FieldLastScanAt holds the string denoting the last_scan_at field in the database.
+	FieldLastScanAt = "last_scan_at"
 	// FieldLastOnlineAt holds the string denoting the last_online_at field in the database.
 	FieldLastOnlineAt = "last_online_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -44,6 +64,16 @@ var Columns = []string{
 	FieldAgentVersion,
 	FieldXrayVersion,
 	FieldCapabilities,
+	FieldPublicIP,
+	FieldCandidatePublicIps,
+	FieldScanHost,
+	FieldProbePort,
+	FieldProbeProtocols,
+	FieldProbeCheckedAt,
+	FieldLastScanStatus,
+	FieldLastScanError,
+	FieldLastScanLatencyMs,
+	FieldLastScanAt,
 	FieldLastOnlineAt,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -70,6 +100,22 @@ var (
 	DefaultXrayVersion string
 	// DefaultCapabilities holds the default value on creation for the "capabilities" field.
 	DefaultCapabilities []string
+	// DefaultPublicIP holds the default value on creation for the "public_ip" field.
+	DefaultPublicIP string
+	// DefaultCandidatePublicIps holds the default value on creation for the "candidate_public_ips" field.
+	DefaultCandidatePublicIps []string
+	// DefaultScanHost holds the default value on creation for the "scan_host" field.
+	DefaultScanHost string
+	// DefaultProbePort holds the default value on creation for the "probe_port" field.
+	DefaultProbePort uint32
+	// DefaultProbeProtocols holds the default value on creation for the "probe_protocols" field.
+	DefaultProbeProtocols []string
+	// DefaultLastScanStatus holds the default value on creation for the "last_scan_status" field.
+	DefaultLastScanStatus string
+	// DefaultLastScanError holds the default value on creation for the "last_scan_error" field.
+	DefaultLastScanError string
+	// DefaultLastScanLatencyMs holds the default value on creation for the "last_scan_latency_ms" field.
+	DefaultLastScanLatencyMs int64
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -109,6 +155,46 @@ func ByAgentVersion(opts ...sql.OrderTermOption) OrderOption {
 // ByXrayVersion orders the results by the xray_version field.
 func ByXrayVersion(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldXrayVersion, opts...).ToFunc()
+}
+
+// ByPublicIP orders the results by the public_ip field.
+func ByPublicIP(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPublicIP, opts...).ToFunc()
+}
+
+// ByScanHost orders the results by the scan_host field.
+func ByScanHost(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldScanHost, opts...).ToFunc()
+}
+
+// ByProbePort orders the results by the probe_port field.
+func ByProbePort(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProbePort, opts...).ToFunc()
+}
+
+// ByProbeCheckedAt orders the results by the probe_checked_at field.
+func ByProbeCheckedAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProbeCheckedAt, opts...).ToFunc()
+}
+
+// ByLastScanStatus orders the results by the last_scan_status field.
+func ByLastScanStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastScanStatus, opts...).ToFunc()
+}
+
+// ByLastScanError orders the results by the last_scan_error field.
+func ByLastScanError(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastScanError, opts...).ToFunc()
+}
+
+// ByLastScanLatencyMs orders the results by the last_scan_latency_ms field.
+func ByLastScanLatencyMs(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastScanLatencyMs, opts...).ToFunc()
+}
+
+// ByLastScanAt orders the results by the last_scan_at field.
+func ByLastScanAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastScanAt, opts...).ToFunc()
 }
 
 // ByLastOnlineAt orders the results by the last_online_at field.

@@ -39,3 +39,25 @@ select {
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th {
+  border-bottom: 1px solid #e5e7eb;
+  color: #667085;
+  font-weight: 600;
+  text-align: left;
+  padding: 9px 10px;
+  white-space: nowrap;
+}
+
+.data-table td {
+  border-bottom: 1px solid #eef0f4;
+  padding: 10px;
+  vertical-align: middle;
+  white-space: nowrap;
+}

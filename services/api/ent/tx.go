@@ -12,12 +12,28 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// AdminUser is the client for interacting with the AdminUser builders.
+	AdminUser *AdminUserClient
+	// AuditLog is the client for interacting with the AuditLog builders.
+	AuditLog *AuditLogClient
+	// City is the client for interacting with the City builders.
+	City *CityClient
+	// FulfillmentAttempt is the client for interacting with the FulfillmentAttempt builders.
+	FulfillmentAttempt *FulfillmentAttemptClient
+	// FulfillmentJob is the client for interacting with the FulfillmentJob builders.
+	FulfillmentJob *FulfillmentJobClient
+	// InventoryReservation is the client for interacting with the InventoryReservation builders.
+	InventoryReservation *InventoryReservationClient
+	// Line is the client for interacting with the Line builders.
+	Line *LineClient
 	// Node is the client for interacting with the Node builders.
 	Node *NodeClient
 	// NodeAgentSession is the client for interacting with the NodeAgentSession builders.
 	NodeAgentSession *NodeAgentSessionClient
 	// NodeCapabilitySnapshot is the client for interacting with the NodeCapabilitySnapshot builders.
 	NodeCapabilitySnapshot *NodeCapabilitySnapshotClient
+	// NodeInventoryIP is the client for interacting with the NodeInventoryIP builders.
+	NodeInventoryIP *NodeInventoryIPClient
 	// NodeJob is the client for interacting with the NodeJob builders.
 	NodeJob *NodeJobClient
 	// NodeJobAttempt is the client for interacting with the NodeJobAttempt builders.
@@ -26,6 +42,20 @@ type Tx struct {
 	NodeRuntimeStatus *NodeRuntimeStatusClient
 	// OutboxEvent is the client for interacting with the OutboxEvent builders.
 	OutboxEvent *OutboxEventClient
+	// PaymentOrder is the client for interacting with the PaymentOrder builders.
+	PaymentOrder *PaymentOrderClient
+	// Product is the client for interacting with the Product builders.
+	Product *ProductClient
+	// ProductPrice is the client for interacting with the ProductPrice builders.
+	ProductPrice *ProductPriceClient
+	// ProxyAccount is the client for interacting with the ProxyAccount builders.
+	ProxyAccount *ProxyAccountClient
+	// ProxyOrder is the client for interacting with the ProxyOrder builders.
+	ProxyOrder *ProxyOrderClient
+	// RatePolicy is the client for interacting with the RatePolicy builders.
+	RatePolicy *RatePolicyClient
+	// Region is the client for interacting with the Region builders.
+	Region *RegionClient
 	// RuntimeAccountState is the client for interacting with the RuntimeAccountState builders.
 	RuntimeAccountState *RuntimeAccountStateClient
 	// RuntimeApplyResult is the client for interacting with the RuntimeApplyResult builders.
@@ -34,6 +64,16 @@ type Tx struct {
 	RuntimeChangeLog *RuntimeChangeLogClient
 	// RuntimeLabAccount is the client for interacting with the RuntimeLabAccount builders.
 	RuntimeLabAccount *RuntimeLabAccountClient
+	// Session is the client for interacting with the Session builders.
+	Session *SessionClient
+	// User is the client for interacting with the User builders.
+	User *UserClient
+	// Wallet is the client for interacting with the Wallet builders.
+	Wallet *WalletClient
+	// WalletHold is the client for interacting with the WalletHold builders.
+	WalletHold *WalletHoldClient
+	// WalletLedger is the client for interacting with the WalletLedger builders.
+	WalletLedger *WalletLedgerClient
 
 	// lazily loaded.
 	client     *Client
@@ -165,17 +205,37 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.AdminUser = NewAdminUserClient(tx.config)
+	tx.AuditLog = NewAuditLogClient(tx.config)
+	tx.City = NewCityClient(tx.config)
+	tx.FulfillmentAttempt = NewFulfillmentAttemptClient(tx.config)
+	tx.FulfillmentJob = NewFulfillmentJobClient(tx.config)
+	tx.InventoryReservation = NewInventoryReservationClient(tx.config)
+	tx.Line = NewLineClient(tx.config)
 	tx.Node = NewNodeClient(tx.config)
 	tx.NodeAgentSession = NewNodeAgentSessionClient(tx.config)
 	tx.NodeCapabilitySnapshot = NewNodeCapabilitySnapshotClient(tx.config)
+	tx.NodeInventoryIP = NewNodeInventoryIPClient(tx.config)
 	tx.NodeJob = NewNodeJobClient(tx.config)
 	tx.NodeJobAttempt = NewNodeJobAttemptClient(tx.config)
 	tx.NodeRuntimeStatus = NewNodeRuntimeStatusClient(tx.config)
 	tx.OutboxEvent = NewOutboxEventClient(tx.config)
+	tx.PaymentOrder = NewPaymentOrderClient(tx.config)
+	tx.Product = NewProductClient(tx.config)
+	tx.ProductPrice = NewProductPriceClient(tx.config)
+	tx.ProxyAccount = NewProxyAccountClient(tx.config)
+	tx.ProxyOrder = NewProxyOrderClient(tx.config)
+	tx.RatePolicy = NewRatePolicyClient(tx.config)
+	tx.Region = NewRegionClient(tx.config)
 	tx.RuntimeAccountState = NewRuntimeAccountStateClient(tx.config)
 	tx.RuntimeApplyResult = NewRuntimeApplyResultClient(tx.config)
 	tx.RuntimeChangeLog = NewRuntimeChangeLogClient(tx.config)
 	tx.RuntimeLabAccount = NewRuntimeLabAccountClient(tx.config)
+	tx.Session = NewSessionClient(tx.config)
+	tx.User = NewUserClient(tx.config)
+	tx.Wallet = NewWalletClient(tx.config)
+	tx.WalletHold = NewWalletHoldClient(tx.config)
+	tx.WalletLedger = NewWalletLedgerClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -185,7 +245,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Node.QueryXXX(), the query will be executed
+// applies a query, for example: AdminUser.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

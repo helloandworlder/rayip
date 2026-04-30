@@ -3,12 +3,17 @@ package node
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net"
+	"strings"
 	"time"
 )
 
 type Repository interface {
 	UpsertLease(ctx context.Context, input LeaseInput, now time.Time) (NodeRecord, error)
+	Get(ctx context.Context, nodeID string) (NodeRecord, bool, error)
 	List(ctx context.Context) ([]NodeRecord, error)
+	SaveScanResult(ctx context.Context, nodeID string, result ScanResult) error
 }
 
 type LeaseStore interface {
@@ -20,13 +25,14 @@ type Service struct {
 	repo   Repository
 	leases LeaseStore
 	now    func() time.Time
+	dial   func(ctx context.Context, network, address string) (net.Conn, error)
 }
 
 func NewService(repo Repository, leases LeaseStore, now func() time.Time) *Service {
 	if now == nil {
 		now = time.Now
 	}
-	return &Service{repo: repo, leases: leases, now: now}
+	return &Service{repo: repo, leases: leases, now: now, dial: (&net.Dialer{Timeout: 3 * time.Second}).DialContext}
 }
 
 func (s *Service) RegisterLease(ctx context.Context, input LeaseInput) (Summary, error) {
@@ -47,24 +53,78 @@ func (s *Service) RegisterLease(ctx context.Context, input LeaseInput) (Summary,
 	}
 
 	lease := LeaseSnapshot{
-		NodeID:          record.ID,
-		NodeCode:        record.Code,
-		SessionID:       input.SessionID,
-		APIInstanceID:   input.APIInstanceID,
-		BundleVersion:   input.BundleVersion,
-		AgentVersion:    input.AgentVersion,
-		XrayVersion:     input.XrayVersion,
-		Capabilities:    append([]string(nil), input.Capabilities...),
-		Sequence:        input.Sequence,
-		RenewedAt:       now,
-		ExpiresAt:       now.Add(time.Duration(input.LeaseTTLSeconds) * time.Second),
-		LeaseTTLSeconds: input.LeaseTTLSeconds,
+		NodeID:             record.ID,
+		NodeCode:           record.Code,
+		SessionID:          input.SessionID,
+		APIInstanceID:      input.APIInstanceID,
+		BundleVersion:      input.BundleVersion,
+		AgentVersion:       input.AgentVersion,
+		XrayVersion:        input.XrayVersion,
+		Capabilities:       append([]string(nil), input.Capabilities...),
+		PublicIP:           input.PublicIP,
+		CandidatePublicIPs: append([]string(nil), input.CandidatePublicIPs...),
+		ScanHost:           input.ScanHost,
+		ProbePort:          input.ProbePort,
+		ProbeProtocols:     append([]string(nil), input.ProbeProtocols...),
+		ProbeCheckedAt:     input.ProbeCheckedAt,
+		Sequence:           input.Sequence,
+		RenewedAt:          now,
+		ExpiresAt:          now.Add(time.Duration(input.LeaseTTLSeconds) * time.Second),
+		LeaseTTLSeconds:    input.LeaseTTLSeconds,
 	}
 	if err := s.leases.PutLease(ctx, lease, time.Duration(input.LeaseTTLSeconds)*time.Second); err != nil {
 		return Summary{}, err
 	}
 
 	return summaryFrom(record, lease, now), nil
+}
+
+func (s *Service) ScanNode(ctx context.Context, nodeID string) (ScanResult, error) {
+	record, ok, err := s.repo.Get(ctx, nodeID)
+	if err != nil {
+		return ScanResult{}, err
+	}
+	if !ok {
+		return ScanResult{}, errors.New("node not found")
+	}
+	targetHosts := scanTargets(record)
+	if len(targetHosts) == 0 || record.ProbePort == 0 {
+		result := ScanResult{
+			NodeID:    record.ID,
+			Target:    fmt.Sprintf("%s:%d", firstNonEmpty(targetHosts...), record.ProbePort),
+			Status:    "FAILED",
+			Error:     "node has no candidate public ip or probe port",
+			ScannedAt: s.now().UTC(),
+		}
+		_ = s.repo.SaveScanResult(ctx, record.ID, result)
+		return result, nil
+	}
+	start := s.now().UTC()
+	result := ScanResult{NodeID: record.ID, Status: "UNREACHABLE", ScannedAt: start}
+	errorsByTarget := []string{}
+	for _, targetHost := range targetHosts {
+		target := net.JoinHostPort(targetHost, fmt.Sprintf("%d", record.ProbePort))
+		result.Target = target
+		conn, err := s.dial(ctx, "tcp", target)
+		if err == nil {
+			result.Status = "REACHABLE"
+			result.Error = ""
+			result.Latency = s.now().UTC().Sub(start)
+			result.LatencyMs = result.Latency.Milliseconds()
+			_ = conn.Close()
+			break
+		}
+		errorsByTarget = append(errorsByTarget, target+": "+err.Error())
+	}
+	if result.Status != "REACHABLE" {
+		result.Error = strings.Join(errorsByTarget, "; ")
+		result.Latency = s.now().UTC().Sub(start)
+		result.LatencyMs = result.Latency.Milliseconds()
+	}
+	if saveErr := s.repo.SaveScanResult(ctx, record.ID, result); saveErr != nil {
+		return result, saveErr
+	}
+	return result, nil
 }
 
 func (s *Service) ListNodes(ctx context.Context) ([]Summary, error) {
@@ -82,12 +142,18 @@ func (s *Service) ListNodes(ctx context.Context) ([]Summary, error) {
 		}
 		if !ok {
 			lease = LeaseSnapshot{
-				NodeID:        record.ID,
-				NodeCode:      record.Code,
-				BundleVersion: record.BundleVersion,
-				AgentVersion:  record.AgentVersion,
-				XrayVersion:   record.XrayVersion,
-				Capabilities:  record.Capabilities,
+				NodeID:             record.ID,
+				NodeCode:           record.Code,
+				BundleVersion:      record.BundleVersion,
+				AgentVersion:       record.AgentVersion,
+				XrayVersion:        record.XrayVersion,
+				Capabilities:       record.Capabilities,
+				PublicIP:           record.PublicIP,
+				CandidatePublicIPs: record.CandidatePublicIPs,
+				ScanHost:           record.ScanHost,
+				ProbePort:          record.ProbePort,
+				ProbeProtocols:     record.ProbeProtocols,
+				ProbeCheckedAt:     record.ProbeCheckedAt,
 			}
 		}
 		summaries = append(summaries, summaryFrom(record, lease, now))
@@ -101,18 +167,45 @@ func summaryFrom(record NodeRecord, lease LeaseSnapshot, now time.Time) Summary 
 		status = StatusOnline
 	}
 	return Summary{
-		ID:             record.ID,
-		Code:           record.Code,
-		Status:         status,
-		LastOnlineAt:   record.LastOnlineAt,
-		BundleVersion:  firstNonEmpty(lease.BundleVersion, record.BundleVersion),
-		AgentVersion:   firstNonEmpty(lease.AgentVersion, record.AgentVersion),
-		XrayVersion:    firstNonEmpty(lease.XrayVersion, record.XrayVersion),
-		APIInstanceID:  lease.APIInstanceID,
-		SessionID:      lease.SessionID,
-		Capabilities:   append([]string(nil), firstNonNil(lease.Capabilities, record.Capabilities)...),
-		LeaseExpiresAt: lease.ExpiresAt,
+		ID:                 record.ID,
+		Code:               record.Code,
+		Status:             status,
+		LastOnlineAt:       record.LastOnlineAt,
+		BundleVersion:      firstNonEmpty(lease.BundleVersion, record.BundleVersion),
+		AgentVersion:       firstNonEmpty(lease.AgentVersion, record.AgentVersion),
+		XrayVersion:        firstNonEmpty(lease.XrayVersion, record.XrayVersion),
+		APIInstanceID:      lease.APIInstanceID,
+		SessionID:          lease.SessionID,
+		Capabilities:       append([]string(nil), firstNonNil(lease.Capabilities, record.Capabilities)...),
+		PublicIP:           firstNonEmpty(lease.PublicIP, record.PublicIP),
+		CandidatePublicIPs: append([]string(nil), firstNonNil(lease.CandidatePublicIPs, record.CandidatePublicIPs)...),
+		ScanHost:           firstNonEmpty(lease.ScanHost, record.ScanHost),
+		ProbePort:          firstNonZero(lease.ProbePort, record.ProbePort),
+		ProbeProtocols:     append([]string(nil), firstNonNil(lease.ProbeProtocols, record.ProbeProtocols)...),
+		ProbeCheckedAt:     firstNonZeroTime(lease.ProbeCheckedAt, record.ProbeCheckedAt),
+		LastScanStatus:     record.LastScanStatus,
+		LastScanError:      record.LastScanError,
+		LastScanLatencyMs:  record.LastScanLatency.Milliseconds(),
+		LastScanAt:         record.LastScanAt,
+		LeaseExpiresAt:     lease.ExpiresAt,
 	}
+}
+
+func (s *Service) SetDialerForTest(dial func(ctx context.Context, network, address string) (net.Conn, error)) {
+	s.dial = dial
+}
+
+func scanTargets(record NodeRecord) []string {
+	if len(record.CandidatePublicIPs) > 0 {
+		return append([]string(nil), record.CandidatePublicIPs...)
+	}
+	if record.ScanHost != "" {
+		return []string{record.ScanHost}
+	}
+	if record.PublicIP != "" {
+		return []string{record.PublicIP}
+	}
+	return nil
 }
 
 func firstNonEmpty(values ...string) string {
@@ -131,4 +224,22 @@ func firstNonNil[T any](values ...[]T) []T {
 		}
 	}
 	return nil
+}
+
+func firstNonZero(values ...uint32) uint32 {
+	for _, value := range values {
+		if value != 0 {
+			return value
+		}
+	}
+	return 0
+}
+
+func firstNonZeroTime(values ...time.Time) time.Time {
+	for _, value := range values {
+		if !value.IsZero() {
+			return value
+		}
+	}
+	return time.Time{}
 }

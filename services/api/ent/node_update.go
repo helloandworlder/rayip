@@ -111,6 +111,168 @@ func (_u *NodeUpdate) AppendCapabilities(v []string) *NodeUpdate {
 	return _u
 }
 
+// SetPublicIP sets the "public_ip" field.
+func (_u *NodeUpdate) SetPublicIP(v string) *NodeUpdate {
+	_u.mutation.SetPublicIP(v)
+	return _u
+}
+
+// SetNillablePublicIP sets the "public_ip" field if the given value is not nil.
+func (_u *NodeUpdate) SetNillablePublicIP(v *string) *NodeUpdate {
+	if v != nil {
+		_u.SetPublicIP(*v)
+	}
+	return _u
+}
+
+// SetCandidatePublicIps sets the "candidate_public_ips" field.
+func (_u *NodeUpdate) SetCandidatePublicIps(v []string) *NodeUpdate {
+	_u.mutation.SetCandidatePublicIps(v)
+	return _u
+}
+
+// AppendCandidatePublicIps appends value to the "candidate_public_ips" field.
+func (_u *NodeUpdate) AppendCandidatePublicIps(v []string) *NodeUpdate {
+	_u.mutation.AppendCandidatePublicIps(v)
+	return _u
+}
+
+// SetScanHost sets the "scan_host" field.
+func (_u *NodeUpdate) SetScanHost(v string) *NodeUpdate {
+	_u.mutation.SetScanHost(v)
+	return _u
+}
+
+// SetNillableScanHost sets the "scan_host" field if the given value is not nil.
+func (_u *NodeUpdate) SetNillableScanHost(v *string) *NodeUpdate {
+	if v != nil {
+		_u.SetScanHost(*v)
+	}
+	return _u
+}
+
+// SetProbePort sets the "probe_port" field.
+func (_u *NodeUpdate) SetProbePort(v uint32) *NodeUpdate {
+	_u.mutation.ResetProbePort()
+	_u.mutation.SetProbePort(v)
+	return _u
+}
+
+// SetNillableProbePort sets the "probe_port" field if the given value is not nil.
+func (_u *NodeUpdate) SetNillableProbePort(v *uint32) *NodeUpdate {
+	if v != nil {
+		_u.SetProbePort(*v)
+	}
+	return _u
+}
+
+// AddProbePort adds value to the "probe_port" field.
+func (_u *NodeUpdate) AddProbePort(v int32) *NodeUpdate {
+	_u.mutation.AddProbePort(v)
+	return _u
+}
+
+// SetProbeProtocols sets the "probe_protocols" field.
+func (_u *NodeUpdate) SetProbeProtocols(v []string) *NodeUpdate {
+	_u.mutation.SetProbeProtocols(v)
+	return _u
+}
+
+// AppendProbeProtocols appends value to the "probe_protocols" field.
+func (_u *NodeUpdate) AppendProbeProtocols(v []string) *NodeUpdate {
+	_u.mutation.AppendProbeProtocols(v)
+	return _u
+}
+
+// SetProbeCheckedAt sets the "probe_checked_at" field.
+func (_u *NodeUpdate) SetProbeCheckedAt(v time.Time) *NodeUpdate {
+	_u.mutation.SetProbeCheckedAt(v)
+	return _u
+}
+
+// SetNillableProbeCheckedAt sets the "probe_checked_at" field if the given value is not nil.
+func (_u *NodeUpdate) SetNillableProbeCheckedAt(v *time.Time) *NodeUpdate {
+	if v != nil {
+		_u.SetProbeCheckedAt(*v)
+	}
+	return _u
+}
+
+// ClearProbeCheckedAt clears the value of the "probe_checked_at" field.
+func (_u *NodeUpdate) ClearProbeCheckedAt() *NodeUpdate {
+	_u.mutation.ClearProbeCheckedAt()
+	return _u
+}
+
+// SetLastScanStatus sets the "last_scan_status" field.
+func (_u *NodeUpdate) SetLastScanStatus(v string) *NodeUpdate {
+	_u.mutation.SetLastScanStatus(v)
+	return _u
+}
+
+// SetNillableLastScanStatus sets the "last_scan_status" field if the given value is not nil.
+func (_u *NodeUpdate) SetNillableLastScanStatus(v *string) *NodeUpdate {
+	if v != nil {
+		_u.SetLastScanStatus(*v)
+	}
+	return _u
+}
+
+// SetLastScanError sets the "last_scan_error" field.
+func (_u *NodeUpdate) SetLastScanError(v string) *NodeUpdate {
+	_u.mutation.SetLastScanError(v)
+	return _u
+}
+
+// SetNillableLastScanError sets the "last_scan_error" field if the given value is not nil.
+func (_u *NodeUpdate) SetNillableLastScanError(v *string) *NodeUpdate {
+	if v != nil {
+		_u.SetLastScanError(*v)
+	}
+	return _u
+}
+
+// SetLastScanLatencyMs sets the "last_scan_latency_ms" field.
+func (_u *NodeUpdate) SetLastScanLatencyMs(v int64) *NodeUpdate {
+	_u.mutation.ResetLastScanLatencyMs()
+	_u.mutation.SetLastScanLatencyMs(v)
+	return _u
+}
+
+// SetNillableLastScanLatencyMs sets the "last_scan_latency_ms" field if the given value is not nil.
+func (_u *NodeUpdate) SetNillableLastScanLatencyMs(v *int64) *NodeUpdate {
+	if v != nil {
+		_u.SetLastScanLatencyMs(*v)
+	}
+	return _u
+}
+
+// AddLastScanLatencyMs adds value to the "last_scan_latency_ms" field.
+func (_u *NodeUpdate) AddLastScanLatencyMs(v int64) *NodeUpdate {
+	_u.mutation.AddLastScanLatencyMs(v)
+	return _u
+}
+
+// SetLastScanAt sets the "last_scan_at" field.
+func (_u *NodeUpdate) SetLastScanAt(v time.Time) *NodeUpdate {
+	_u.mutation.SetLastScanAt(v)
+	return _u
+}
+
+// SetNillableLastScanAt sets the "last_scan_at" field if the given value is not nil.
+func (_u *NodeUpdate) SetNillableLastScanAt(v *time.Time) *NodeUpdate {
+	if v != nil {
+		_u.SetLastScanAt(*v)
+	}
+	return _u
+}
+
+// ClearLastScanAt clears the value of the "last_scan_at" field.
+func (_u *NodeUpdate) ClearLastScanAt() *NodeUpdate {
+	_u.mutation.ClearLastScanAt()
+	return _u
+}
+
 // SetLastOnlineAt sets the "last_online_at" field.
 func (_u *NodeUpdate) SetLastOnlineAt(v time.Time) *NodeUpdate {
 	_u.mutation.SetLastOnlineAt(v)
@@ -209,6 +371,58 @@ func (_u *NodeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, node.FieldCapabilities, value)
 		})
+	}
+	if value, ok := _u.mutation.PublicIP(); ok {
+		_spec.SetField(node.FieldPublicIP, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.CandidatePublicIps(); ok {
+		_spec.SetField(node.FieldCandidatePublicIps, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedCandidatePublicIps(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, node.FieldCandidatePublicIps, value)
+		})
+	}
+	if value, ok := _u.mutation.ScanHost(); ok {
+		_spec.SetField(node.FieldScanHost, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ProbePort(); ok {
+		_spec.SetField(node.FieldProbePort, field.TypeUint32, value)
+	}
+	if value, ok := _u.mutation.AddedProbePort(); ok {
+		_spec.AddField(node.FieldProbePort, field.TypeUint32, value)
+	}
+	if value, ok := _u.mutation.ProbeProtocols(); ok {
+		_spec.SetField(node.FieldProbeProtocols, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedProbeProtocols(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, node.FieldProbeProtocols, value)
+		})
+	}
+	if value, ok := _u.mutation.ProbeCheckedAt(); ok {
+		_spec.SetField(node.FieldProbeCheckedAt, field.TypeTime, value)
+	}
+	if _u.mutation.ProbeCheckedAtCleared() {
+		_spec.ClearField(node.FieldProbeCheckedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.LastScanStatus(); ok {
+		_spec.SetField(node.FieldLastScanStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.LastScanError(); ok {
+		_spec.SetField(node.FieldLastScanError, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.LastScanLatencyMs(); ok {
+		_spec.SetField(node.FieldLastScanLatencyMs, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedLastScanLatencyMs(); ok {
+		_spec.AddField(node.FieldLastScanLatencyMs, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.LastScanAt(); ok {
+		_spec.SetField(node.FieldLastScanAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastScanAtCleared() {
+		_spec.ClearField(node.FieldLastScanAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.LastOnlineAt(); ok {
 		_spec.SetField(node.FieldLastOnlineAt, field.TypeTime, value)
@@ -318,6 +532,168 @@ func (_u *NodeUpdateOne) SetCapabilities(v []string) *NodeUpdateOne {
 // AppendCapabilities appends value to the "capabilities" field.
 func (_u *NodeUpdateOne) AppendCapabilities(v []string) *NodeUpdateOne {
 	_u.mutation.AppendCapabilities(v)
+	return _u
+}
+
+// SetPublicIP sets the "public_ip" field.
+func (_u *NodeUpdateOne) SetPublicIP(v string) *NodeUpdateOne {
+	_u.mutation.SetPublicIP(v)
+	return _u
+}
+
+// SetNillablePublicIP sets the "public_ip" field if the given value is not nil.
+func (_u *NodeUpdateOne) SetNillablePublicIP(v *string) *NodeUpdateOne {
+	if v != nil {
+		_u.SetPublicIP(*v)
+	}
+	return _u
+}
+
+// SetCandidatePublicIps sets the "candidate_public_ips" field.
+func (_u *NodeUpdateOne) SetCandidatePublicIps(v []string) *NodeUpdateOne {
+	_u.mutation.SetCandidatePublicIps(v)
+	return _u
+}
+
+// AppendCandidatePublicIps appends value to the "candidate_public_ips" field.
+func (_u *NodeUpdateOne) AppendCandidatePublicIps(v []string) *NodeUpdateOne {
+	_u.mutation.AppendCandidatePublicIps(v)
+	return _u
+}
+
+// SetScanHost sets the "scan_host" field.
+func (_u *NodeUpdateOne) SetScanHost(v string) *NodeUpdateOne {
+	_u.mutation.SetScanHost(v)
+	return _u
+}
+
+// SetNillableScanHost sets the "scan_host" field if the given value is not nil.
+func (_u *NodeUpdateOne) SetNillableScanHost(v *string) *NodeUpdateOne {
+	if v != nil {
+		_u.SetScanHost(*v)
+	}
+	return _u
+}
+
+// SetProbePort sets the "probe_port" field.
+func (_u *NodeUpdateOne) SetProbePort(v uint32) *NodeUpdateOne {
+	_u.mutation.ResetProbePort()
+	_u.mutation.SetProbePort(v)
+	return _u
+}
+
+// SetNillableProbePort sets the "probe_port" field if the given value is not nil.
+func (_u *NodeUpdateOne) SetNillableProbePort(v *uint32) *NodeUpdateOne {
+	if v != nil {
+		_u.SetProbePort(*v)
+	}
+	return _u
+}
+
+// AddProbePort adds value to the "probe_port" field.
+func (_u *NodeUpdateOne) AddProbePort(v int32) *NodeUpdateOne {
+	_u.mutation.AddProbePort(v)
+	return _u
+}
+
+// SetProbeProtocols sets the "probe_protocols" field.
+func (_u *NodeUpdateOne) SetProbeProtocols(v []string) *NodeUpdateOne {
+	_u.mutation.SetProbeProtocols(v)
+	return _u
+}
+
+// AppendProbeProtocols appends value to the "probe_protocols" field.
+func (_u *NodeUpdateOne) AppendProbeProtocols(v []string) *NodeUpdateOne {
+	_u.mutation.AppendProbeProtocols(v)
+	return _u
+}
+
+// SetProbeCheckedAt sets the "probe_checked_at" field.
+func (_u *NodeUpdateOne) SetProbeCheckedAt(v time.Time) *NodeUpdateOne {
+	_u.mutation.SetProbeCheckedAt(v)
+	return _u
+}
+
+// SetNillableProbeCheckedAt sets the "probe_checked_at" field if the given value is not nil.
+func (_u *NodeUpdateOne) SetNillableProbeCheckedAt(v *time.Time) *NodeUpdateOne {
+	if v != nil {
+		_u.SetProbeCheckedAt(*v)
+	}
+	return _u
+}
+
+// ClearProbeCheckedAt clears the value of the "probe_checked_at" field.
+func (_u *NodeUpdateOne) ClearProbeCheckedAt() *NodeUpdateOne {
+	_u.mutation.ClearProbeCheckedAt()
+	return _u
+}
+
+// SetLastScanStatus sets the "last_scan_status" field.
+func (_u *NodeUpdateOne) SetLastScanStatus(v string) *NodeUpdateOne {
+	_u.mutation.SetLastScanStatus(v)
+	return _u
+}
+
+// SetNillableLastScanStatus sets the "last_scan_status" field if the given value is not nil.
+func (_u *NodeUpdateOne) SetNillableLastScanStatus(v *string) *NodeUpdateOne {
+	if v != nil {
+		_u.SetLastScanStatus(*v)
+	}
+	return _u
+}
+
+// SetLastScanError sets the "last_scan_error" field.
+func (_u *NodeUpdateOne) SetLastScanError(v string) *NodeUpdateOne {
+	_u.mutation.SetLastScanError(v)
+	return _u
+}
+
+// SetNillableLastScanError sets the "last_scan_error" field if the given value is not nil.
+func (_u *NodeUpdateOne) SetNillableLastScanError(v *string) *NodeUpdateOne {
+	if v != nil {
+		_u.SetLastScanError(*v)
+	}
+	return _u
+}
+
+// SetLastScanLatencyMs sets the "last_scan_latency_ms" field.
+func (_u *NodeUpdateOne) SetLastScanLatencyMs(v int64) *NodeUpdateOne {
+	_u.mutation.ResetLastScanLatencyMs()
+	_u.mutation.SetLastScanLatencyMs(v)
+	return _u
+}
+
+// SetNillableLastScanLatencyMs sets the "last_scan_latency_ms" field if the given value is not nil.
+func (_u *NodeUpdateOne) SetNillableLastScanLatencyMs(v *int64) *NodeUpdateOne {
+	if v != nil {
+		_u.SetLastScanLatencyMs(*v)
+	}
+	return _u
+}
+
+// AddLastScanLatencyMs adds value to the "last_scan_latency_ms" field.
+func (_u *NodeUpdateOne) AddLastScanLatencyMs(v int64) *NodeUpdateOne {
+	_u.mutation.AddLastScanLatencyMs(v)
+	return _u
+}
+
+// SetLastScanAt sets the "last_scan_at" field.
+func (_u *NodeUpdateOne) SetLastScanAt(v time.Time) *NodeUpdateOne {
+	_u.mutation.SetLastScanAt(v)
+	return _u
+}
+
+// SetNillableLastScanAt sets the "last_scan_at" field if the given value is not nil.
+func (_u *NodeUpdateOne) SetNillableLastScanAt(v *time.Time) *NodeUpdateOne {
+	if v != nil {
+		_u.SetLastScanAt(*v)
+	}
+	return _u
+}
+
+// ClearLastScanAt clears the value of the "last_scan_at" field.
+func (_u *NodeUpdateOne) ClearLastScanAt() *NodeUpdateOne {
+	_u.mutation.ClearLastScanAt()
 	return _u
 }
 
@@ -449,6 +825,58 @@ func (_u *NodeUpdateOne) sqlSave(ctx context.Context) (_node *Node, err error) {
 		_spec.AddModifier(func(u *sql.UpdateBuilder) {
 			sqljson.Append(u, node.FieldCapabilities, value)
 		})
+	}
+	if value, ok := _u.mutation.PublicIP(); ok {
+		_spec.SetField(node.FieldPublicIP, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.CandidatePublicIps(); ok {
+		_spec.SetField(node.FieldCandidatePublicIps, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedCandidatePublicIps(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, node.FieldCandidatePublicIps, value)
+		})
+	}
+	if value, ok := _u.mutation.ScanHost(); ok {
+		_spec.SetField(node.FieldScanHost, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.ProbePort(); ok {
+		_spec.SetField(node.FieldProbePort, field.TypeUint32, value)
+	}
+	if value, ok := _u.mutation.AddedProbePort(); ok {
+		_spec.AddField(node.FieldProbePort, field.TypeUint32, value)
+	}
+	if value, ok := _u.mutation.ProbeProtocols(); ok {
+		_spec.SetField(node.FieldProbeProtocols, field.TypeJSON, value)
+	}
+	if value, ok := _u.mutation.AppendedProbeProtocols(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, node.FieldProbeProtocols, value)
+		})
+	}
+	if value, ok := _u.mutation.ProbeCheckedAt(); ok {
+		_spec.SetField(node.FieldProbeCheckedAt, field.TypeTime, value)
+	}
+	if _u.mutation.ProbeCheckedAtCleared() {
+		_spec.ClearField(node.FieldProbeCheckedAt, field.TypeTime)
+	}
+	if value, ok := _u.mutation.LastScanStatus(); ok {
+		_spec.SetField(node.FieldLastScanStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.LastScanError(); ok {
+		_spec.SetField(node.FieldLastScanError, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.LastScanLatencyMs(); ok {
+		_spec.SetField(node.FieldLastScanLatencyMs, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.AddedLastScanLatencyMs(); ok {
+		_spec.AddField(node.FieldLastScanLatencyMs, field.TypeInt64, value)
+	}
+	if value, ok := _u.mutation.LastScanAt(); ok {
+		_spec.SetField(node.FieldLastScanAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastScanAtCleared() {
+		_spec.ClearField(node.FieldLastScanAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.LastOnlineAt(); ok {
 		_spec.SetField(node.FieldLastOnlineAt, field.TypeTime, value)

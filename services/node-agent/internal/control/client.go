@@ -33,6 +33,7 @@ func NewClient(cfg config.Config, endpoint *runtime.Endpoint, manager *runtime.M
 				ManifestPath: cfg.Runtime.ManifestPath,
 				CoreMode:     cfg.Runtime.CoreMode,
 				XrayGRPCAddr: endpoint.GRPCAddr(),
+				BinaryPath:   cfg.Runtime.XrayBinaryPath,
 			})
 		},
 		log: log,
@@ -71,6 +72,16 @@ func (c *Client) connectOnce(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	probeInfo, probeErr := probePublicReachability(c.cfg.Probe, time.Now)
+	if probeErr != nil {
+		c.log.Warn("public reachability probe failed", zap.Error(probeErr))
+		probeInfo = &controlv1.NodeProbeObservation{
+			ProbePort:          c.cfg.Probe.Port,
+			ProbeProtocols:     append([]string(nil), c.cfg.Probe.Protocols...),
+			CheckedAtUnixMilli: time.Now().UTC().UnixMilli(),
+			ScanHost:           c.cfg.Probe.ScanHost,
+		}
+	}
 	sendMu.Lock()
 	if err := stream.Send(&controlv1.AgentEnvelope{
 		RequestId: uuid.NewString(),
@@ -84,6 +95,7 @@ func (c *Client) connectOnce(ctx context.Context) error {
 			Sequence:        seq,
 			LeaseTtlSeconds: int64(c.cfg.Lease.TTL / time.Second),
 			Runtime:         runtime.ObservationToProto(runtimeInfo),
+			Probe:           probeInfo,
 		}},
 	}); err != nil {
 		sendMu.Unlock()
@@ -122,6 +134,16 @@ func (c *Client) connectOnce(ctx context.Context) error {
 			if discoverErr != nil {
 				return discoverErr
 			}
+			probeInfo, probeErr := probePublicReachability(c.cfg.Probe, time.Now)
+			if probeErr != nil {
+				c.log.Warn("public reachability probe failed", zap.Error(probeErr))
+				probeInfo = &controlv1.NodeProbeObservation{
+					ProbePort:          c.cfg.Probe.Port,
+					ProbeProtocols:     append([]string(nil), c.cfg.Probe.Protocols...),
+					CheckedAtUnixMilli: time.Now().UTC().UnixMilli(),
+					ScanHost:           c.cfg.Probe.ScanHost,
+				}
+			}
 			sendMu.Lock()
 			sendErr := stream.Send(&controlv1.AgentEnvelope{
 				RequestId: uuid.NewString(),
@@ -136,6 +158,7 @@ func (c *Client) connectOnce(ctx context.Context) error {
 					Sequence:        seq,
 					LeaseTtlSeconds: int64(c.cfg.Lease.TTL / time.Second),
 					Runtime:         runtime.ObservationToProto(runtimeInfo),
+					Probe:           probeInfo,
 				}},
 			})
 			sendMu.Unlock()

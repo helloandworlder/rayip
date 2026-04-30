@@ -5,6 +5,7 @@ import (
 
 	"github.com/rayip/rayip/services/api/internal/bus"
 	"github.com/rayip/rayip/services/api/internal/cache"
+	"github.com/rayip/rayip/services/api/internal/commercial"
 	"github.com/rayip/rayip/services/api/internal/config"
 	"github.com/rayip/rayip/services/api/internal/db"
 	"github.com/rayip/rayip/services/api/internal/grpcapi"
@@ -27,31 +28,41 @@ func New() *fx.App {
 			cache.NewRedis,
 			bus.NewNATS,
 			bus.NewRuntimePublisher,
+			node.NewNATSScanPublisher,
 			func(p *bus.RuntimePublisher) runtimecontrol.OutboxPublisher { return p },
+			func(p *node.NATSPublisher) node.ScanPublisher { return p },
 			fx.Annotate(node.NewEntRepository, fx.As(new(node.Repository))),
 			fx.Annotate(node.NewRedisLeaseStore, fx.As(new(node.LeaseStore))),
 			fx.Annotate(noderuntime.NewEntRepository, fx.As(new(noderuntime.Repository))),
 			fx.Annotate(runtimecontrol.NewEntRepository, fx.As(new(runtimecontrol.Repository))),
 			fx.Annotate(runtimelab.NewEntRepository, fx.As(new(runtimelab.Repository))),
+			fx.Annotate(commercial.NewEntRepository, fx.As(new(commercial.Repository))),
+			commercial.NewRuntimeControlAdapter,
+			func(a *commercial.RuntimeControlAdapter) commercial.RuntimeWriter { return a },
 			grpcapi.NewRuntimeDispatcher,
 			func(d *grpcapi.RuntimeDispatcher) runtimelab.Dispatcher { return d },
 			func(d *grpcapi.RuntimeDispatcher) runtimecontrol.RuntimeDispatcher { return d },
 			func() func() time.Time { return time.Now },
 			node.NewService,
+			node.NewScanScheduler,
+			node.NewScanWorker,
 			noderuntime.NewService,
 			runtimecontrol.NewService,
 			runtimecontrol.NewWorker,
 			runtimecontrol.NewReconcilePlanner,
 			runtimelab.NewService,
+			commercial.NewService,
 			httpapi.NewServer,
 			grpcapi.NewControlServer,
 			grpcapi.NewGRPCServer,
 		),
 		fx.Invoke(
 			db.RegisterLifecycle,
+			commercial.RegisterLifecycle,
 			cache.RegisterLifecycle,
 			bus.RegisterLifecycle,
 			runtimecontrol.RegisterRuntimePipelineLifecycle,
+			node.RegisterScanPipelineLifecycle,
 			httpapi.RegisterLifecycle,
 			grpcapi.RegisterLifecycle,
 		),

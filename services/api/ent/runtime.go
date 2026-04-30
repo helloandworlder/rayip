@@ -5,24 +5,152 @@ package ent
 import (
 	"time"
 
+	"github.com/rayip/rayip/services/api/ent/adminuser"
+	"github.com/rayip/rayip/services/api/ent/auditlog"
+	"github.com/rayip/rayip/services/api/ent/city"
+	"github.com/rayip/rayip/services/api/ent/fulfillmentattempt"
+	"github.com/rayip/rayip/services/api/ent/fulfillmentjob"
+	"github.com/rayip/rayip/services/api/ent/inventoryreservation"
+	"github.com/rayip/rayip/services/api/ent/line"
 	"github.com/rayip/rayip/services/api/ent/node"
 	"github.com/rayip/rayip/services/api/ent/nodeagentsession"
 	"github.com/rayip/rayip/services/api/ent/nodecapabilitysnapshot"
+	"github.com/rayip/rayip/services/api/ent/nodeinventoryip"
 	"github.com/rayip/rayip/services/api/ent/nodejob"
 	"github.com/rayip/rayip/services/api/ent/nodejobattempt"
 	"github.com/rayip/rayip/services/api/ent/noderuntimestatus"
 	"github.com/rayip/rayip/services/api/ent/outboxevent"
+	"github.com/rayip/rayip/services/api/ent/paymentorder"
+	"github.com/rayip/rayip/services/api/ent/product"
+	"github.com/rayip/rayip/services/api/ent/productprice"
+	"github.com/rayip/rayip/services/api/ent/proxyaccount"
+	"github.com/rayip/rayip/services/api/ent/proxyorder"
+	"github.com/rayip/rayip/services/api/ent/ratepolicy"
+	"github.com/rayip/rayip/services/api/ent/region"
 	"github.com/rayip/rayip/services/api/ent/runtimeaccountstate"
 	"github.com/rayip/rayip/services/api/ent/runtimeapplyresult"
 	"github.com/rayip/rayip/services/api/ent/runtimechangelog"
 	"github.com/rayip/rayip/services/api/ent/runtimelabaccount"
 	"github.com/rayip/rayip/services/api/ent/schema"
+	"github.com/rayip/rayip/services/api/ent/session"
+	"github.com/rayip/rayip/services/api/ent/user"
+	"github.com/rayip/rayip/services/api/ent/wallet"
+	"github.com/rayip/rayip/services/api/ent/wallethold"
+	"github.com/rayip/rayip/services/api/ent/walletledger"
 )
 
 // The init function reads all schema descriptors with runtime code
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	adminuserFields := schema.AdminUser{}.Fields()
+	_ = adminuserFields
+	// adminuserDescRole is the schema descriptor for role field.
+	adminuserDescRole := adminuserFields[3].Descriptor()
+	// adminuser.DefaultRole holds the default value on creation for the role field.
+	adminuser.DefaultRole = adminuserDescRole.Default.(string)
+	// adminuserDescCreatedAt is the schema descriptor for created_at field.
+	adminuserDescCreatedAt := adminuserFields[4].Descriptor()
+	// adminuser.DefaultCreatedAt holds the default value on creation for the created_at field.
+	adminuser.DefaultCreatedAt = adminuserDescCreatedAt.Default.(func() time.Time)
+	// adminuserDescUpdatedAt is the schema descriptor for updated_at field.
+	adminuserDescUpdatedAt := adminuserFields[5].Descriptor()
+	// adminuser.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	adminuser.DefaultUpdatedAt = adminuserDescUpdatedAt.Default.(func() time.Time)
+	// adminuser.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	adminuser.UpdateDefaultUpdatedAt = adminuserDescUpdatedAt.UpdateDefault.(func() time.Time)
+	auditlogFields := schema.AuditLog{}.Fields()
+	_ = auditlogFields
+	// auditlogDescActorID is the schema descriptor for actor_id field.
+	auditlogDescActorID := auditlogFields[1].Descriptor()
+	// auditlog.DefaultActorID holds the default value on creation for the actor_id field.
+	auditlog.DefaultActorID = auditlogDescActorID.Default.(string)
+	// auditlogDescActorType is the schema descriptor for actor_type field.
+	auditlogDescActorType := auditlogFields[2].Descriptor()
+	// auditlog.DefaultActorType holds the default value on creation for the actor_type field.
+	auditlog.DefaultActorType = auditlogDescActorType.Default.(string)
+	// auditlogDescTargetID is the schema descriptor for target_id field.
+	auditlogDescTargetID := auditlogFields[4].Descriptor()
+	// auditlog.DefaultTargetID holds the default value on creation for the target_id field.
+	auditlog.DefaultTargetID = auditlogDescTargetID.Default.(string)
+	// auditlogDescMetadata is the schema descriptor for metadata field.
+	auditlogDescMetadata := auditlogFields[5].Descriptor()
+	// auditlog.DefaultMetadata holds the default value on creation for the metadata field.
+	auditlog.DefaultMetadata = auditlogDescMetadata.Default.(map[string]interface{})
+	// auditlogDescCreatedAt is the schema descriptor for created_at field.
+	auditlogDescCreatedAt := auditlogFields[6].Descriptor()
+	// auditlog.DefaultCreatedAt holds the default value on creation for the created_at field.
+	auditlog.DefaultCreatedAt = auditlogDescCreatedAt.Default.(func() time.Time)
+	cityFields := schema.City{}.Fields()
+	_ = cityFields
+	// cityDescCreatedAt is the schema descriptor for created_at field.
+	cityDescCreatedAt := cityFields[3].Descriptor()
+	// city.DefaultCreatedAt holds the default value on creation for the created_at field.
+	city.DefaultCreatedAt = cityDescCreatedAt.Default.(func() time.Time)
+	// cityDescUpdatedAt is the schema descriptor for updated_at field.
+	cityDescUpdatedAt := cityFields[4].Descriptor()
+	// city.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	city.DefaultUpdatedAt = cityDescUpdatedAt.Default.(func() time.Time)
+	// city.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	city.UpdateDefaultUpdatedAt = cityDescUpdatedAt.UpdateDefault.(func() time.Time)
+	fulfillmentattemptFields := schema.FulfillmentAttempt{}.Fields()
+	_ = fulfillmentattemptFields
+	// fulfillmentattemptDescError is the schema descriptor for error field.
+	fulfillmentattemptDescError := fulfillmentattemptFields[3].Descriptor()
+	// fulfillmentattempt.DefaultError holds the default value on creation for the error field.
+	fulfillmentattempt.DefaultError = fulfillmentattemptDescError.Default.(string)
+	// fulfillmentattemptDescCreatedAt is the schema descriptor for created_at field.
+	fulfillmentattemptDescCreatedAt := fulfillmentattemptFields[4].Descriptor()
+	// fulfillmentattempt.DefaultCreatedAt holds the default value on creation for the created_at field.
+	fulfillmentattempt.DefaultCreatedAt = fulfillmentattemptDescCreatedAt.Default.(func() time.Time)
+	fulfillmentjobFields := schema.FulfillmentJob{}.Fields()
+	_ = fulfillmentjobFields
+	// fulfillmentjobDescErrorDetail is the schema descriptor for error_detail field.
+	fulfillmentjobDescErrorDetail := fulfillmentjobFields[4].Descriptor()
+	// fulfillmentjob.DefaultErrorDetail holds the default value on creation for the error_detail field.
+	fulfillmentjob.DefaultErrorDetail = fulfillmentjobDescErrorDetail.Default.(string)
+	// fulfillmentjobDescCreatedAt is the schema descriptor for created_at field.
+	fulfillmentjobDescCreatedAt := fulfillmentjobFields[5].Descriptor()
+	// fulfillmentjob.DefaultCreatedAt holds the default value on creation for the created_at field.
+	fulfillmentjob.DefaultCreatedAt = fulfillmentjobDescCreatedAt.Default.(func() time.Time)
+	// fulfillmentjobDescUpdatedAt is the schema descriptor for updated_at field.
+	fulfillmentjobDescUpdatedAt := fulfillmentjobFields[6].Descriptor()
+	// fulfillmentjob.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	fulfillmentjob.DefaultUpdatedAt = fulfillmentjobDescUpdatedAt.Default.(func() time.Time)
+	// fulfillmentjob.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	fulfillmentjob.UpdateDefaultUpdatedAt = fulfillmentjobDescUpdatedAt.UpdateDefault.(func() time.Time)
+	inventoryreservationFields := schema.InventoryReservation{}.Fields()
+	_ = inventoryreservationFields
+	// inventoryreservationDescOrderID is the schema descriptor for order_id field.
+	inventoryreservationDescOrderID := inventoryreservationFields[3].Descriptor()
+	// inventoryreservation.DefaultOrderID holds the default value on creation for the order_id field.
+	inventoryreservation.DefaultOrderID = inventoryreservationDescOrderID.Default.(string)
+	// inventoryreservationDescCreatedAt is the schema descriptor for created_at field.
+	inventoryreservationDescCreatedAt := inventoryreservationFields[6].Descriptor()
+	// inventoryreservation.DefaultCreatedAt holds the default value on creation for the created_at field.
+	inventoryreservation.DefaultCreatedAt = inventoryreservationDescCreatedAt.Default.(func() time.Time)
+	// inventoryreservationDescUpdatedAt is the schema descriptor for updated_at field.
+	inventoryreservationDescUpdatedAt := inventoryreservationFields[7].Descriptor()
+	// inventoryreservation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	inventoryreservation.DefaultUpdatedAt = inventoryreservationDescUpdatedAt.Default.(func() time.Time)
+	// inventoryreservation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	inventoryreservation.UpdateDefaultUpdatedAt = inventoryreservationDescUpdatedAt.UpdateDefault.(func() time.Time)
+	lineFields := schema.Line{}.Fields()
+	_ = lineFields
+	// lineDescEnabled is the schema descriptor for enabled field.
+	lineDescEnabled := lineFields[5].Descriptor()
+	// line.DefaultEnabled holds the default value on creation for the enabled field.
+	line.DefaultEnabled = lineDescEnabled.Default.(bool)
+	// lineDescCreatedAt is the schema descriptor for created_at field.
+	lineDescCreatedAt := lineFields[6].Descriptor()
+	// line.DefaultCreatedAt holds the default value on creation for the created_at field.
+	line.DefaultCreatedAt = lineDescCreatedAt.Default.(func() time.Time)
+	// lineDescUpdatedAt is the schema descriptor for updated_at field.
+	lineDescUpdatedAt := lineFields[7].Descriptor()
+	// line.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	line.DefaultUpdatedAt = lineDescUpdatedAt.Default.(func() time.Time)
+	// line.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	line.UpdateDefaultUpdatedAt = lineDescUpdatedAt.UpdateDefault.(func() time.Time)
 	nodeFields := schema.Node{}.Fields()
 	_ = nodeFields
 	// nodeDescStatus is the schema descriptor for status field.
@@ -45,12 +173,44 @@ func init() {
 	nodeDescCapabilities := nodeFields[6].Descriptor()
 	// node.DefaultCapabilities holds the default value on creation for the capabilities field.
 	node.DefaultCapabilities = nodeDescCapabilities.Default.([]string)
+	// nodeDescPublicIP is the schema descriptor for public_ip field.
+	nodeDescPublicIP := nodeFields[7].Descriptor()
+	// node.DefaultPublicIP holds the default value on creation for the public_ip field.
+	node.DefaultPublicIP = nodeDescPublicIP.Default.(string)
+	// nodeDescCandidatePublicIps is the schema descriptor for candidate_public_ips field.
+	nodeDescCandidatePublicIps := nodeFields[8].Descriptor()
+	// node.DefaultCandidatePublicIps holds the default value on creation for the candidate_public_ips field.
+	node.DefaultCandidatePublicIps = nodeDescCandidatePublicIps.Default.([]string)
+	// nodeDescScanHost is the schema descriptor for scan_host field.
+	nodeDescScanHost := nodeFields[9].Descriptor()
+	// node.DefaultScanHost holds the default value on creation for the scan_host field.
+	node.DefaultScanHost = nodeDescScanHost.Default.(string)
+	// nodeDescProbePort is the schema descriptor for probe_port field.
+	nodeDescProbePort := nodeFields[10].Descriptor()
+	// node.DefaultProbePort holds the default value on creation for the probe_port field.
+	node.DefaultProbePort = nodeDescProbePort.Default.(uint32)
+	// nodeDescProbeProtocols is the schema descriptor for probe_protocols field.
+	nodeDescProbeProtocols := nodeFields[11].Descriptor()
+	// node.DefaultProbeProtocols holds the default value on creation for the probe_protocols field.
+	node.DefaultProbeProtocols = nodeDescProbeProtocols.Default.([]string)
+	// nodeDescLastScanStatus is the schema descriptor for last_scan_status field.
+	nodeDescLastScanStatus := nodeFields[13].Descriptor()
+	// node.DefaultLastScanStatus holds the default value on creation for the last_scan_status field.
+	node.DefaultLastScanStatus = nodeDescLastScanStatus.Default.(string)
+	// nodeDescLastScanError is the schema descriptor for last_scan_error field.
+	nodeDescLastScanError := nodeFields[14].Descriptor()
+	// node.DefaultLastScanError holds the default value on creation for the last_scan_error field.
+	node.DefaultLastScanError = nodeDescLastScanError.Default.(string)
+	// nodeDescLastScanLatencyMs is the schema descriptor for last_scan_latency_ms field.
+	nodeDescLastScanLatencyMs := nodeFields[15].Descriptor()
+	// node.DefaultLastScanLatencyMs holds the default value on creation for the last_scan_latency_ms field.
+	node.DefaultLastScanLatencyMs = nodeDescLastScanLatencyMs.Default.(int64)
 	// nodeDescCreatedAt is the schema descriptor for created_at field.
-	nodeDescCreatedAt := nodeFields[8].Descriptor()
+	nodeDescCreatedAt := nodeFields[18].Descriptor()
 	// node.DefaultCreatedAt holds the default value on creation for the created_at field.
 	node.DefaultCreatedAt = nodeDescCreatedAt.Default.(func() time.Time)
 	// nodeDescUpdatedAt is the schema descriptor for updated_at field.
-	nodeDescUpdatedAt := nodeFields[9].Descriptor()
+	nodeDescUpdatedAt := nodeFields[19].Descriptor()
 	// node.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	node.DefaultUpdatedAt = nodeDescUpdatedAt.Default.(func() time.Time)
 	// node.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
@@ -115,6 +275,38 @@ func init() {
 	nodecapabilitysnapshot.DefaultUpdatedAt = nodecapabilitysnapshotDescUpdatedAt.Default.(func() time.Time)
 	// nodecapabilitysnapshot.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	nodecapabilitysnapshot.UpdateDefaultUpdatedAt = nodecapabilitysnapshotDescUpdatedAt.UpdateDefault.(func() time.Time)
+	nodeinventoryipFields := schema.NodeInventoryIP{}.Fields()
+	_ = nodeinventoryipFields
+	// nodeinventoryipDescProtocols is the schema descriptor for protocols field.
+	nodeinventoryipDescProtocols := nodeinventoryipFields[5].Descriptor()
+	// nodeinventoryip.DefaultProtocols holds the default value on creation for the protocols field.
+	nodeinventoryip.DefaultProtocols = nodeinventoryipDescProtocols.Default.([]string)
+	// nodeinventoryipDescManualHold is the schema descriptor for manual_hold field.
+	nodeinventoryipDescManualHold := nodeinventoryipFields[7].Descriptor()
+	// nodeinventoryip.DefaultManualHold holds the default value on creation for the manual_hold field.
+	nodeinventoryip.DefaultManualHold = nodeinventoryipDescManualHold.Default.(bool)
+	// nodeinventoryipDescComplianceHold is the schema descriptor for compliance_hold field.
+	nodeinventoryipDescComplianceHold := nodeinventoryipFields[8].Descriptor()
+	// nodeinventoryip.DefaultComplianceHold holds the default value on creation for the compliance_hold field.
+	nodeinventoryip.DefaultComplianceHold = nodeinventoryipDescComplianceHold.Default.(bool)
+	// nodeinventoryipDescSoldOrderID is the schema descriptor for sold_order_id field.
+	nodeinventoryipDescSoldOrderID := nodeinventoryipFields[9].Descriptor()
+	// nodeinventoryip.DefaultSoldOrderID holds the default value on creation for the sold_order_id field.
+	nodeinventoryip.DefaultSoldOrderID = nodeinventoryipDescSoldOrderID.Default.(string)
+	// nodeinventoryipDescReservedOrderID is the schema descriptor for reserved_order_id field.
+	nodeinventoryipDescReservedOrderID := nodeinventoryipFields[10].Descriptor()
+	// nodeinventoryip.DefaultReservedOrderID holds the default value on creation for the reserved_order_id field.
+	nodeinventoryip.DefaultReservedOrderID = nodeinventoryipDescReservedOrderID.Default.(string)
+	// nodeinventoryipDescCreatedAt is the schema descriptor for created_at field.
+	nodeinventoryipDescCreatedAt := nodeinventoryipFields[11].Descriptor()
+	// nodeinventoryip.DefaultCreatedAt holds the default value on creation for the created_at field.
+	nodeinventoryip.DefaultCreatedAt = nodeinventoryipDescCreatedAt.Default.(func() time.Time)
+	// nodeinventoryipDescUpdatedAt is the schema descriptor for updated_at field.
+	nodeinventoryipDescUpdatedAt := nodeinventoryipFields[12].Descriptor()
+	// nodeinventoryip.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	nodeinventoryip.DefaultUpdatedAt = nodeinventoryipDescUpdatedAt.Default.(func() time.Time)
+	// nodeinventoryip.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	nodeinventoryip.UpdateDefaultUpdatedAt = nodeinventoryipDescUpdatedAt.UpdateDefault.(func() time.Time)
 	nodejobFields := schema.NodeJob{}.Fields()
 	_ = nodejobFields
 	// nodejobDescBaseRevision is the schema descriptor for base_revision field.
@@ -259,6 +451,158 @@ func init() {
 	outboxeventDescCreatedAt := outboxeventFields[6].Descriptor()
 	// outboxevent.DefaultCreatedAt holds the default value on creation for the created_at field.
 	outboxevent.DefaultCreatedAt = outboxeventDescCreatedAt.Default.(func() time.Time)
+	paymentorderFields := schema.PaymentOrder{}.Fields()
+	_ = paymentorderFields
+	// paymentorderDescProvider is the schema descriptor for provider field.
+	paymentorderDescProvider := paymentorderFields[4].Descriptor()
+	// paymentorder.DefaultProvider holds the default value on creation for the provider field.
+	paymentorder.DefaultProvider = paymentorderDescProvider.Default.(string)
+	// paymentorderDescProviderTradeNo is the schema descriptor for provider_trade_no field.
+	paymentorderDescProviderTradeNo := paymentorderFields[5].Descriptor()
+	// paymentorder.DefaultProviderTradeNo holds the default value on creation for the provider_trade_no field.
+	paymentorder.DefaultProviderTradeNo = paymentorderDescProviderTradeNo.Default.(string)
+	// paymentorderDescCreatedAt is the schema descriptor for created_at field.
+	paymentorderDescCreatedAt := paymentorderFields[7].Descriptor()
+	// paymentorder.DefaultCreatedAt holds the default value on creation for the created_at field.
+	paymentorder.DefaultCreatedAt = paymentorderDescCreatedAt.Default.(func() time.Time)
+	// paymentorderDescUpdatedAt is the schema descriptor for updated_at field.
+	paymentorderDescUpdatedAt := paymentorderFields[8].Descriptor()
+	// paymentorder.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	paymentorder.DefaultUpdatedAt = paymentorderDescUpdatedAt.Default.(func() time.Time)
+	// paymentorder.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	paymentorder.UpdateDefaultUpdatedAt = paymentorderDescUpdatedAt.UpdateDefault.(func() time.Time)
+	productFields := schema.Product{}.Fields()
+	_ = productFields
+	// productDescIPType is the schema descriptor for ip_type field.
+	productDescIPType := productFields[2].Descriptor()
+	// product.DefaultIPType holds the default value on creation for the ip_type field.
+	product.DefaultIPType = productDescIPType.Default.(string)
+	// productDescEnabled is the schema descriptor for enabled field.
+	productDescEnabled := productFields[3].Descriptor()
+	// product.DefaultEnabled holds the default value on creation for the enabled field.
+	product.DefaultEnabled = productDescEnabled.Default.(bool)
+	// productDescCreatedAt is the schema descriptor for created_at field.
+	productDescCreatedAt := productFields[4].Descriptor()
+	// product.DefaultCreatedAt holds the default value on creation for the created_at field.
+	product.DefaultCreatedAt = productDescCreatedAt.Default.(func() time.Time)
+	// productDescUpdatedAt is the schema descriptor for updated_at field.
+	productDescUpdatedAt := productFields[5].Descriptor()
+	// product.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	product.DefaultUpdatedAt = productDescUpdatedAt.Default.(func() time.Time)
+	// product.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	product.UpdateDefaultUpdatedAt = productDescUpdatedAt.UpdateDefault.(func() time.Time)
+	productpriceFields := schema.ProductPrice{}.Fields()
+	_ = productpriceFields
+	// productpriceDescCreatedAt is the schema descriptor for created_at field.
+	productpriceDescCreatedAt := productpriceFields[5].Descriptor()
+	// productprice.DefaultCreatedAt holds the default value on creation for the created_at field.
+	productprice.DefaultCreatedAt = productpriceDescCreatedAt.Default.(func() time.Time)
+	// productpriceDescUpdatedAt is the schema descriptor for updated_at field.
+	productpriceDescUpdatedAt := productpriceFields[6].Descriptor()
+	// productprice.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	productprice.DefaultUpdatedAt = productpriceDescUpdatedAt.Default.(func() time.Time)
+	// productprice.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	productprice.UpdateDefaultUpdatedAt = productpriceDescUpdatedAt.UpdateDefault.(func() time.Time)
+	proxyaccountFields := schema.ProxyAccount{}.Fields()
+	_ = proxyaccountFields
+	// proxyaccountDescConnectionURI is the schema descriptor for connection_uri field.
+	proxyaccountDescConnectionURI := proxyaccountFields[10].Descriptor()
+	// proxyaccount.DefaultConnectionURI holds the default value on creation for the connection_uri field.
+	proxyaccount.DefaultConnectionURI = proxyaccountDescConnectionURI.Default.(string)
+	// proxyaccountDescEgressLimitBps is the schema descriptor for egress_limit_bps field.
+	proxyaccountDescEgressLimitBps := proxyaccountFields[12].Descriptor()
+	// proxyaccount.DefaultEgressLimitBps holds the default value on creation for the egress_limit_bps field.
+	proxyaccount.DefaultEgressLimitBps = proxyaccountDescEgressLimitBps.Default.(uint64)
+	// proxyaccountDescIngressLimitBps is the schema descriptor for ingress_limit_bps field.
+	proxyaccountDescIngressLimitBps := proxyaccountFields[13].Descriptor()
+	// proxyaccount.DefaultIngressLimitBps holds the default value on creation for the ingress_limit_bps field.
+	proxyaccount.DefaultIngressLimitBps = proxyaccountDescIngressLimitBps.Default.(uint64)
+	// proxyaccountDescMaxConnections is the schema descriptor for max_connections field.
+	proxyaccountDescMaxConnections := proxyaccountFields[14].Descriptor()
+	// proxyaccount.DefaultMaxConnections holds the default value on creation for the max_connections field.
+	proxyaccount.DefaultMaxConnections = proxyaccountDescMaxConnections.Default.(uint32)
+	// proxyaccountDescCreatedAt is the schema descriptor for created_at field.
+	proxyaccountDescCreatedAt := proxyaccountFields[18].Descriptor()
+	// proxyaccount.DefaultCreatedAt holds the default value on creation for the created_at field.
+	proxyaccount.DefaultCreatedAt = proxyaccountDescCreatedAt.Default.(func() time.Time)
+	// proxyaccountDescUpdatedAt is the schema descriptor for updated_at field.
+	proxyaccountDescUpdatedAt := proxyaccountFields[19].Descriptor()
+	// proxyaccount.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	proxyaccount.DefaultUpdatedAt = proxyaccountDescUpdatedAt.Default.(func() time.Time)
+	// proxyaccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	proxyaccount.UpdateDefaultUpdatedAt = proxyaccountDescUpdatedAt.UpdateDefault.(func() time.Time)
+	proxyorderFields := schema.ProxyOrder{}.Fields()
+	_ = proxyorderFields
+	// proxyorderDescReservationID is the schema descriptor for reservation_id field.
+	proxyorderDescReservationID := proxyorderFields[4].Descriptor()
+	// proxyorder.DefaultReservationID holds the default value on creation for the reservation_id field.
+	proxyorder.DefaultReservationID = proxyorderDescReservationID.Default.(string)
+	// proxyorderDescWalletHoldID is the schema descriptor for wallet_hold_id field.
+	proxyorderDescWalletHoldID := proxyorderFields[5].Descriptor()
+	// proxyorder.DefaultWalletHoldID holds the default value on creation for the wallet_hold_id field.
+	proxyorder.DefaultWalletHoldID = proxyorderDescWalletHoldID.Default.(string)
+	// proxyorderDescProxyAccountID is the schema descriptor for proxy_account_id field.
+	proxyorderDescProxyAccountID := proxyorderFields[6].Descriptor()
+	// proxyorder.DefaultProxyAccountID holds the default value on creation for the proxy_account_id field.
+	proxyorder.DefaultProxyAccountID = proxyorderDescProxyAccountID.Default.(string)
+	// proxyorderDescQuantity is the schema descriptor for quantity field.
+	proxyorderDescQuantity := proxyorderFields[10].Descriptor()
+	// proxyorder.DefaultQuantity holds the default value on creation for the quantity field.
+	proxyorder.DefaultQuantity = proxyorderDescQuantity.Default.(int)
+	// proxyorderDescFailureReason is the schema descriptor for failure_reason field.
+	proxyorderDescFailureReason := proxyorderFields[13].Descriptor()
+	// proxyorder.DefaultFailureReason holds the default value on creation for the failure_reason field.
+	proxyorder.DefaultFailureReason = proxyorderDescFailureReason.Default.(string)
+	// proxyorderDescCreatedAt is the schema descriptor for created_at field.
+	proxyorderDescCreatedAt := proxyorderFields[14].Descriptor()
+	// proxyorder.DefaultCreatedAt holds the default value on creation for the created_at field.
+	proxyorder.DefaultCreatedAt = proxyorderDescCreatedAt.Default.(func() time.Time)
+	// proxyorderDescUpdatedAt is the schema descriptor for updated_at field.
+	proxyorderDescUpdatedAt := proxyorderFields[15].Descriptor()
+	// proxyorder.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	proxyorder.DefaultUpdatedAt = proxyorderDescUpdatedAt.Default.(func() time.Time)
+	// proxyorder.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	proxyorder.UpdateDefaultUpdatedAt = proxyorderDescUpdatedAt.UpdateDefault.(func() time.Time)
+	ratepolicyFields := schema.RatePolicy{}.Fields()
+	_ = ratepolicyFields
+	// ratepolicyDescEgressLimitBps is the schema descriptor for egress_limit_bps field.
+	ratepolicyDescEgressLimitBps := ratepolicyFields[2].Descriptor()
+	// ratepolicy.DefaultEgressLimitBps holds the default value on creation for the egress_limit_bps field.
+	ratepolicy.DefaultEgressLimitBps = ratepolicyDescEgressLimitBps.Default.(uint64)
+	// ratepolicyDescIngressLimitBps is the schema descriptor for ingress_limit_bps field.
+	ratepolicyDescIngressLimitBps := ratepolicyFields[3].Descriptor()
+	// ratepolicy.DefaultIngressLimitBps holds the default value on creation for the ingress_limit_bps field.
+	ratepolicy.DefaultIngressLimitBps = ratepolicyDescIngressLimitBps.Default.(uint64)
+	// ratepolicyDescMaxConnections is the schema descriptor for max_connections field.
+	ratepolicyDescMaxConnections := ratepolicyFields[4].Descriptor()
+	// ratepolicy.DefaultMaxConnections holds the default value on creation for the max_connections field.
+	ratepolicy.DefaultMaxConnections = ratepolicyDescMaxConnections.Default.(uint32)
+	// ratepolicyDescCreatedAt is the schema descriptor for created_at field.
+	ratepolicyDescCreatedAt := ratepolicyFields[5].Descriptor()
+	// ratepolicy.DefaultCreatedAt holds the default value on creation for the created_at field.
+	ratepolicy.DefaultCreatedAt = ratepolicyDescCreatedAt.Default.(func() time.Time)
+	// ratepolicyDescUpdatedAt is the schema descriptor for updated_at field.
+	ratepolicyDescUpdatedAt := ratepolicyFields[6].Descriptor()
+	// ratepolicy.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	ratepolicy.DefaultUpdatedAt = ratepolicyDescUpdatedAt.Default.(func() time.Time)
+	// ratepolicy.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	ratepolicy.UpdateDefaultUpdatedAt = ratepolicyDescUpdatedAt.UpdateDefault.(func() time.Time)
+	regionFields := schema.Region{}.Fields()
+	_ = regionFields
+	// regionDescCountry is the schema descriptor for country field.
+	regionDescCountry := regionFields[2].Descriptor()
+	// region.DefaultCountry holds the default value on creation for the country field.
+	region.DefaultCountry = regionDescCountry.Default.(string)
+	// regionDescCreatedAt is the schema descriptor for created_at field.
+	regionDescCreatedAt := regionFields[3].Descriptor()
+	// region.DefaultCreatedAt holds the default value on creation for the created_at field.
+	region.DefaultCreatedAt = regionDescCreatedAt.Default.(func() time.Time)
+	// regionDescUpdatedAt is the schema descriptor for updated_at field.
+	regionDescUpdatedAt := regionFields[4].Descriptor()
+	// region.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	region.DefaultUpdatedAt = regionDescUpdatedAt.Default.(func() time.Time)
+	// region.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	region.UpdateDefaultUpdatedAt = regionDescUpdatedAt.UpdateDefault.(func() time.Time)
 	runtimeaccountstateFields := schema.RuntimeAccountState{}.Fields()
 	_ = runtimeaccountstateFields
 	// runtimeaccountstateDescKind is the schema descriptor for kind field.
@@ -379,4 +723,72 @@ func init() {
 	runtimelabaccount.DefaultUpdatedAt = runtimelabaccountDescUpdatedAt.Default.(func() time.Time)
 	// runtimelabaccount.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	runtimelabaccount.UpdateDefaultUpdatedAt = runtimelabaccountDescUpdatedAt.UpdateDefault.(func() time.Time)
+	sessionFields := schema.Session{}.Fields()
+	_ = sessionFields
+	// sessionDescCreatedAt is the schema descriptor for created_at field.
+	sessionDescCreatedAt := sessionFields[4].Descriptor()
+	// session.DefaultCreatedAt holds the default value on creation for the created_at field.
+	session.DefaultCreatedAt = sessionDescCreatedAt.Default.(func() time.Time)
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescStatus is the schema descriptor for status field.
+	userDescStatus := userFields[3].Descriptor()
+	// user.DefaultStatus holds the default value on creation for the status field.
+	user.DefaultStatus = userDescStatus.Default.(string)
+	// userDescCreatedAt is the schema descriptor for created_at field.
+	userDescCreatedAt := userFields[4].Descriptor()
+	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
+	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
+	// userDescUpdatedAt is the schema descriptor for updated_at field.
+	userDescUpdatedAt := userFields[5].Descriptor()
+	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
+	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	user.UpdateDefaultUpdatedAt = userDescUpdatedAt.UpdateDefault.(func() time.Time)
+	walletFields := schema.Wallet{}.Fields()
+	_ = walletFields
+	// walletDescBalanceCents is the schema descriptor for balance_cents field.
+	walletDescBalanceCents := walletFields[2].Descriptor()
+	// wallet.DefaultBalanceCents holds the default value on creation for the balance_cents field.
+	wallet.DefaultBalanceCents = walletDescBalanceCents.Default.(int64)
+	// walletDescHeldCents is the schema descriptor for held_cents field.
+	walletDescHeldCents := walletFields[3].Descriptor()
+	// wallet.DefaultHeldCents holds the default value on creation for the held_cents field.
+	wallet.DefaultHeldCents = walletDescHeldCents.Default.(int64)
+	// walletDescUpdatedAt is the schema descriptor for updated_at field.
+	walletDescUpdatedAt := walletFields[4].Descriptor()
+	// wallet.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	wallet.DefaultUpdatedAt = walletDescUpdatedAt.Default.(func() time.Time)
+	// wallet.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	wallet.UpdateDefaultUpdatedAt = walletDescUpdatedAt.UpdateDefault.(func() time.Time)
+	walletholdFields := schema.WalletHold{}.Fields()
+	_ = walletholdFields
+	// walletholdDescCreatedAt is the schema descriptor for created_at field.
+	walletholdDescCreatedAt := walletholdFields[6].Descriptor()
+	// wallethold.DefaultCreatedAt holds the default value on creation for the created_at field.
+	wallethold.DefaultCreatedAt = walletholdDescCreatedAt.Default.(func() time.Time)
+	// walletholdDescUpdatedAt is the schema descriptor for updated_at field.
+	walletholdDescUpdatedAt := walletholdFields[7].Descriptor()
+	// wallethold.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	wallethold.DefaultUpdatedAt = walletholdDescUpdatedAt.Default.(func() time.Time)
+	// wallethold.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	wallethold.UpdateDefaultUpdatedAt = walletholdDescUpdatedAt.UpdateDefault.(func() time.Time)
+	walletledgerFields := schema.WalletLedger{}.Fields()
+	_ = walletledgerFields
+	// walletledgerDescReferenceType is the schema descriptor for reference_type field.
+	walletledgerDescReferenceType := walletledgerFields[7].Descriptor()
+	// walletledger.DefaultReferenceType holds the default value on creation for the reference_type field.
+	walletledger.DefaultReferenceType = walletledgerDescReferenceType.Default.(string)
+	// walletledgerDescReferenceID is the schema descriptor for reference_id field.
+	walletledgerDescReferenceID := walletledgerFields[8].Descriptor()
+	// walletledger.DefaultReferenceID holds the default value on creation for the reference_id field.
+	walletledger.DefaultReferenceID = walletledgerDescReferenceID.Default.(string)
+	// walletledgerDescIdempotencyKey is the schema descriptor for idempotency_key field.
+	walletledgerDescIdempotencyKey := walletledgerFields[9].Descriptor()
+	// walletledger.DefaultIdempotencyKey holds the default value on creation for the idempotency_key field.
+	walletledger.DefaultIdempotencyKey = walletledgerDescIdempotencyKey.Default.(string)
+	// walletledgerDescCreatedAt is the schema descriptor for created_at field.
+	walletledgerDescCreatedAt := walletledgerFields[10].Descriptor()
+	// walletledger.DefaultCreatedAt holds the default value on creation for the created_at field.
+	walletledger.DefaultCreatedAt = walletledgerDescCreatedAt.Default.(func() time.Time)
 }

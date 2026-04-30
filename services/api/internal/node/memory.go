@@ -37,12 +37,30 @@ func (r *MemoryRepository) UpsertLease(_ context.Context, input LeaseInput, now 
 	record.AgentVersion = input.AgentVersion
 	record.XrayVersion = input.XrayVersion
 	record.Capabilities = append([]string(nil), input.Capabilities...)
+	record.PublicIP = input.PublicIP
+	record.CandidatePublicIPs = append([]string(nil), input.CandidatePublicIPs...)
+	record.ScanHost = input.ScanHost
+	record.ProbePort = input.ProbePort
+	record.ProbeProtocols = append([]string(nil), input.ProbeProtocols...)
+	record.ProbeCheckedAt = input.ProbeCheckedAt
 	record.LastOnlineAt = now
 	record.UpdatedAt = now
 
 	r.byCode[record.Code] = record
 	r.codeByID[record.ID] = record.Code
 	return record, nil
+}
+
+func (r *MemoryRepository) Get(_ context.Context, nodeID string) (NodeRecord, bool, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	code, ok := r.codeByID[nodeID]
+	if !ok {
+		return NodeRecord{}, false, nil
+	}
+	record, ok := r.byCode[code]
+	return record, ok, nil
 }
 
 func (r *MemoryRepository) List(_ context.Context) ([]NodeRecord, error) {
@@ -54,6 +72,24 @@ func (r *MemoryRepository) List(_ context.Context) ([]NodeRecord, error) {
 		records = append(records, record)
 	}
 	return records, nil
+}
+
+func (r *MemoryRepository) SaveScanResult(_ context.Context, nodeID string, result ScanResult) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	code, ok := r.codeByID[nodeID]
+	if !ok {
+		return nil
+	}
+	record := r.byCode[code]
+	record.LastScanStatus = result.Status
+	record.LastScanError = result.Error
+	record.LastScanLatency = result.Latency
+	record.LastScanAt = result.ScannedAt
+	record.UpdatedAt = result.ScannedAt
+	r.byCode[code] = record
+	return nil
 }
 
 type MemoryLeaseStore struct {

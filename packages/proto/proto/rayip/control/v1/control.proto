@@ -41,6 +41,7 @@ message AgentHello {
   uint64 sequence = 7;
   int64 lease_ttl_seconds = 8;
   RuntimeObservation runtime = 9;
+  NodeProbeObservation probe = 10;
 }
 
 message LeaseRenewal {
@@ -54,6 +55,16 @@ message LeaseRenewal {
   uint64 sequence = 8;
   int64 lease_ttl_seconds = 9;
   RuntimeObservation runtime = 10;
+  NodeProbeObservation probe = 11;
+}
+
+message NodeProbeObservation {
+  string public_ip = 1;
+  uint32 probe_port = 2;
+  repeated string probe_protocols = 3;
+  int64 checked_at_unix_milli = 4;
+  string scan_host = 5;
+  repeated string candidate_public_ips = 6;
 }
 
 message MetricSnapshot {

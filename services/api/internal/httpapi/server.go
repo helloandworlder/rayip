@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/nats-io/nats.go"
+	"github.com/rayip/rayip/services/api/internal/commercial"
 	"github.com/rayip/rayip/services/api/internal/config"
 	"github.com/rayip/rayip/services/api/internal/node"
 	"github.com/rayip/rayip/services/api/internal/noderuntime"
@@ -30,6 +31,7 @@ type ServerParams struct {
 	ReconcilePlanner *runtimecontrol.ReconcilePlanner
 	NodeRuntime      *noderuntime.Service
 	Lab              *runtimelab.Service
+	Commercial       *commercial.Service
 }
 
 func NewServer(p ServerParams) *fiber.App {
@@ -41,6 +43,7 @@ func NewServer(p ServerParams) *fiber.App {
 		ReadyCheck:  readyCheck(p.SQLDB, p.Redis, p.NATS),
 	})
 	RegisterNodeRoutes(app, p.Nodes)
+	RegisterCommercialRoutes(app, p.Commercial)
 	RegisterRuntimeControlRoutes(app, p.RuntimeControl, p.RuntimeWorker, p.ReconcilePlanner, p.NodeRuntime)
 	RegisterRuntimeLabRoutes(app, p.Lab)
 	return app

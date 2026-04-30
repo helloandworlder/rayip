@@ -2,8 +2,11 @@ package runtime
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"io"
 	"net"
 	"os"
 	"strings"
@@ -21,6 +24,7 @@ type DiscoveryConfig struct {
 	ManifestPath string
 	CoreMode     string
 	XrayGRPCAddr string
+	BinaryPath   string
 }
 
 type DiscoveryInfo struct {
@@ -45,7 +49,7 @@ func Discover(cfg DiscoveryConfig) (DiscoveryInfo, error) {
 	payload, err := os.ReadFile(cfg.ManifestPath)
 	if errors.Is(err, os.ErrNotExist) {
 		if strings.EqualFold(cfg.CoreMode, "xray") {
-			return mergeXrayExtension(cfg, info)
+			return finalizeXrayDiscovery(cfg, info)
 		}
 		return info, nil
 	}
@@ -81,12 +85,12 @@ func Discover(cfg DiscoveryConfig) (DiscoveryInfo, error) {
 		info.Capabilities = manifest.Capabilities
 	}
 	if strings.EqualFold(cfg.CoreMode, "xray") {
-		return mergeXrayExtension(cfg, info)
+		return finalizeXrayDiscovery(cfg, info)
 	}
 	return info, nil
 }
 
-func mergeXrayExtension(cfg DiscoveryConfig, info DiscoveryInfo) (DiscoveryInfo, error) {
+func finalizeXrayDiscovery(cfg DiscoveryConfig, info DiscoveryInfo) (DiscoveryInfo, error) {
 	discovered, err := discoverXrayExtension(cfg.XrayGRPCAddr)
 	if err != nil {
 		return DiscoveryInfo{}, err
@@ -103,7 +107,27 @@ func mergeXrayExtension(cfg DiscoveryConfig, info DiscoveryInfo) (DiscoveryInfo,
 	if discovered.LastGoodGeneration > 0 {
 		info.LastGoodGeneration = discovered.LastGoodGeneration
 	}
+	if info.BinarySHA256 == "" && cfg.BinaryPath != "" {
+		hash, err := fileSHA256(cfg.BinaryPath)
+		if err != nil {
+			return DiscoveryInfo{}, err
+		}
+		info.BinarySHA256 = hash
+	}
 	return info, nil
+}
+
+func fileSHA256(path string) (string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+	sum := sha256.New()
+	if _, err := io.Copy(sum, file); err != nil {
+		return "", err
+	}
+	return "sha256:" + hex.EncodeToString(sum.Sum(nil)), nil
 }
 
 func discoverXrayExtension(addr string) (DiscoveryInfo, error) {

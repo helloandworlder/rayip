@@ -5,9 +5,12 @@ import (
 	"errors"
 	"io"
 	"net"
+	"strings"
+	"time"
 
 	"github.com/google/uuid"
 	controlv1 "github.com/rayip/rayip/packages/proto/gen/go/rayip/control/v1"
+	"github.com/rayip/rayip/services/api/internal/commercial"
 	"github.com/rayip/rayip/services/api/internal/config"
 	"github.com/rayip/rayip/services/api/internal/node"
 	"github.com/rayip/rayip/services/api/internal/noderuntime"
@@ -24,11 +27,20 @@ type ControlServer struct {
 	nodes       *node.Service
 	nodeRuntime *noderuntime.Service
 	runtime     *RuntimeDispatcher
+	lab         *runtimelab.Service
+	commercial  *commercial.Service
 	log         *zap.Logger
 }
 
-func NewControlServer(cfg config.Config, nodes *node.Service, nodeRuntime *noderuntime.Service, runtime *RuntimeDispatcher, log *zap.Logger) *ControlServer {
-	return &ControlServer{cfg: cfg, nodes: nodes, nodeRuntime: nodeRuntime, runtime: runtime, log: log}
+func NewControlServer(cfg config.Config, nodes *node.Service, nodeRuntime *noderuntime.Service, runtime *RuntimeDispatcher, lab *runtimelab.Service, commercial *commercial.Service, log *zap.Logger) *ControlServer {
+	return &ControlServer{cfg: cfg, nodes: nodes, nodeRuntime: nodeRuntime, runtime: runtime, lab: lab, commercial: commercial, log: log}
+}
+
+func probeCheckedAt(probe *controlv1.NodeProbeObservation) time.Time {
+	if probe == nil || probe.GetCheckedAtUnixMilli() <= 0 {
+		return time.Time{}
+	}
+	return time.UnixMilli(probe.GetCheckedAtUnixMilli()).UTC()
 }
 
 func (s *ControlServer) Connect(stream grpc.BidiStreamingServer[controlv1.AgentEnvelope, controlv1.ControlEnvelope]) error {
@@ -62,15 +74,21 @@ func (s *ControlServer) Connect(stream grpc.BidiStreamingServer[controlv1.AgentE
 		leaseTTL = s.cfg.Node.LeaseTTLSeconds
 	}
 	summary, err := s.nodes.RegisterLease(ctx, node.LeaseInput{
-		NodeCode:        hello.GetNodeCode(),
-		SessionID:       sessionID,
-		APIInstanceID:   s.cfg.Service.InstanceID,
-		BundleVersion:   observation.GetBundleVersion(),
-		AgentVersion:    observation.GetAgentVersion(),
-		XrayVersion:     observation.GetXrayVersion(),
-		Capabilities:    observation.GetCapabilities(),
-		Sequence:        hello.GetSequence(),
-		LeaseTTLSeconds: leaseTTL,
+		NodeCode:           hello.GetNodeCode(),
+		SessionID:          sessionID,
+		APIInstanceID:      s.cfg.Service.InstanceID,
+		BundleVersion:      observation.GetBundleVersion(),
+		AgentVersion:       observation.GetAgentVersion(),
+		XrayVersion:        observation.GetXrayVersion(),
+		Capabilities:       observation.GetCapabilities(),
+		PublicIP:           hello.GetProbe().GetPublicIp(),
+		CandidatePublicIPs: hello.GetProbe().GetCandidatePublicIps(),
+		ScanHost:           hello.GetProbe().GetScanHost(),
+		ProbePort:          hello.GetProbe().GetProbePort(),
+		ProbeProtocols:     hello.GetProbe().GetProbeProtocols(),
+		ProbeCheckedAt:     probeCheckedAt(hello.GetProbe()),
+		Sequence:           hello.GetSequence(),
+		LeaseTTLSeconds:    leaseTTL,
 	})
 	if err != nil {
 		return err
@@ -85,6 +103,7 @@ func (s *ControlServer) Connect(stream grpc.BidiStreamingServer[controlv1.AgentE
 		ExpectedDigestHash:   observation.GetRuntimeDigest(),
 		RuntimeDigestHash:    observation.GetRuntimeDigest(),
 		Capabilities:         observation.GetCapabilities(),
+		CandidatePublicIPs:   hello.GetProbe().GetCandidatePublicIps(),
 		RequiredCapabilities: verdict.GetRequiredCapabilities(),
 		ManifestHash:         observation.GetManifestSha256(),
 		BinaryHash:           observation.GetBinarySha256(),
@@ -127,16 +146,22 @@ func (s *ControlServer) Connect(stream grpc.BidiStreamingServer[controlv1.AgentE
 				}
 			}
 			_, err := s.nodes.RegisterLease(ctx, node.LeaseInput{
-				NodeID:          lease.GetNodeId(),
-				NodeCode:        lease.GetNodeCode(),
-				SessionID:       lease.GetSessionId(),
-				APIInstanceID:   s.cfg.Service.InstanceID,
-				BundleVersion:   observation.GetBundleVersion(),
-				AgentVersion:    observation.GetAgentVersion(),
-				XrayVersion:     observation.GetXrayVersion(),
-				Capabilities:    observation.GetCapabilities(),
-				Sequence:        lease.GetSequence(),
-				LeaseTTLSeconds: int(lease.GetLeaseTtlSeconds()),
+				NodeID:             lease.GetNodeId(),
+				NodeCode:           lease.GetNodeCode(),
+				SessionID:          lease.GetSessionId(),
+				APIInstanceID:      s.cfg.Service.InstanceID,
+				BundleVersion:      observation.GetBundleVersion(),
+				AgentVersion:       observation.GetAgentVersion(),
+				XrayVersion:        observation.GetXrayVersion(),
+				Capabilities:       observation.GetCapabilities(),
+				PublicIP:           lease.GetProbe().GetPublicIp(),
+				CandidatePublicIPs: lease.GetProbe().GetCandidatePublicIps(),
+				ScanHost:           lease.GetProbe().GetScanHost(),
+				ProbePort:          lease.GetProbe().GetProbePort(),
+				ProbeProtocols:     lease.GetProbe().GetProbeProtocols(),
+				ProbeCheckedAt:     probeCheckedAt(lease.GetProbe()),
+				Sequence:           lease.GetSequence(),
+				LeaseTTLSeconds:    int(lease.GetLeaseTtlSeconds()),
 			})
 			if err != nil {
 				return err
@@ -152,6 +177,7 @@ func (s *ControlServer) Connect(stream grpc.BidiStreamingServer[controlv1.AgentE
 				ExpectedDigestHash:   observation.GetRuntimeDigest(),
 				RuntimeDigestHash:    observation.GetRuntimeDigest(),
 				Capabilities:         observation.GetCapabilities(),
+				CandidatePublicIPs:   lease.GetProbe().GetCandidatePublicIps(),
 				RequiredCapabilities: verdict.GetRequiredCapabilities(),
 				ManifestHash:         observation.GetManifestSha256(),
 				BinaryHash:           observation.GetBinarySha256(),
@@ -171,7 +197,28 @@ func (s *ControlServer) Connect(stream grpc.BidiStreamingServer[controlv1.AgentE
 		}
 		if ack := envelope.GetRuntimeApplyAck(); ack != nil {
 			result := runtimelab.ResultFromProto(ack)
+			if result.CreatedAt.IsZero() {
+				result.CreatedAt = time.Now().UTC()
+			}
 			s.runtime.HandleResult(result)
+			if s.lab != nil {
+				_ = s.lab.SaveApplyResult(ctx, result)
+			}
+			for _, resource := range ack.GetResourceResults() {
+				proxyAccountID := strings.TrimPrefix(resource.GetName(), "proxy/")
+				if proxyAccountID == "" || proxyAccountID == resource.GetName() {
+					continue
+				}
+				status := commercial.RuntimeApplyStatusACK
+				if result.Status != runtimelab.ApplyStatusACK && result.Status != runtimelab.ApplyStatusDuplicate {
+					status = commercial.RuntimeApplyStatus(result.Status)
+				}
+				_ = s.commercial.HandleRuntimeApplyResult(ctx, commercial.RuntimeApplySettlementInput{
+					ProxyAccountID: proxyAccountID,
+					Status:         status,
+					ErrorDetail:    result.ErrorDetail,
+				})
+			}
 			_, _ = s.nodeRuntime.RecordRuntimeAck(ctx, noderuntime.RuntimeAckInput{
 				NodeID:           result.NodeID,
 				Status:           string(result.Status),

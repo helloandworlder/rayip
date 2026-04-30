@@ -14,6 +14,7 @@ type Config struct {
 	API     APIConfig
 	Runtime RuntimeConfig
 	Lease   LeaseConfig
+	Probe   ProbeConfig
 }
 
 type NodeConfig struct {
@@ -41,6 +42,14 @@ type LeaseConfig struct {
 	TTL      time.Duration
 }
 
+type ProbeConfig struct {
+	PublicIPURL string
+	ScanHost    string
+	Port        uint32
+	Protocols   []string
+	Timeout     time.Duration
+}
+
 func Load() (Config, error) {
 	v := viper.New()
 	v.SetEnvPrefix("RAYIP_AGENT")
@@ -64,6 +73,11 @@ func Load() (Config, error) {
 	v.SetDefault("runtime.xray_auto_start", true)
 	v.SetDefault("lease.interval", "10s")
 	v.SetDefault("lease.ttl", "45s")
+	v.SetDefault("probe.public_ip_url", "https://api.ipify.org")
+	v.SetDefault("probe.scan_host", "")
+	v.SetDefault("probe.port", 18080)
+	v.SetDefault("probe.protocols", "SOCKS5,HTTP")
+	v.SetDefault("probe.timeout", "5s")
 
 	bundleDir := v.GetString("runtime.bundle_dir")
 	configPath := v.GetString("runtime.xray_config_path")
@@ -90,5 +104,24 @@ func Load() (Config, error) {
 			Interval: v.GetDuration("lease.interval"),
 			TTL:      v.GetDuration("lease.ttl"),
 		},
+		Probe: ProbeConfig{
+			PublicIPURL: v.GetString("probe.public_ip_url"),
+			ScanHost:    v.GetString("probe.scan_host"),
+			Port:        uint32(v.GetUint("probe.port")),
+			Protocols:   splitCSV(v.GetString("probe.protocols")),
+			Timeout:     v.GetDuration("probe.timeout"),
+		},
 	}, nil
+}
+
+func splitCSV(value string) []string {
+	parts := strings.Split(value, ",")
+	out := make([]string, 0, len(parts))
+	for _, part := range parts {
+		part = strings.TrimSpace(part)
+		if part != "" {
+			out = append(out, part)
+		}
+	}
+	return out
 }

@@ -6,6 +6,27 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// AdminUser is the predicate function for adminuser builders.
+type AdminUser func(*sql.Selector)
+
+// AuditLog is the predicate function for auditlog builders.
+type AuditLog func(*sql.Selector)
+
+// City is the predicate function for city builders.
+type City func(*sql.Selector)
+
+// FulfillmentAttempt is the predicate function for fulfillmentattempt builders.
+type FulfillmentAttempt func(*sql.Selector)
+
+// FulfillmentJob is the predicate function for fulfillmentjob builders.
+type FulfillmentJob func(*sql.Selector)
+
+// InventoryReservation is the predicate function for inventoryreservation builders.
+type InventoryReservation func(*sql.Selector)
+
+// Line is the predicate function for line builders.
+type Line func(*sql.Selector)
+
 // Node is the predicate function for node builders.
 type Node func(*sql.Selector)
 
@@ -14,6 +35,9 @@ type NodeAgentSession func(*sql.Selector)
 
 // NodeCapabilitySnapshot is the predicate function for nodecapabilitysnapshot builders.
 type NodeCapabilitySnapshot func(*sql.Selector)
+
+// NodeInventoryIP is the predicate function for nodeinventoryip builders.
+type NodeInventoryIP func(*sql.Selector)
 
 // NodeJob is the predicate function for nodejob builders.
 type NodeJob func(*sql.Selector)
@@ -27,6 +51,27 @@ type NodeRuntimeStatus func(*sql.Selector)
 // OutboxEvent is the predicate function for outboxevent builders.
 type OutboxEvent func(*sql.Selector)
 
+// PaymentOrder is the predicate function for paymentorder builders.
+type PaymentOrder func(*sql.Selector)
+
+// Product is the predicate function for product builders.
+type Product func(*sql.Selector)
+
+// ProductPrice is the predicate function for productprice builders.
+type ProductPrice func(*sql.Selector)
+
+// ProxyAccount is the predicate function for proxyaccount builders.
+type ProxyAccount func(*sql.Selector)
+
+// ProxyOrder is the predicate function for proxyorder builders.
+type ProxyOrder func(*sql.Selector)
+
+// RatePolicy is the predicate function for ratepolicy builders.
+type RatePolicy func(*sql.Selector)
+
+// Region is the predicate function for region builders.
+type Region func(*sql.Selector)
+
 // RuntimeAccountState is the predicate function for runtimeaccountstate builders.
 type RuntimeAccountState func(*sql.Selector)
 
@@ -38,3 +83,18 @@ type RuntimeChangeLog func(*sql.Selector)
 
 // RuntimeLabAccount is the predicate function for runtimelabaccount builders.
 type RuntimeLabAccount func(*sql.Selector)
+
+// Session is the predicate function for session builders.
+type Session func(*sql.Selector)
+
+// User is the predicate function for user builders.
+type User func(*sql.Selector)
+
+// Wallet is the predicate function for wallet builders.
+type Wallet func(*sql.Selector)
+
+// WalletHold is the predicate function for wallethold builders.
+type WalletHold func(*sql.Selector)
+
+// WalletLedger is the predicate function for walletledger builders.
+type WalletLedger func(*sql.Selector)

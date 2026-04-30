@@ -36,6 +36,9 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.Runtime.XrayGRPCAddr != "auto" {
 		t.Fatalf("xray grpc addr = %q, want auto", cfg.Runtime.XrayGRPCAddr)
 	}
+	if cfg.Probe.PublicIPURL == "" || cfg.Probe.Port != 18080 || len(cfg.Probe.Protocols) == 0 {
+		t.Fatalf("probe defaults = %#v", cfg.Probe)
+	}
 }
 
 func TestLoadEnvOverrides(t *testing.T) {
@@ -47,6 +50,10 @@ func TestLoadEnvOverrides(t *testing.T) {
 	t.Setenv("RAYIP_AGENT_RUNTIME_XRAY_GRPC_ADDR", "127.0.0.1:10085")
 	t.Setenv("RAYIP_AGENT_RUNTIME_XRAY_BINARY_PATH", "/opt/rayip/runtime/xray")
 	t.Setenv("RAYIP_AGENT_RUNTIME_XRAY_CONFIG_PATH", "/opt/rayip/runtime/config.json")
+	t.Setenv("RAYIP_AGENT_PROBE_PUBLIC_IP_URL", "http://probe.local/ip")
+	t.Setenv("RAYIP_AGENT_PROBE_SCAN_HOST", "node-agent.example.net")
+	t.Setenv("RAYIP_AGENT_PROBE_PORT", "28080")
+	t.Setenv("RAYIP_AGENT_PROBE_PROTOCOLS", "SOCKS5")
 
 	cfg, err := config.Load()
 	if err != nil {
@@ -73,5 +80,8 @@ func TestLoadEnvOverrides(t *testing.T) {
 	}
 	if cfg.Runtime.XrayBinaryPath != "/opt/rayip/runtime/xray" || cfg.Runtime.XrayConfigPath != "/opt/rayip/runtime/config.json" {
 		t.Fatalf("runtime xray paths = %#v", cfg.Runtime)
+	}
+	if cfg.Probe.PublicIPURL != "http://probe.local/ip" || cfg.Probe.ScanHost != "node-agent.example.net" || cfg.Probe.Port != 28080 || len(cfg.Probe.Protocols) != 1 || cfg.Probe.Protocols[0] != "SOCKS5" {
+		t.Fatalf("probe config = %#v", cfg.Probe)
 	}
 }

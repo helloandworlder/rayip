@@ -91,6 +91,130 @@ func (_c *NodeCreate) SetCapabilities(v []string) *NodeCreate {
 	return _c
 }
 
+// SetPublicIP sets the "public_ip" field.
+func (_c *NodeCreate) SetPublicIP(v string) *NodeCreate {
+	_c.mutation.SetPublicIP(v)
+	return _c
+}
+
+// SetNillablePublicIP sets the "public_ip" field if the given value is not nil.
+func (_c *NodeCreate) SetNillablePublicIP(v *string) *NodeCreate {
+	if v != nil {
+		_c.SetPublicIP(*v)
+	}
+	return _c
+}
+
+// SetCandidatePublicIps sets the "candidate_public_ips" field.
+func (_c *NodeCreate) SetCandidatePublicIps(v []string) *NodeCreate {
+	_c.mutation.SetCandidatePublicIps(v)
+	return _c
+}
+
+// SetScanHost sets the "scan_host" field.
+func (_c *NodeCreate) SetScanHost(v string) *NodeCreate {
+	_c.mutation.SetScanHost(v)
+	return _c
+}
+
+// SetNillableScanHost sets the "scan_host" field if the given value is not nil.
+func (_c *NodeCreate) SetNillableScanHost(v *string) *NodeCreate {
+	if v != nil {
+		_c.SetScanHost(*v)
+	}
+	return _c
+}
+
+// SetProbePort sets the "probe_port" field.
+func (_c *NodeCreate) SetProbePort(v uint32) *NodeCreate {
+	_c.mutation.SetProbePort(v)
+	return _c
+}
+
+// SetNillableProbePort sets the "probe_port" field if the given value is not nil.
+func (_c *NodeCreate) SetNillableProbePort(v *uint32) *NodeCreate {
+	if v != nil {
+		_c.SetProbePort(*v)
+	}
+	return _c
+}
+
+// SetProbeProtocols sets the "probe_protocols" field.
+func (_c *NodeCreate) SetProbeProtocols(v []string) *NodeCreate {
+	_c.mutation.SetProbeProtocols(v)
+	return _c
+}
+
+// SetProbeCheckedAt sets the "probe_checked_at" field.
+func (_c *NodeCreate) SetProbeCheckedAt(v time.Time) *NodeCreate {
+	_c.mutation.SetProbeCheckedAt(v)
+	return _c
+}
+
+// SetNillableProbeCheckedAt sets the "probe_checked_at" field if the given value is not nil.
+func (_c *NodeCreate) SetNillableProbeCheckedAt(v *time.Time) *NodeCreate {
+	if v != nil {
+		_c.SetProbeCheckedAt(*v)
+	}
+	return _c
+}
+
+// SetLastScanStatus sets the "last_scan_status" field.
+func (_c *NodeCreate) SetLastScanStatus(v string) *NodeCreate {
+	_c.mutation.SetLastScanStatus(v)
+	return _c
+}
+
+// SetNillableLastScanStatus sets the "last_scan_status" field if the given value is not nil.
+func (_c *NodeCreate) SetNillableLastScanStatus(v *string) *NodeCreate {
+	if v != nil {
+		_c.SetLastScanStatus(*v)
+	}
+	return _c
+}
+
+// SetLastScanError sets the "last_scan_error" field.
+func (_c *NodeCreate) SetLastScanError(v string) *NodeCreate {
+	_c.mutation.SetLastScanError(v)
+	return _c
+}
+
+// SetNillableLastScanError sets the "last_scan_error" field if the given value is not nil.
+func (_c *NodeCreate) SetNillableLastScanError(v *string) *NodeCreate {
+	if v != nil {
+		_c.SetLastScanError(*v)
+	}
+	return _c
+}
+
+// SetLastScanLatencyMs sets the "last_scan_latency_ms" field.
+func (_c *NodeCreate) SetLastScanLatencyMs(v int64) *NodeCreate {
+	_c.mutation.SetLastScanLatencyMs(v)
+	return _c
+}
+
+// SetNillableLastScanLatencyMs sets the "last_scan_latency_ms" field if the given value is not nil.
+func (_c *NodeCreate) SetNillableLastScanLatencyMs(v *int64) *NodeCreate {
+	if v != nil {
+		_c.SetLastScanLatencyMs(*v)
+	}
+	return _c
+}
+
+// SetLastScanAt sets the "last_scan_at" field.
+func (_c *NodeCreate) SetLastScanAt(v time.Time) *NodeCreate {
+	_c.mutation.SetLastScanAt(v)
+	return _c
+}
+
+// SetNillableLastScanAt sets the "last_scan_at" field if the given value is not nil.
+func (_c *NodeCreate) SetNillableLastScanAt(v *time.Time) *NodeCreate {
+	if v != nil {
+		_c.SetLastScanAt(*v)
+	}
+	return _c
+}
+
 // SetLastOnlineAt sets the "last_online_at" field.
 func (_c *NodeCreate) SetLastOnlineAt(v time.Time) *NodeCreate {
 	_c.mutation.SetLastOnlineAt(v)
@@ -194,6 +318,38 @@ func (_c *NodeCreate) defaults() {
 		v := node.DefaultCapabilities
 		_c.mutation.SetCapabilities(v)
 	}
+	if _, ok := _c.mutation.PublicIP(); !ok {
+		v := node.DefaultPublicIP
+		_c.mutation.SetPublicIP(v)
+	}
+	if _, ok := _c.mutation.CandidatePublicIps(); !ok {
+		v := node.DefaultCandidatePublicIps
+		_c.mutation.SetCandidatePublicIps(v)
+	}
+	if _, ok := _c.mutation.ScanHost(); !ok {
+		v := node.DefaultScanHost
+		_c.mutation.SetScanHost(v)
+	}
+	if _, ok := _c.mutation.ProbePort(); !ok {
+		v := node.DefaultProbePort
+		_c.mutation.SetProbePort(v)
+	}
+	if _, ok := _c.mutation.ProbeProtocols(); !ok {
+		v := node.DefaultProbeProtocols
+		_c.mutation.SetProbeProtocols(v)
+	}
+	if _, ok := _c.mutation.LastScanStatus(); !ok {
+		v := node.DefaultLastScanStatus
+		_c.mutation.SetLastScanStatus(v)
+	}
+	if _, ok := _c.mutation.LastScanError(); !ok {
+		v := node.DefaultLastScanError
+		_c.mutation.SetLastScanError(v)
+	}
+	if _, ok := _c.mutation.LastScanLatencyMs(); !ok {
+		v := node.DefaultLastScanLatencyMs
+		_c.mutation.SetLastScanLatencyMs(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := node.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -223,6 +379,30 @@ func (_c *NodeCreate) check() error {
 	}
 	if _, ok := _c.mutation.Capabilities(); !ok {
 		return &ValidationError{Name: "capabilities", err: errors.New(`ent: missing required field "Node.capabilities"`)}
+	}
+	if _, ok := _c.mutation.PublicIP(); !ok {
+		return &ValidationError{Name: "public_ip", err: errors.New(`ent: missing required field "Node.public_ip"`)}
+	}
+	if _, ok := _c.mutation.CandidatePublicIps(); !ok {
+		return &ValidationError{Name: "candidate_public_ips", err: errors.New(`ent: missing required field "Node.candidate_public_ips"`)}
+	}
+	if _, ok := _c.mutation.ScanHost(); !ok {
+		return &ValidationError{Name: "scan_host", err: errors.New(`ent: missing required field "Node.scan_host"`)}
+	}
+	if _, ok := _c.mutation.ProbePort(); !ok {
+		return &ValidationError{Name: "probe_port", err: errors.New(`ent: missing required field "Node.probe_port"`)}
+	}
+	if _, ok := _c.mutation.ProbeProtocols(); !ok {
+		return &ValidationError{Name: "probe_protocols", err: errors.New(`ent: missing required field "Node.probe_protocols"`)}
+	}
+	if _, ok := _c.mutation.LastScanStatus(); !ok {
+		return &ValidationError{Name: "last_scan_status", err: errors.New(`ent: missing required field "Node.last_scan_status"`)}
+	}
+	if _, ok := _c.mutation.LastScanError(); !ok {
+		return &ValidationError{Name: "last_scan_error", err: errors.New(`ent: missing required field "Node.last_scan_error"`)}
+	}
+	if _, ok := _c.mutation.LastScanLatencyMs(); !ok {
+		return &ValidationError{Name: "last_scan_latency_ms", err: errors.New(`ent: missing required field "Node.last_scan_latency_ms"`)}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Node.created_at"`)}
@@ -289,6 +469,46 @@ func (_c *NodeCreate) createSpec() (*Node, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Capabilities(); ok {
 		_spec.SetField(node.FieldCapabilities, field.TypeJSON, value)
 		_node.Capabilities = value
+	}
+	if value, ok := _c.mutation.PublicIP(); ok {
+		_spec.SetField(node.FieldPublicIP, field.TypeString, value)
+		_node.PublicIP = value
+	}
+	if value, ok := _c.mutation.CandidatePublicIps(); ok {
+		_spec.SetField(node.FieldCandidatePublicIps, field.TypeJSON, value)
+		_node.CandidatePublicIps = value
+	}
+	if value, ok := _c.mutation.ScanHost(); ok {
+		_spec.SetField(node.FieldScanHost, field.TypeString, value)
+		_node.ScanHost = value
+	}
+	if value, ok := _c.mutation.ProbePort(); ok {
+		_spec.SetField(node.FieldProbePort, field.TypeUint32, value)
+		_node.ProbePort = value
+	}
+	if value, ok := _c.mutation.ProbeProtocols(); ok {
+		_spec.SetField(node.FieldProbeProtocols, field.TypeJSON, value)
+		_node.ProbeProtocols = value
+	}
+	if value, ok := _c.mutation.ProbeCheckedAt(); ok {
+		_spec.SetField(node.FieldProbeCheckedAt, field.TypeTime, value)
+		_node.ProbeCheckedAt = &value
+	}
+	if value, ok := _c.mutation.LastScanStatus(); ok {
+		_spec.SetField(node.FieldLastScanStatus, field.TypeString, value)
+		_node.LastScanStatus = value
+	}
+	if value, ok := _c.mutation.LastScanError(); ok {
+		_spec.SetField(node.FieldLastScanError, field.TypeString, value)
+		_node.LastScanError = value
+	}
+	if value, ok := _c.mutation.LastScanLatencyMs(); ok {
+		_spec.SetField(node.FieldLastScanLatencyMs, field.TypeInt64, value)
+		_node.LastScanLatencyMs = value
+	}
+	if value, ok := _c.mutation.LastScanAt(); ok {
+		_spec.SetField(node.FieldLastScanAt, field.TypeTime, value)
+		_node.LastScanAt = &value
 	}
 	if value, ok := _c.mutation.LastOnlineAt(); ok {
 		_spec.SetField(node.FieldLastOnlineAt, field.TypeTime, value)
@@ -423,6 +643,150 @@ func (u *NodeUpsert) SetCapabilities(v []string) *NodeUpsert {
 // UpdateCapabilities sets the "capabilities" field to the value that was provided on create.
 func (u *NodeUpsert) UpdateCapabilities() *NodeUpsert {
 	u.SetExcluded(node.FieldCapabilities)
+	return u
+}
+
+// SetPublicIP sets the "public_ip" field.
+func (u *NodeUpsert) SetPublicIP(v string) *NodeUpsert {
+	u.Set(node.FieldPublicIP, v)
+	return u
+}
+
+// UpdatePublicIP sets the "public_ip" field to the value that was provided on create.
+func (u *NodeUpsert) UpdatePublicIP() *NodeUpsert {
+	u.SetExcluded(node.FieldPublicIP)
+	return u
+}
+
+// SetCandidatePublicIps sets the "candidate_public_ips" field.
+func (u *NodeUpsert) SetCandidatePublicIps(v []string) *NodeUpsert {
+	u.Set(node.FieldCandidatePublicIps, v)
+	return u
+}
+
+// UpdateCandidatePublicIps sets the "candidate_public_ips" field to the value that was provided on create.
+func (u *NodeUpsert) UpdateCandidatePublicIps() *NodeUpsert {
+	u.SetExcluded(node.FieldCandidatePublicIps)
+	return u
+}
+
+// SetScanHost sets the "scan_host" field.
+func (u *NodeUpsert) SetScanHost(v string) *NodeUpsert {
+	u.Set(node.FieldScanHost, v)
+	return u
+}
+
+// UpdateScanHost sets the "scan_host" field to the value that was provided on create.
+func (u *NodeUpsert) UpdateScanHost() *NodeUpsert {
+	u.SetExcluded(node.FieldScanHost)
+	return u
+}
+
+// SetProbePort sets the "probe_port" field.
+func (u *NodeUpsert) SetProbePort(v uint32) *NodeUpsert {
+	u.Set(node.FieldProbePort, v)
+	return u
+}
+
+// UpdateProbePort sets the "probe_port" field to the value that was provided on create.
+func (u *NodeUpsert) UpdateProbePort() *NodeUpsert {
+	u.SetExcluded(node.FieldProbePort)
+	return u
+}
+
+// AddProbePort adds v to the "probe_port" field.
+func (u *NodeUpsert) AddProbePort(v uint32) *NodeUpsert {
+	u.Add(node.FieldProbePort, v)
+	return u
+}
+
+// SetProbeProtocols sets the "probe_protocols" field.
+func (u *NodeUpsert) SetProbeProtocols(v []string) *NodeUpsert {
+	u.Set(node.FieldProbeProtocols, v)
+	return u
+}
+
+// UpdateProbeProtocols sets the "probe_protocols" field to the value that was provided on create.
+func (u *NodeUpsert) UpdateProbeProtocols() *NodeUpsert {
+	u.SetExcluded(node.FieldProbeProtocols)
+	return u
+}
+
+// SetProbeCheckedAt sets the "probe_checked_at" field.
+func (u *NodeUpsert) SetProbeCheckedAt(v time.Time) *NodeUpsert {
+	u.Set(node.FieldProbeCheckedAt, v)
+	return u
+}
+
+// UpdateProbeCheckedAt sets the "probe_checked_at" field to the value that was provided on create.
+func (u *NodeUpsert) UpdateProbeCheckedAt() *NodeUpsert {
+	u.SetExcluded(node.FieldProbeCheckedAt)
+	return u
+}
+
+// ClearProbeCheckedAt clears the value of the "probe_checked_at" field.
+func (u *NodeUpsert) ClearProbeCheckedAt() *NodeUpsert {
+	u.SetNull(node.FieldProbeCheckedAt)
+	return u
+}
+
+// SetLastScanStatus sets the "last_scan_status" field.
+func (u *NodeUpsert) SetLastScanStatus(v string) *NodeUpsert {
+	u.Set(node.FieldLastScanStatus, v)
+	return u
+}
+
+// UpdateLastScanStatus sets the "last_scan_status" field to the value that was provided on create.
+func (u *NodeUpsert) UpdateLastScanStatus() *NodeUpsert {
+	u.SetExcluded(node.FieldLastScanStatus)
+	return u
+}
+
+// SetLastScanError sets the "last_scan_error" field.
+func (u *NodeUpsert) SetLastScanError(v string) *NodeUpsert {
+	u.Set(node.FieldLastScanError, v)
+	return u
+}
+
+// UpdateLastScanError sets the "last_scan_error" field to the value that was provided on create.
+func (u *NodeUpsert) UpdateLastScanError() *NodeUpsert {
+	u.SetExcluded(node.FieldLastScanError)
+	return u
+}
+
+// SetLastScanLatencyMs sets the "last_scan_latency_ms" field.
+func (u *NodeUpsert) SetLastScanLatencyMs(v int64) *NodeUpsert {
+	u.Set(node.FieldLastScanLatencyMs, v)
+	return u
+}
+
+// UpdateLastScanLatencyMs sets the "last_scan_latency_ms" field to the value that was provided on create.
+func (u *NodeUpsert) UpdateLastScanLatencyMs() *NodeUpsert {
+	u.SetExcluded(node.FieldLastScanLatencyMs)
+	return u
+}
+
+// AddLastScanLatencyMs adds v to the "last_scan_latency_ms" field.
+func (u *NodeUpsert) AddLastScanLatencyMs(v int64) *NodeUpsert {
+	u.Add(node.FieldLastScanLatencyMs, v)
+	return u
+}
+
+// SetLastScanAt sets the "last_scan_at" field.
+func (u *NodeUpsert) SetLastScanAt(v time.Time) *NodeUpsert {
+	u.Set(node.FieldLastScanAt, v)
+	return u
+}
+
+// UpdateLastScanAt sets the "last_scan_at" field to the value that was provided on create.
+func (u *NodeUpsert) UpdateLastScanAt() *NodeUpsert {
+	u.SetExcluded(node.FieldLastScanAt)
+	return u
+}
+
+// ClearLastScanAt clears the value of the "last_scan_at" field.
+func (u *NodeUpsert) ClearLastScanAt() *NodeUpsert {
+	u.SetNull(node.FieldLastScanAt)
 	return u
 }
 
@@ -588,6 +952,174 @@ func (u *NodeUpsertOne) SetCapabilities(v []string) *NodeUpsertOne {
 func (u *NodeUpsertOne) UpdateCapabilities() *NodeUpsertOne {
 	return u.Update(func(s *NodeUpsert) {
 		s.UpdateCapabilities()
+	})
+}
+
+// SetPublicIP sets the "public_ip" field.
+func (u *NodeUpsertOne) SetPublicIP(v string) *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetPublicIP(v)
+	})
+}
+
+// UpdatePublicIP sets the "public_ip" field to the value that was provided on create.
+func (u *NodeUpsertOne) UpdatePublicIP() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdatePublicIP()
+	})
+}
+
+// SetCandidatePublicIps sets the "candidate_public_ips" field.
+func (u *NodeUpsertOne) SetCandidatePublicIps(v []string) *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetCandidatePublicIps(v)
+	})
+}
+
+// UpdateCandidatePublicIps sets the "candidate_public_ips" field to the value that was provided on create.
+func (u *NodeUpsertOne) UpdateCandidatePublicIps() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateCandidatePublicIps()
+	})
+}
+
+// SetScanHost sets the "scan_host" field.
+func (u *NodeUpsertOne) SetScanHost(v string) *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetScanHost(v)
+	})
+}
+
+// UpdateScanHost sets the "scan_host" field to the value that was provided on create.
+func (u *NodeUpsertOne) UpdateScanHost() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateScanHost()
+	})
+}
+
+// SetProbePort sets the "probe_port" field.
+func (u *NodeUpsertOne) SetProbePort(v uint32) *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetProbePort(v)
+	})
+}
+
+// AddProbePort adds v to the "probe_port" field.
+func (u *NodeUpsertOne) AddProbePort(v uint32) *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.AddProbePort(v)
+	})
+}
+
+// UpdateProbePort sets the "probe_port" field to the value that was provided on create.
+func (u *NodeUpsertOne) UpdateProbePort() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateProbePort()
+	})
+}
+
+// SetProbeProtocols sets the "probe_protocols" field.
+func (u *NodeUpsertOne) SetProbeProtocols(v []string) *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetProbeProtocols(v)
+	})
+}
+
+// UpdateProbeProtocols sets the "probe_protocols" field to the value that was provided on create.
+func (u *NodeUpsertOne) UpdateProbeProtocols() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateProbeProtocols()
+	})
+}
+
+// SetProbeCheckedAt sets the "probe_checked_at" field.
+func (u *NodeUpsertOne) SetProbeCheckedAt(v time.Time) *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetProbeCheckedAt(v)
+	})
+}
+
+// UpdateProbeCheckedAt sets the "probe_checked_at" field to the value that was provided on create.
+func (u *NodeUpsertOne) UpdateProbeCheckedAt() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateProbeCheckedAt()
+	})
+}
+
+// ClearProbeCheckedAt clears the value of the "probe_checked_at" field.
+func (u *NodeUpsertOne) ClearProbeCheckedAt() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.ClearProbeCheckedAt()
+	})
+}
+
+// SetLastScanStatus sets the "last_scan_status" field.
+func (u *NodeUpsertOne) SetLastScanStatus(v string) *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetLastScanStatus(v)
+	})
+}
+
+// UpdateLastScanStatus sets the "last_scan_status" field to the value that was provided on create.
+func (u *NodeUpsertOne) UpdateLastScanStatus() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateLastScanStatus()
+	})
+}
+
+// SetLastScanError sets the "last_scan_error" field.
+func (u *NodeUpsertOne) SetLastScanError(v string) *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetLastScanError(v)
+	})
+}
+
+// UpdateLastScanError sets the "last_scan_error" field to the value that was provided on create.
+func (u *NodeUpsertOne) UpdateLastScanError() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateLastScanError()
+	})
+}
+
+// SetLastScanLatencyMs sets the "last_scan_latency_ms" field.
+func (u *NodeUpsertOne) SetLastScanLatencyMs(v int64) *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetLastScanLatencyMs(v)
+	})
+}
+
+// AddLastScanLatencyMs adds v to the "last_scan_latency_ms" field.
+func (u *NodeUpsertOne) AddLastScanLatencyMs(v int64) *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.AddLastScanLatencyMs(v)
+	})
+}
+
+// UpdateLastScanLatencyMs sets the "last_scan_latency_ms" field to the value that was provided on create.
+func (u *NodeUpsertOne) UpdateLastScanLatencyMs() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateLastScanLatencyMs()
+	})
+}
+
+// SetLastScanAt sets the "last_scan_at" field.
+func (u *NodeUpsertOne) SetLastScanAt(v time.Time) *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetLastScanAt(v)
+	})
+}
+
+// UpdateLastScanAt sets the "last_scan_at" field to the value that was provided on create.
+func (u *NodeUpsertOne) UpdateLastScanAt() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateLastScanAt()
+	})
+}
+
+// ClearLastScanAt clears the value of the "last_scan_at" field.
+func (u *NodeUpsertOne) ClearLastScanAt() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.ClearLastScanAt()
 	})
 }
 
@@ -925,6 +1457,174 @@ func (u *NodeUpsertBulk) SetCapabilities(v []string) *NodeUpsertBulk {
 func (u *NodeUpsertBulk) UpdateCapabilities() *NodeUpsertBulk {
 	return u.Update(func(s *NodeUpsert) {
 		s.UpdateCapabilities()
+	})
+}
+
+// SetPublicIP sets the "public_ip" field.
+func (u *NodeUpsertBulk) SetPublicIP(v string) *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetPublicIP(v)
+	})
+}
+
+// UpdatePublicIP sets the "public_ip" field to the value that was provided on create.
+func (u *NodeUpsertBulk) UpdatePublicIP() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdatePublicIP()
+	})
+}
+
+// SetCandidatePublicIps sets the "candidate_public_ips" field.
+func (u *NodeUpsertBulk) SetCandidatePublicIps(v []string) *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetCandidatePublicIps(v)
+	})
+}
+
+// UpdateCandidatePublicIps sets the "candidate_public_ips" field to the value that was provided on create.
+func (u *NodeUpsertBulk) UpdateCandidatePublicIps() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateCandidatePublicIps()
+	})
+}
+
+// SetScanHost sets the "scan_host" field.
+func (u *NodeUpsertBulk) SetScanHost(v string) *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetScanHost(v)
+	})
+}
+
+// UpdateScanHost sets the "scan_host" field to the value that was provided on create.
+func (u *NodeUpsertBulk) UpdateScanHost() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateScanHost()
+	})
+}
+
+// SetProbePort sets the "probe_port" field.
+func (u *NodeUpsertBulk) SetProbePort(v uint32) *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetProbePort(v)
+	})
+}
+
+// AddProbePort adds v to the "probe_port" field.
+func (u *NodeUpsertBulk) AddProbePort(v uint32) *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.AddProbePort(v)
+	})
+}
+
+// UpdateProbePort sets the "probe_port" field to the value that was provided on create.
+func (u *NodeUpsertBulk) UpdateProbePort() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateProbePort()
+	})
+}
+
+// SetProbeProtocols sets the "probe_protocols" field.
+func (u *NodeUpsertBulk) SetProbeProtocols(v []string) *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetProbeProtocols(v)
+	})
+}
+
+// UpdateProbeProtocols sets the "probe_protocols" field to the value that was provided on create.
+func (u *NodeUpsertBulk) UpdateProbeProtocols() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateProbeProtocols()
+	})
+}
+
+// SetProbeCheckedAt sets the "probe_checked_at" field.
+func (u *NodeUpsertBulk) SetProbeCheckedAt(v time.Time) *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetProbeCheckedAt(v)
+	})
+}
+
+// UpdateProbeCheckedAt sets the "probe_checked_at" field to the value that was provided on create.
+func (u *NodeUpsertBulk) UpdateProbeCheckedAt() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateProbeCheckedAt()
+	})
+}
+
+// ClearProbeCheckedAt clears the value of the "probe_checked_at" field.
+func (u *NodeUpsertBulk) ClearProbeCheckedAt() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.ClearProbeCheckedAt()
+	})
+}
+
+// SetLastScanStatus sets the "last_scan_status" field.
+func (u *NodeUpsertBulk) SetLastScanStatus(v string) *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetLastScanStatus(v)
+	})
+}
+
+// UpdateLastScanStatus sets the "last_scan_status" field to the value that was provided on create.
+func (u *NodeUpsertBulk) UpdateLastScanStatus() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateLastScanStatus()
+	})
+}
+
+// SetLastScanError sets the "last_scan_error" field.
+func (u *NodeUpsertBulk) SetLastScanError(v string) *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetLastScanError(v)
+	})
+}
+
+// UpdateLastScanError sets the "last_scan_error" field to the value that was provided on create.
+func (u *NodeUpsertBulk) UpdateLastScanError() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateLastScanError()
+	})
+}
+
+// SetLastScanLatencyMs sets the "last_scan_latency_ms" field.
+func (u *NodeUpsertBulk) SetLastScanLatencyMs(v int64) *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetLastScanLatencyMs(v)
+	})
+}
+
+// AddLastScanLatencyMs adds v to the "last_scan_latency_ms" field.
+func (u *NodeUpsertBulk) AddLastScanLatencyMs(v int64) *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.AddLastScanLatencyMs(v)
+	})
+}
+
+// UpdateLastScanLatencyMs sets the "last_scan_latency_ms" field to the value that was provided on create.
+func (u *NodeUpsertBulk) UpdateLastScanLatencyMs() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateLastScanLatencyMs()
+	})
+}
+
+// SetLastScanAt sets the "last_scan_at" field.
+func (u *NodeUpsertBulk) SetLastScanAt(v time.Time) *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetLastScanAt(v)
+	})
+}
+
+// UpdateLastScanAt sets the "last_scan_at" field to the value that was provided on create.
+func (u *NodeUpsertBulk) UpdateLastScanAt() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateLastScanAt()
+	})
+}
+
+// ClearLastScanAt clears the value of the "last_scan_at" field.
+func (u *NodeUpsertBulk) ClearLastScanAt() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.ClearLastScanAt()
 	})
 }
 

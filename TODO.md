@@ -1,394 +1,430 @@
-# RayIP V1 项目交付计划
+# RayIP V1 产品交付主线
 
-> 规划原则：Runtime first，但不是纯技术 spike。每个 Task 都必须形成可运行、可验收的产品能力，至少有管理端可见性、API/数据/任务链路、节点或 Runtime 验证、测试证据。商业目标放在需求优先级最前，技术实现顺序先打掉 NodeAgent + 魔改 XrayCore + gRPC 增量下发 + Xray 内限速这些最大未知数。
+> 版本：产品主线 v3
+> 日期：2026-04-30
+> 口径：可售真实性优先，首单闭环优先，生命周期其次，运营生产化最后。
 
-## 0. 项目目标
+`TODO.md` 是 RayIP V1 后续执行的唯一主线文档。`docs/rayip-v1-roadmap.md` 负责解释路线图成熟度，`docs/rayip-v1-requirements.md` 负责约束功能和验收口径；执行状态以本文为准。
 
-RayIP V1 是一个可商业运营的 toC 静态家宽代理销售平台。
+## 0. V1 产品目标
 
-V1 只做：
+RayIP V1 是面向 C 端客户销售静态家宽代理的平台。
+
+V1 只销售：
 
 - 静态家宽 IP
 - SOCKS5
 - HTTP
 
-核心验收：
+V1 不做：
 
-- 客户能注册、充值、购买、获得可用代理、续费、停用、刷新 IP、刷新凭据、查看流量。
-- 管理员能管理产品、价格、库存、节点、订单、任务、通知、Web SSH、退役和恢复。
-- 客户看到可购买，就必须已经满足可售、可发货、可使用。
-- Runtime 未确认前，客户不能看到代理凭据。
-- Postgres 是根源状态，Redis 是实时状态，NATS JetStream 是持久任务队列。
-- NodeAgent 与魔改 XrayCore 作为 Runtime Bundle 一起安装、升级、回滚。
-- NodeAgent `.env` 只保留 bootstrap 必要项；Runtime 版本、能力、限速池、账号禁用状态、滥用阈值和合规策略必须通过自发现、协商和控制面动态下发获得。
-- 托管 XrayCore gRPC 端口必须采用 `auto` 随机模式：每次启动先探测本机环回端口，启动或探活失败就换端口重试，避免与 3x-ui、旧 XrayTool 或其他 XrayCore 冲突。
-- 账号 Disabled、限速、连接数、合规和滥用处置必须由平台云控决策并下发；NodeAgent/XrayCore 只执行策略和上报事件，不做本地业务决策。
-- Runtime Bundle 是签名供应链资产；生产节点必须校验 manifest、hash、签名和 minimum allowed version。
-- 用户面板必须对齐 `frontend_design/` 的 RocketIP / IPIPD 风格：左侧分组导航、顶部余额和充值、紧凑购买页、强复制/导出/续费操作。
+- 专线产品
+- 动态住宅池
+- VMess / VLESS / Trojan / Shadowsocks / HY2 对外销售
+- 节点本地 UI
+- 3x-ui 集成
+- 多租户分销体系
 
-## 1. 交付结构
+客户必须能完成：注册、充值、购买静态家宽 SOCKS5/HTTP，Runtime ACK 后拿到真实可用代理，并能续费、停用、刷新 IP/凭据、查看流量。
 
-RayIP V1 分 3 个 Milestone、11 个厚 Task。
+管理员必须能完成：管理节点、库存、订单、任务、生命周期、故障恢复和 Test 环境验收。
 
-| Milestone | 目标 | Task |
+## 1. 产品不可变规则
+
+- 客户看到可买，必须已经满足：节点在线、候选公网 IP 可用、协议能力匹配、Runtime digest 一致、库存可用、线路启用、价格有效。
+- Runtime ACK 前不展示代理密码、连接串或新凭据。
+- 钱包、订单、库存、Runtime desired state 以 Postgres 为根源事实。
+- Redis 只做在线态、实时指标、短期缓存和限流，不承载根源事实。
+- NATS JetStream 只承载持久任务队列；消息只带索引，Worker 必须回 Postgres 读事实。
+- 健康检查、延迟、测速统一归入节点扫描 Worker，不拆独立测速模块。
+- 管理端可以展示 Runtime/NATS/Worker 等内部概念，客户界面不能暴露这些概念。
+- 任何充值、下单、续费、停用、刷新、Runtime apply 都必须幂等，最终结果落 Postgres。
+
+## 2. 当前真实状态
+
+### 已完成
+
+- Monorepo 基线已存在：`services/api`、`services/node-agent`、`packages/proto`、`apps/user-web`、`apps/admin-web`。
+- T1 本地工程基线已完成：API health/ready、NodeAgent lease、管理端节点在线/离线、基础 compose、前后台构建链路。
+- Runtime desired state 基座已存在：`runtime_account_states`、`runtime_change_log`、`outbox_events`。
+- Runtime outbox、NATS JetStream subject、durable worker、job/attempt 记录和手动 process 管理入口已有实现基础。
+- `node_runtime_status` 和 `noderuntime` 服务已有，能计算节点可售状态和不可售 reason code。
+- Control gRPC 已能把 RuntimeObservation / RuntimeApplyAck 写入节点 runtime 状态。
+- snapshot/reconcile planner 已支持按 desired state 分页构建 `SNAPSHOT` apply。
+- 商业骨架已有部分落地：用户、钱包、价格、库存、订单、代理账号等 Ent 模型和商业服务骨架已经在工作树中出现。
+- NodeAgent 已有候选公网 IP 发现、控制面探测和节点扫描队列相关代码基础。
+
+### 部分完成
+
+- T2 Runtime P0 已有 NodeAgent/XrayCore 管理代码和测试骨架，但真实 XrayCore 内账号级限速、连接数、usage、digest 仍需实测闭环。
+- T3 desired-state + NATS Worker 已有主体链路，但必须用真实 Runtime ACK/NACK 和断线重连场景补齐验证。
+- T4 可售判断已有状态模型，但必须改成“候选公网 IP -> 平台逐 IP 探测 -> 通过后入库存”的产品主线。
+- T5-T7 商业模型已有基础，但首单从注册、充值、购买、钱包冻结、库存预约、Runtime ACK、扣款交付的真实 smoke 尚未完成。
+
+### 未完成
+
+- 真实 Linux 节点上的 SOCKS5/HTTP 入站和出站逐 IP 验证。
+- 平台扫描样例 `IP:PORT:user:pass` 的队列化健康探测、延迟、失败 reason code 和入库闸门。
+- Runtime ACK 前后客户凭据可见性闸门。
+- NACK/超时后 wallet hold、inventory reservation 和 proxy account 的补偿释放。
+- 续费、停用、过期删除、刷新 IP、刷新凭据和流量展示的真实 Runtime smoke。
+- 管理运营中心、任务控制台、Web SSH、退役、恢复和 Test 环境故障演练。
+
+### 必须真实 smoke
+
+- 管理员创建测试 SOCKS5/HTTP 代理并真实连接。
+- NodeAgent 扫描网卡公网 IP，平台逐个扫描 `204.42.251.2:9878:testuser1:testpass1` 这种代理候选。
+- 候选 IP 必须证明可入站、可出站，未通过、私网、CGNAT、默认出口漂移 IP 不进入可售目录。
+- 用户从 0 开始注册、充值、购买 1 个静态家宽代理，ACK 后可复制连接串并真实连接。
+- 停用/过期后 Runtime remove resource，原代理连接失败。
+
+## 3. 产品闸门
+
+| Gate | 名称 | 退出标准 |
 |---|---|---|
-| M1：Runtime 可行性闸门 | 证明节点能接、Xray 能控、策略能生效、任务能可靠送达，避免把商业流程建在不确定 Runtime 上 | T1-T4 |
-| M2：商业交易闭环 | 在已验证 Runtime 上完成可售目录、钱包充值、首单购买、生命周期和客户自助 | T5-T8 |
-| M3：生产运营闭环 | 完成管理运营、节点恢复、Web SSH、发布硬化和 Test 环境验收 | T9-T11 |
+| G1 | Runtime 可控可验收 | NodeAgent + XrayCore 能创建 SOCKS5/HTTP 账号，限速、连接数、流量、digest 有实测证据，重复 apply 不重复改 Runtime |
+| G2 | 真实节点可售 | NodeAgent 上报 `candidate_public_ips`，平台队列逐 IP 探测代理连通性和延迟，通过后才进入库存 |
+| G3 | 首单商业闭环 | 注册、充值、余额下单、钱包冻结、库存预约、Runtime 发货、ACK 后扣款交付，NACK/超时可补偿 |
+| G4 | 生命周期自助 | 我的代理、续费、停用、过期删除、刷新 IP/凭据、流量展示全部以 Runtime 确认为准 |
+| G5 | 生产运营闭环 | 管理驾驶舱、任务控制台、告警、Web SSH、退役、恢复、Test 环境 E2E 和故障演练完成 |
 
-Task 完成定义：
+## 4. 交付结构
 
-- 有明确用户价值或管理员价值。
-- 有前端入口或管理端入口。
-- 有 API、领域逻辑、数据库迁移和关键约束。
-- 涉及异步动作时，必须有 outbox / NATS / Worker 和幂等处理。
-- 涉及 Runtime 时，必须打通 API -> NodeAgent -> XrayCore，并有结构化 apply result。
-- 有管理端可见性：状态、结果、错误原因、审计或任务时间线。
-- 有单元、集成、契约或 E2E 验收。
-- 涉及用户面板时，必须按 [用户故事与前端设计计划](./docs/plans/rayip-v1-user-stories-and-frontend-plan.md) 做设计和流程验收。
-- 开工前必须按 [开发前契约冻结清单](./docs/plans/rayip-v1-contract-freeze-checklist.md) 冻结本 Task 的最小契约。
-- 不满足上述条件，不能算 Task 完成。
+| Milestone | 产品成熟度 | Gate | Task |
+|---|---|---|---|
+| M1：可控可售基础 | Runtime 能控，真实节点能被证明可售 | G1-G2 | T1-T4 |
+| M2：首单与生命周期 | 客户能完成真实购买和主要自助操作 | G3-G4 | T5-T8 |
+| M3：生产运营 | 管理员能运营、恢复、发布和演练 | G5 | T9-T11 |
 
-## 2. Milestone 与 Task
+## 5. Task 主线
 
-## M1：Runtime 可行性闸门
+### T1：工程基线与真实 NodeAgent 在线
 
-目标：先证明 RayIP 的数据面和控制面成立。没有这个闸门，不进入正式销售闭环。
+Status: 已完成本地验收，后续提交前仍需跑对应 CI。
 
-### T1：薄工程基线 + 第一台节点在线
+Value:
+- 管理员能看到真实 NodeAgent 在线/离线，项目能端到端启动。
 
-状态：已完成本地验收，等待后续提交后跑远端 CI。
+Why now:
+- 所有 Runtime、库存和商业链路都依赖节点在线态和基础服务可运行。
 
-价值：
+Scope:
+- Monorepo 基线、API health/ready/version、NodeAgent enrollment/lease、Redis 在线态、Postgres 节点表、管理端节点列表、前后台构建、compose。
 
-- 项目可以端到端运行，管理员能看到真实 NodeAgent 在线/离线，而不是只有空服务。
-
-交付范围：
-
-- Monorepo 基线：`services/api`、`services/node-agent`、`packages/proto`、`apps/user-web`、`apps/admin-web`。
-- API：Fiber + Fx + Zap + Viper，提供 health、ready、version。
-- NodeAgent：Fx + Zap + Viper，能启动、读取配置、连接 API。
-- Proto：control/runtime/metrics/common 的最小消息，能生成 Go 代码。
-- 管理面板：节点列表、节点详情、节点在线状态。
-- 用户面板：登录壳和购买入口壳即可，不做商业逻辑。
-- 基础设施：本地 Postgres / Redis / NATS compose。
-- Redis：节点 lease 和 session route。
-- DB：nodes、node_agent_sessions、node_capability_snapshots 的最小版本。
-- CI：Go test/build、前端 typecheck/build。
-
-验收：
-
+Acceptance:
 - [x] 本地一条命令启动 Postgres / Redis / NATS。
 - [x] API health / ready 可访问。
 - [x] NodeAgent 可连接 API 并保持 lease。
 - [x] 管理端能看到真实 NodeAgent 在线/离线。
 - [x] API 重启后 NodeAgent 可自动重连。
-- [x] 前后台可构建，Proto 可生成 Go 代码，CI 工作流已落地，本地同等命令通过。
+- [x] 前后台可构建，Proto 可生成 Go 代码。
 
-### T2：XrayCore Runtime 能力 P0
+Evidence:
+- 已有本地验收记录；提交前补远端 CI 结果。
 
-价值：
+### T2：Runtime P0：SOCKS5/HTTP、限速、连接数、usage、digest
 
-- 证明魔改 XrayCore 可以兑现 RayIP 产品承诺：SOCKS5/HTTP、账号级限速、连接数限制、流量统计和 digest。
+Status: 部分完成，真实 XrayCore 行为仍是 G1 阻塞项。
 
-交付范围：
+Value:
+- 管理员能创建测试代理，并证明 RayIP 真实能兑现 SOCKS5/HTTP、限速、连接数、流量统计和 digest。
 
-- XrayCore fork：作为独立仓库维护，RayIP 用 `third_party/xray-core` submodule 固定源码指针。
-- Runtime Bundle Supply Chain：manifest、binary hash、签名、allowed channel、minimum allowed version、原子切换和回滚。
-- ZTP：bootstrap token 只用于首次注册，注册后使用短期 node credential / session identity。
-- Capability Negotiation：NodeAgent 从 manifest + XrayCore 扩展 API 自发现能力，API 返回 `ACCEPTED / NEEDS_UPGRADE / QUARANTINED / UNSUPPORTED_CAPABILITY / DIGEST_MISMATCH`。
-- XrayCore：实现或验证 `UpsertAccount`、`DeleteAccount`、`DisableAccount`、`UpdatePolicy`、`GetUsage`、`GetDigest`。
-- XrayCore：实现账号级 token bucket、智能公平限速、连接数限制、usage stats、abuse event、runtime digest。
-- NodeAgent：本机 gRPC Xray API / 扩展 API client，管理 XrayCore 进程、随机 gRPC 端口探测/重试和 Runtime health。
-- API：Runtime Lab 接口，允许管理员创建测试账号、更新策略、禁用账号、读取流量和 digest。
-- 管理面板：Runtime Lab 页面，展示测试代理、策略、流量、digest、apply 结果。
-- DB：runtime lab 测试记录、runtime_apply_results、node_runtime_capabilities、runtime_bundle_versions 的最小结构。
-- 测试：账号增量创建/删除、重复 apply 幂等、限速、连接数限制、流量统计、digest。
+Why now:
+- Runtime 是商业发货的最大技术风险；不证明 Runtime，就不能推进首单闭环。
 
-验收：
+Scope:
+- NodeAgent 托管 XrayCore，随机 loopback gRPC 端口探测/重试。
+- XrayCore 扩展 API：`UpsertAccount`、`DeleteAccount`、`DisableAccount`、`UpdatePolicy`、`GetUsage`、`GetDigest`。
+- SOCKS5/HTTP 测试账号真实创建、连接、删除。
+- 账号级限速、连接数限制、usage stats、digest。
+- Runtime Bundle manifest、hash、签名、capabilities、extension ABI。
+- 管理端 Runtime Lab 和 apply result。
 
-- [ ] 管理员可在 Runtime Lab 创建 SOCKS5/HTTP 测试代理。
-- [ ] NodeAgent 不依赖 env 声明 Runtime 能力，能力来自 manifest 和 XrayCore 扩展 API 自发现。
-- [ ] API 对 Runtime Bundle 和能力协商做准入，不兼容节点进入 DEGRADED / QUARANTINED。
-- [ ] Runtime Bundle manifest、binary hash、签名校验失败时节点不可售。
+Acceptance:
+- [ ] 管理员可在 Runtime Lab 创建 SOCKS5 和 HTTP 测试代理。
 - [ ] 测试代理可真实连接。
-- [ ] XrayCore 内账号级限速生效。
-- [ ] XrayCore 内基于优先级、固定限速和短期流量消耗的智能公平限速生效。
-- [ ] XrayCore 内账号级连接数限制生效。
-- [ ] XrayCore 可返回账号级上下行流量。
-- [ ] XrayCore 可上报滥用事件，但不本地禁用或改限速；API 可按策略禁用、限速、上报或人工审核并通过 RuntimeCommand 下发。
-- [ ] NodeAgent 启动托管 XrayCore 时使用随机 loopback gRPC 端口，端口占用或探活失败会换端口重试。
+- [ ] 账号级限速有可复现实测证据。
+- [ ] 账号级连接数限制有可复现实测证据。
+- [ ] 账号级上下行 usage 可读取并和连接测试对应。
+- [ ] Runtime digest 可复现，和期望状态一致。
 - [ ] 重复 apply 同一 generation 不产生副作用。
+- [ ] Bundle manifest、hash、签名或能力校验失败时节点不可售。
 
-### T3：可靠增量下发通道
+Evidence:
+- 必须保留命令、日志、curl/socks/http 连接结果、usage 前后值和 digest 对比。
 
-价值：
+### T3：Runtime desired-state + NATS Worker 可靠下发
 
-- 证明任务可以从 Postgres 期望状态可靠送到 NodeAgent/XrayCore，重复投递、断线、重试都不会破坏 Runtime。
+Status: 部分完成，需接入真实 Runtime ACK/NACK 验证。
 
-当前进展：
+Value:
+- 业务动作可以可靠变成 Runtime 期望状态，并通过 NATS Worker 幂等下发到 NodeAgent/XrayCore。
 
-- 已落地 Runtime desired state 的 Ent 基座：`runtime_account_states`、`runtime_change_log`、`outbox_events`。
-- 已新增 `runtimecontrol` 领域服务，支持正式代理资源 upsert/remove 时同步写当前期望状态、节点单调 seq 变更日志和 outbox 索引事件。
-- 已新增 outbox publisher、NATS JetStream `RAYIP_RUNTIME` / `rayip.runtime.apply.v1`、durable worker、job/attempt 记录和手动 process 管理入口。
-- Worker 已按节点回读 Postgres desired state/change log 组装 `RuntimeApply`，ACK 推进 accepted revision，NACK/调度失败保留 last good revision 并记录错误。
+Why now:
+- 首单、续费、停用、刷新都依赖同一条可靠 apply 通道。
 
-交付范围：
+Scope:
+- Postgres desired state、change log、outbox。
+- NATS JetStream stream/subject/durable consumer/ack/redelivery/DLQ。
+- Worker 收索引消息后回 Postgres 读取事实，组装 Runtime batch。
+- NodeAgent 以 `version_info + nonce + ACK/NACK + last_good_generation` 回执。
+- 管理端任务控制台最小闭环。
 
-- API：Runtime 期望状态、change seq、outbox 事件、手动测试代理任务。
-- NATS JetStream：stream、subject、durable consumer、ack、redelivery、DLQ。
-- Worker：读取 outbox/NATS 消息，回 Postgres 读取当前期望状态，生成 Runtime batch。
-- NodeAgent：接收 batch，按账号/generation apply，返回账号级成功、失败、跳过、重复。
-- XrayCore：继续使用 T2 的增量 API。
-- Runtime 下发：采用 `version_info + nonce + ACK/NACK + last_good_generation`，NACK 必须带错误细节。
-- 管理面板：最小任务控制台，展示任务状态、attempt、错误分类、apply result。
-- DB：runtime_account_states、runtime_change_log、outbox_events、runtime_apply_results、node_jobs、node_job_attempts 的最小闭环。
-- 测试：重复消息、Worker 重启、NodeAgent 断线重连、apply 部分失败、outbox 重放。
-
-验收：
-
-- [ ] 管理员创建测试代理时，链路是 PG -> outbox -> NATS -> Worker -> NodeAgent -> XrayCore。
+Acceptance:
 - [ ] NATS 消息只带索引，不带业务事实大 payload。
-- [ ] Worker 必须回 Postgres 读取当前期望状态。
+- [ ] Worker 必须回 Postgres 读取当前 desired state。
 - [ ] 重复消息不会重复修改 Runtime。
-- [ ] NodeAgent 对同一 `version_info + nonce` 的重复下发返回一致 ACK/NACK，不重复改 Runtime。
-- [ ] NACK 后 API 保留 last good generation，并在管理端展示错误原因。
+- [ ] NodeAgent 对重复 `version_info + nonce` 返回一致 ACK/NACK。
+- [ ] NACK 后 API 保留 last good generation，并展示错误原因。
 - [ ] NodeAgent 断线重连后能继续处理未完成变更。
 - [ ] 管理端能看到任务时间线和账号级 apply result。
 
-### T4：节点能力、可售闸门和 10k 恢复验证
+Evidence:
+- 单测覆盖重复消息、Worker 重启、断线重连、部分失败；集成 smoke 覆盖 PG -> outbox -> NATS -> Worker -> NodeAgent -> Runtime。
 
-价值：
+### T4：家宽节点可售发现：候选公网 IP、健康扫描、不可售原因
 
-- 证明“可售”不是后台手填数量，而是由节点健康、Bundle 能力、Runtime digest 和恢复能力共同决定。
+Status: 部分完成，是 G2 当前主线。
 
-当前进展：
+Value:
+- 客户看到的库存来自真实可连接的家宽 IP，而不是人工填数或只看节点在线。
 
-- 已新增 `node_runtime_status` Ent 模型和 `noderuntime` 服务，统一计算 `SELLABLE` 与不可售 reason code。
-- Control gRPC 已把 RuntimeObservation / RuntimeApplyAck 写入节点 runtime 状态，管理端可查看可售状态、revision 水位、digest 和不可售原因。
-- 已新增 snapshot/reconcile planner，支持按 desired state 分页构建 `SNAPSHOT` apply，默认每页最多 500 个 resource。
+Why now:
+- 首单闭环前必须证明“可售”真实，否则会出现能下单但不可用。
 
-交付范围：
+Scope:
+- NodeAgent 扫描网卡、路由和出口，生成 `candidate_public_ips`。
+- 平台节点扫描 Worker 为每个候选 IP 创建临时 SOCKS5/HTTP 探测凭据。
+- 平台队列逐条扫描 `IP:PORT:user:pass`，验证入站可达、出站出口一致、延迟和基础吞吐。
+- 私网、CGNAT、默认出口漂移、端口不可达、认证失败、协议不匹配、digest mismatch 全部写 reason code。
+- 通过扫描的 IP 才进入 `node_inventory_ips` 的 `AVAILABLE` 候选，未通过不进入客户可售目录。
+- 管理端展示候选 IP、扫描状态、延迟、失败原因、最近成功时间。
 
-- API：节点健康评分、身份校验、Bundle 签名/hash/channel/能力协商、可售闸门、Runtime digest 对账。
-- API：节点身份、Bundle 签名/hash、channel、minimum version、合规 hold、滥用状态纳入可售判断。
-- NodeAgent：上报 bundle_version、XrayCore version、extension ABI、capabilities、manifest hash、binary hash、账号数、generation 水位、snapshot digest。
-- XrayCore：digest 分桶、账号数量、异常账号列表。
-- 管理面板：节点能力页、不可售原因、digest 对账结果。
-- DB：node_runtime_status、node_capability_snapshots、runtime digest 对账记录。
-- 压测/恢复：单节点 10k+ 测试账号分页 apply、分页 digest、断点续传。
-- 测试：OFFLINE、DEGRADED、能力不匹配、digest 不一致时停止新销售。
+Acceptance:
+- [ ] NodeAgent 上报 `candidate_public_ips`。
+- [ ] 平台队列能逐个扫描 `IP:PORT:user:pass`。
+- [ ] 每个入库 IP 都证明可入站、可出站。
+- [ ] 未通过扫描、私网、CGNAT、默认出口漂移 IP 不进入可售目录。
+- [ ] OFFLINE、DEGRADED、capability mismatch、digest mismatch、manual/compliance hold 的节点不卖新库存。
+- [ ] 管理端能看到不可售 reason code。
 
-验收：
+Evidence:
+- 真实 Linux 节点 smoke：候选 IP 列表、扫描任务记录、成功/失败样例、入库结果和用户可售目录对比。
 
-- [ ] 节点 OFFLINE / DEGRADED / 能力不匹配时不可售。
-- [ ] 节点 QUARANTINED / NEEDS_UPGRADE / 签名校验失败 / 合规 hold 时不可售。
-- [ ] Runtime digest 不一致时相关库存不可售并提示原因。
-- [ ] 单节点 10k+ 账号可分页 apply 和 digest 对账。
-- [ ] 恢复过程支持断点续传，不依赖整份配置重写。
-- [ ] 管理端能看到节点为什么不可售。
+### T5：用户、钱包、充值、审计
 
-## M2：商业交易闭环
+Status: 部分商业骨架已有，仍需闭环验证。
 
-目标：在已验证 Runtime 上完成用户、钱包、可售目录、首单发货和主要生命周期能力。
+Value:
+- 客户可注册登录、充值入账、查看余额；管理员可审计钱包和充值流水。
 
-### T5：用户、管理员、钱包和充值闭环
+Why now:
+- 首单闭环必须先有正确的钱包根源事实和幂等充值。
 
-价值：
+Scope:
+- 用户注册/登录、管理员登录/RBAC、钱包、不可变流水、充值订单、易支付模拟/回调、审计日志。
+- Idempotency-Key 或第三方交易号门闩。
 
-- 客户可以注册登录、查看余额、完成充值；管理员可以审计用户、钱包和充值流水。
-
-交付范围：
-
-- 用户面板：注册、登录、账户概览、余额、充值记录。
-- 管理面板：用户列表、用户详情、钱包流水、充值订单、审计记录。
-- API：用户认证、管理员认证、RBAC、钱包、不可变流水、充值订单。
-- 易支付：充值模拟和易支付回调接口，回调必须幂等。
-- DB：users、admin_users、wallets、wallet_ledger、payment_orders、audit_logs。
-- 安全：密码 hash、Cookie/session 或 token 策略、管理员操作审计。
-- 测试：登录、充值入账、重复回调不重复入账、钱包流水不可变。
-
-验收：
-
+Acceptance:
 - [ ] 用户可注册、登录、查看余额。
 - [ ] 用户可发起充值模拟并入账。
 - [ ] 同一充值回调重复投递不会重复入账。
-- [ ] 所有充值、购买、续费入口必须有 Idempotency-Key 或第三方交易号幂等门闩。
-- [ ] 管理员可查看用户、钱包流水、充值订单。
 - [ ] 钱包流水不可修改，只能追加。
+- [ ] 管理员可查看用户、钱包流水、充值订单和审计日志。
 
-### T6：真实可售目录、产品价格和库存预约
+Evidence:
+- 单测覆盖充值回调幂等、钱包流水不可变；集成测试覆盖充值事务。
 
-价值：
+### T6：产品、价格、地区线路、库存预约
 
-- 客户能看到真实可售的地区、线路、协议、价格和数量；不可发货的库存不会展示。
+Status: 部分商业骨架已有，需和 G2 可售扫描合并。
 
-交付范围：
+Value:
+- 客户只看到真实可售的地区、线路、协议、价格和数量；并发下单不会超卖。
 
-- 用户面板：购买页的用途、IP 类型、国家/城市、线路、协议、时长、数量、价格预览、可售数量。
-- 管理面板：产品、价格、用途、地区、城市、线路、库存 IP、rate policy、可售开关。
-- API：产品目录、价格计算、可售库存查询、库存预约预检查。
-- DB：products、product_prices、regions、cities、lines、node_inventory_ips、rate_policies、inventory_reservations。
-- Redis：可售库存热缓存和预约过期提醒，但不能作为根源事实。
-- 规则：节点必须 ACTIVE、身份有效、Bundle 签名/hash 通过、channel 允许、能力匹配、digest 一致、合规/滥用状态 clean、库存 AVAILABLE、线路启用、价格有效才可售。
-- 测试：价格计算、不可售过滤、库存状态条件更新、并发预约防超卖。
+Why now:
+- 这是首单前的售卖目录和库存事务闸门。
 
-验收：
+Scope:
+- 产品、价格、用途、国家/城市、线路、协议、时长、数量、rate policy。
+- 库存状态、库存预约、预约过期释放。
+- 可售查询必须同时满足节点在线、候选公网 IP 扫描通过、协议能力匹配、digest 一致、线路启用、价格有效、库存可用。
 
+Acceptance:
 - [ ] 管理员可配置产品、价格、地区、线路、库存和速率策略。
 - [ ] 用户购买页只展示真实可售地区、线路和数量。
 - [ ] 禁用线路、禁用库存、异常节点、能力不匹配节点不会出现在可售结果中。
 - [ ] 并发库存预约不超卖。
 - [ ] Redis 丢失不影响 Postgres 库存事实。
 
-### T7：首单购买、钱包冻结和 Runtime 发货
+Evidence:
+- 单测覆盖价格计算、可售过滤、reason code、并发预约；集成测试覆盖预约事务。
 
-价值：
+### T7：首单下单与 Runtime ACK 交付
 
-- 客户购买 1 个静态家宽 SOCKS5/HTTP 后，能拿到真实可用代理。
+Status: 未完成，是 G3 核心主线。
 
-交付范围：
+Value:
+- 客户从 0 开始购买 1 个静态家宽 SOCKS5/HTTP，ACK 后拿到真实可用代理。
 
-- 用户面板：提交订单、余额支付、订单处理中、代理凭据展示。
-- 管理面板：订单详情、代理账号详情、发货任务时间线。
-- API：库存预约、钱包冻结、订单创建、代理账号创建、Runtime 期望状态、outbox。
-- NATS/Worker：发货任务，消息只带索引，Worker 回 Postgres 读当前期望状态。
-- NodeAgent/XrayCore：复用 M1 的可靠增量 apply，创建正式代理账号。
-- DB：wallet_holds、proxy_orders、proxy_accounts、runtime_account_states、runtime_change_log、runtime_apply_results、outbox_events。
-- 测试：并发下单不超卖、重复请求幂等、发货失败释放库存和冻结余额。
+Why now:
+- 这是 V1 第一个商业闭环；完成前不继续扩后台 CRUD。
 
-验收：
+Scope:
+- 注册用户余额下单、钱包冻结、库存预约、订单创建、代理账号创建、Runtime desired state、outbox 同事务。
+- Runtime ACK 后扣款、库存 SOLD、订单 ACTIVE、凭据可复制。
+- Runtime ACK 前订单显示发货中，不展示代理密码、连接串或新凭据。
+- NACK/超时释放 wallet hold、inventory reservation，并把订单推进失败/退款状态。
+- 管理端订单详情和发货时间线。
 
-- [ ] 客户可购买一个静态家宽 SOCKS5/HTTP。
-- [ ] Runtime 未确认前，客户看不到代理凭据。
-- [ ] 发货成功后扣款并展示凭据。
-- [ ] 发货失败后释放库存和冻结余额。
+Acceptance:
+- [ ] 用户可购买一个静态家宽 SOCKS5/HTTP。
+- [ ] ACK 前订单显示发货中且无凭据。
+- [ ] ACK 后扣款、库存 SOLD、代理凭据可复制且可连接。
+- [ ] NACK/超时释放 wallet hold 和 inventory reservation。
 - [ ] 代理可实际连接并产生账号级流量。
 - [ ] 重复下单请求返回同一业务结果，不重复扣款。
 
-### T8：代理生命周期、IP 刷新、流量和开发者 App
+Evidence:
+- E2E smoke 录制或日志：注册 -> 充值 -> 购买 -> ACK -> 连接代理 -> usage 增量。
 
-价值：
+### T8：生命周期：续费、停用、过期、刷新 IP/凭据、流量
 
-- 客户可以管理已购买代理，平台状态和 Runtime 状态保持一致，并支持基础自动化调用。
+Status: 未完成，是 G4 主线。
 
-交付范围：
+Value:
+- 客户能自助管理代理，平台状态和 Runtime 状态保持一致。
 
-- 用户面板：我的代理、代理详情、续费、停用、IP 刷新、凭据刷新、流量图、开发者 App、IP 白名单、Webhook。
-- 管理面板：生命周期操作、IP 刷新记录、流量汇总、开发者 App、Webhook 投递、优惠券、邀请、反馈。
-- API：续费冻结/确认、停用、过期任务、凭据刷新、IP 刷新、流量查询、开发者 API 签名、nonce、防重放、Webhook。
-- NATS/Worker：renew、disable、expire、refresh_credential、refresh_ip、traffic_rollup、webhook_delivery、notification。
-- NodeAgent/XrayCore：账号策略更新、禁用、凭据更新、IP 刷新 apply、账号流量读取、Runtime digest。
-- DB：traffic_rollups、developer_apps、developer_app_secrets、developer_app_ip_allowlists、developer_app_webhooks、notification_events、coupons、referrals、feedback。
-- 测试：续费同步 Runtime、停用后不可用、凭据刷新确认后展示、IP 刷新确认后展示、开发者 API 签名和防重放。
+Why now:
+- 首单之后必须证明订单不是一次性交付，而是可运营生命周期。
 
-验收：
+Scope:
+- 我的代理、代理详情、续费、停用、过期删除、刷新 IP、刷新凭据、流量展示。
+- Runtime desired state 更新、ACK 后才更新客户可见凭据/IP。
+- 过期扫描 Worker、流量 rollup Worker、Webhook/通知基础。
 
-- [ ] 续费成功后平台过期时间和 Runtime 策略一致。
-- [ ] 停用/过期后代理不可用。
-- [ ] 凭据刷新 Runtime 确认后才展示新凭据。
-- [ ] IP 刷新确认后才展示新 IP。
+Acceptance:
+- [ ] 续费后平台到期时间和 Runtime resource version 同步。
+- [ ] 停用/过期后 Runtime remove resource，代理连接失败。
+- [ ] 刷新 IP 必须 Runtime 确认后才展示新 IP。
+- [ ] 刷新凭据必须 Runtime 确认后才展示新凭据。
 - [ ] 客户可查看每个代理上下行流量。
-- [ ] 客户可创建多个开发者 App，AppID/AppSecret 签名、防重放、IP 白名单生效。
-- [ ] Webhook 投递失败可重试，不影响主流程。
 
-## M3：生产运营闭环
+Evidence:
+- 生命周期 smoke：续费、停用、过期删除、刷新 IP、刷新凭据、usage 展示。
 
-目标：完成商业运营所需的管理员体验、节点恢复能力和 Test 发布门槛。
+### T9：管理运营中心与任务控制台
 
-### T9：管理员运营中心、任务控制台和 Bark 告警
+Status: 未完成。
 
-价值：
+Value:
+- 管理员能看到节点、库存、订单、任务、Runtime apply 和失败原因。
 
-- 管理员能知道系统是否可售、节点是否健康、任务是否成功，不需要靠客户投诉发现问题。
+Why now:
+- 生产运营需要发现问题、定位问题和安全重试，但不能替代主流程正确性。
 
-交付范围：
+Scope:
+- 管理驾驶舱、实时节点面板、任务控制台、订单时间线、不可售原因、Bark 告警。
+- CPU/RAM/磁盘/连接数/速度/账号数/Runtime 状态上报。
+- 任务重试、取消、对账、DLQ、通知事件。
 
-- 管理面板：概览、实时节点面板、任务控制台、订单时间线、不可售原因、Bark 配置。
-- API：节点健康评分、任务查询、任务重试/取消/对账、通知事件。
-- Redis：实时指标窗口。
-- Postgres：分钟/小时指标聚合、任务历史、通知投递。
-- NATS/Worker：Bark 通知、任务 DLQ、对账触发。
-- NodeAgent：CPU、RAM、磁盘、连接数、速度、Runtime 状态、账号数上报。
-- 测试：节点离线告警、任务失败告警、通知失败不影响主业务。
-
-验收：
-
-- [ ] 管理员能看到所有节点实时速度、CPU、RAM、存储、连接数、流量。
-- [ ] 管理员能看到节点不可售原因。
-- [ ] 管理员能查看任务时间线并安全重试或触发对账。
+Acceptance:
+- [ ] 管理员能看到节点、库存、订单、任务和 Runtime apply 状态。
+- [ ] 管理员能看到每个不可售原因和任务失败原因。
+- [ ] 管理员能安全重试、取消或触发对账。
 - [ ] Bark 可收到节点离线、DEGRADED、任务最终失败、库存低水位告警。
 
-### T10：ZTP、Web SSH、节点退役和自动恢复
+Evidence:
+- 管理端截图/API smoke、告警投递记录、任务失败和重试样例。
 
-价值：
+### T10：节点接入、Web SSH、退役、恢复
 
-- 管理员可以方便接入、诊断、退役和恢复节点；节点故障不会变成客户侧不可解释事故。
+Status: 未完成。
 
-交付范围：
+Value:
+- 管理员可以接入、诊断、退役和恢复节点，节点故障不变成客户侧不可解释事故。
 
-- 管理面板：节点安装、复制一键脚本、Web SSH、退役流程、恢复记录。
-- API：SSH 凭据加密、host key fingerprint、recovery token、退役状态机、恢复 Job。
-- NATS/Worker：ssh_recover_node、retire_node、reconcile。
-- NodeAgent：Web SSH PTY 桥接、重装恢复、last applied seq、snapshot digest。
-- XrayCore：digest 对账、账号级分页恢复、重复 apply 幂等。
-- DB：node_jobs、node_job_attempts、terminal audit、retirement state、recovery audit。
-- 测试：SSH 自动恢复、NodeAgent 重装恢复、10k+ 账号分页恢复、退役中不卖新库存。
+Why now:
+- 真实运营必须具备节点维护和恢复能力。
 
-验收：
+Scope:
+- 节点安装脚本、ZTP enrollment、Web SSH、SSH 凭据加密、host key fingerprint、recovery token。
+- 节点退役状态机、退役中不卖新库存。
+- SSH 自动恢复 NodeAgent + XrayCore Runtime Bundle。
+- NodeAgent 重装后根据 Postgres desired state 恢复已有订单。
 
-- [ ] 管理员可从后台 SSH 安装节点或复制一键脚本。
+Acceptance:
+- [ ] 管理员可复制一键脚本或通过后台 SSH 安装节点。
 - [ ] 管理员可从节点详情打开 Web SSH。
 - [ ] 退役中节点不再销售新库存。
 - [ ] NodeAgent 重装后能恢复已有指派订单。
 - [ ] SSH 可达时平台能自动修复离线 NodeAgent。
-- [ ] 单节点 10k+ 账号恢复不需要整机重写配置。
 
-### T11：Railway Test、发布门槛和生产硬化
+Evidence:
+- 一键安装日志、Web SSH 审计、退役 smoke、重装恢复 smoke。
 
-价值：
+### T11：Test 环境、E2E、故障演练、发布门槛
 
-- 项目可以在 Test 环境完整验收，具备进入生产运营的基本质量门槛。
+Status: 未完成。
 
-交付范围：
+Value:
+- RayIP V1 可以在 Test 环境完整验收，具备进入生产运营的基本质量门槛。
 
-- Railway：项目 `RayIP`，环境 `Test`，Postgres、Redis、NATS、API、user-web、admin-web。
-- 节点：至少一个真实 Linux 节点部署 NodeAgent + XrayCore Runtime Bundle。
-- 自动化：E2E 冒烟、并发下单、充值回调、outbox 重放、NodeAgent 重连/重装、Redis 降级、NATS 故障、Bark 失败。
-- 安全：Secret 管理、SSH 凭据加密、管理员审计、开发者 API 防重放。
-- 运维：备份策略、迁移策略、日志级别、错误码、发布回滚。
-- 文档：部署说明、运维手册、发布检查表。
+Why now:
+- 生产发布前必须证明端到端链路和故障降级，而不是只证明本地 happy path。
 
-验收：
+Scope:
+- Railway/Dokploy/Test 环境：Postgres、Redis、NATS、API、user-web、admin-web。
+- 至少一台真实 Linux 节点部署 NodeAgent + XrayCore Runtime Bundle。
+- E2E smoke：注册、充值、购买、连接、续费、停用、刷新 IP/凭据、流量。
+- 故障演练：Redis、NATS、NodeAgent 断线、Runtime NACK、Bark 失败、节点重装。
+- 发布检查表、备份、回滚、Secret 管理、审计。
 
-- [ ] Test 环境完成注册、充值模拟、购买、发货、使用代理、续费、停用、IP 刷新、凭据刷新。
+Acceptance:
+- [ ] Test 环境完成完整 E2E。
 - [ ] 并发下单不超卖。
 - [ ] 发货失败不扣款。
 - [ ] Runtime 未确认不展示凭据。
 - [ ] NodeAgent 掉线后节点不可售。
-- [ ] NodeAgent 重装恢复已有订单。
-- [ ] Redis / NATS / Bark 故障场景有明确降级行为。
+- [ ] Redis/NATS/NodeAgent 断线有明确降级与恢复行为。
 - [ ] 发布检查表全部通过。
 
-## 3. 风险登记
+Evidence:
+- E2E 报告、故障演练记录、发布检查表。
 
-| 风险 | 影响 | 前置处理 |
-|---|---|---|
-| 商业流程先于 Runtime | 订单、库存、钱包建在不确定数据面上，后期大返工 | M1 先完成 Runtime 可行性闸门 |
-| XrayCore 魔改限速/连接数能力不足 | 产品策略无法兑现 | T2 必须真实验证账号级限速和连接数 |
-| XrayCore 增量 API 不完整 | 日常发货、续费、停用、刷新只能靠重写配置 | T2 必须覆盖 upsert/delete/disable/update policy/usage/digest |
-| 可靠任务链路不成立 | 重复投递、断线、重试导致 Runtime 状态错乱 | T3 固定 PG 期望状态 + outbox + NATS + generation + apply result |
-| 可售库存是手工判断 | 客户能买到不可发货或不可用库存 | T4 让可售依赖节点健康、Bundle 能力和 Runtime digest |
-| 钱包/库存事务边界错误 | 超卖、重复扣款、退款错误 | T6/T7 必须包含并发和幂等测试 |
-| NodeAgent 重装恢复不幂等 | 已售代理丢失或重复下发 | T4/T10 必须完成 generation、snapshot digest、分页恢复 |
-| 管理面板变成失败补救列表 | 主流程不可靠 | 客户动作必须以 Runtime 确认后对客户可见为验收 |
-| Redis 职责越界 | 热状态丢失影响订单事实 | 钱包、库存、订单、幂等结果只以 Postgres 为准 |
+## 6. 测试计划
 
-## 4. 发布前总验收
+### 单元测试
 
+- 钱包流水幂等。
+- 充值回调幂等。
+- Idempotency-Key 下单幂等。
+- 库存预约并发不超卖。
+- 可售 reason code：offline、digest mismatch、unsupported capability、manual/compliance hold、no candidate public IP、scan failed、egress mismatch。
+- 节点扫描 Worker 指数退避、最大重试、NATS 消息索引化。
+
+### 集成测试
+
+- Postgres 事务下的钱包 hold、库存 reservation、订单状态推进。
+- Runtime desired state outbox 到 NATS Worker，再到 RuntimeApply ACK/NACK。
+- NodeAgent 重连后继续处理未完成变更。
+- NACK/超时后补偿释放 wallet hold 和 inventory reservation。
+
+### E2E smoke
+
+- Docker Compose 本地商业链路 smoke。
+- 真实 Linux 节点 smoke：NodeAgent 扫网卡公网 IP，平台逐 IP SOCKS5/HTTP 验证。
+- 首单真实代理连接 smoke。
+- 停用后连接失败 smoke。
+
+## 7. 发布前总验收
+
+- [ ] G1 Runtime 可控可验收。
+- [ ] G2 真实节点可售。
+- [ ] G3 首单商业闭环。
+- [ ] G4 生命周期自助。
+- [ ] G5 生产运营闭环。
 - [ ] 客户侧：注册、登录、充值、余额、购买、代理详情、流量、续费、停用、IP 刷新、凭据刷新、反馈。
 - [ ] 管理侧：用户、钱包、账单、充值、产品价格、地区线路、库存、订单、代理账号、节点、退役、任务、通知、审计。
-- [ ] 节点侧：ZTP、enrollment、Bundle 检查、增量下发、流量上报、重连恢复、重装恢复、Web SSH。
-- [ ] Runtime：XrayCore 内限速、连接数限制、流量统计、digest、账号级增量 apply 生效。
+- [ ] 节点侧：ZTP、enrollment、Bundle 检查、候选公网 IP 扫描、增量下发、流量上报、重连恢复、重装恢复、Web SSH。
 - [ ] 正确性：不可售库存不展示、发货失败不扣款、Runtime 未确认不展示凭据、续费/停用/过期同步 Runtime、并发下单不超卖。
-- [ ] 运维性：管理员能看到节点健康、不可售原因、任务失败原因，并能安全触发重试、对账、退役、SSH。

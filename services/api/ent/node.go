@@ -30,6 +30,26 @@ type Node struct {
 	XrayVersion string `json:"xray_version,omitempty"`
 	// Capabilities holds the value of the "capabilities" field.
 	Capabilities []string `json:"capabilities,omitempty"`
+	// PublicIP holds the value of the "public_ip" field.
+	PublicIP string `json:"public_ip,omitempty"`
+	// CandidatePublicIps holds the value of the "candidate_public_ips" field.
+	CandidatePublicIps []string `json:"candidate_public_ips,omitempty"`
+	// ScanHost holds the value of the "scan_host" field.
+	ScanHost string `json:"scan_host,omitempty"`
+	// ProbePort holds the value of the "probe_port" field.
+	ProbePort uint32 `json:"probe_port,omitempty"`
+	// ProbeProtocols holds the value of the "probe_protocols" field.
+	ProbeProtocols []string `json:"probe_protocols,omitempty"`
+	// ProbeCheckedAt holds the value of the "probe_checked_at" field.
+	ProbeCheckedAt *time.Time `json:"probe_checked_at,omitempty"`
+	// LastScanStatus holds the value of the "last_scan_status" field.
+	LastScanStatus string `json:"last_scan_status,omitempty"`
+	// LastScanError holds the value of the "last_scan_error" field.
+	LastScanError string `json:"last_scan_error,omitempty"`
+	// LastScanLatencyMs holds the value of the "last_scan_latency_ms" field.
+	LastScanLatencyMs int64 `json:"last_scan_latency_ms,omitempty"`
+	// LastScanAt holds the value of the "last_scan_at" field.
+	LastScanAt *time.Time `json:"last_scan_at,omitempty"`
 	// LastOnlineAt holds the value of the "last_online_at" field.
 	LastOnlineAt *time.Time `json:"last_online_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -44,11 +64,13 @@ func (*Node) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case node.FieldCapabilities:
+		case node.FieldCapabilities, node.FieldCandidatePublicIps, node.FieldProbeProtocols:
 			values[i] = new([]byte)
-		case node.FieldID, node.FieldCode, node.FieldStatus, node.FieldBundleVersion, node.FieldAgentVersion, node.FieldXrayVersion:
+		case node.FieldProbePort, node.FieldLastScanLatencyMs:
+			values[i] = new(sql.NullInt64)
+		case node.FieldID, node.FieldCode, node.FieldStatus, node.FieldBundleVersion, node.FieldAgentVersion, node.FieldXrayVersion, node.FieldPublicIP, node.FieldScanHost, node.FieldLastScanStatus, node.FieldLastScanError:
 			values[i] = new(sql.NullString)
-		case node.FieldLastOnlineAt, node.FieldCreatedAt, node.FieldUpdatedAt:
+		case node.FieldProbeCheckedAt, node.FieldLastScanAt, node.FieldLastOnlineAt, node.FieldCreatedAt, node.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -108,6 +130,72 @@ func (_m *Node) assignValues(columns []string, values []any) error {
 				if err := json.Unmarshal(*value, &_m.Capabilities); err != nil {
 					return fmt.Errorf("unmarshal field capabilities: %w", err)
 				}
+			}
+		case node.FieldPublicIP:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field public_ip", values[i])
+			} else if value.Valid {
+				_m.PublicIP = value.String
+			}
+		case node.FieldCandidatePublicIps:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field candidate_public_ips", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.CandidatePublicIps); err != nil {
+					return fmt.Errorf("unmarshal field candidate_public_ips: %w", err)
+				}
+			}
+		case node.FieldScanHost:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field scan_host", values[i])
+			} else if value.Valid {
+				_m.ScanHost = value.String
+			}
+		case node.FieldProbePort:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field probe_port", values[i])
+			} else if value.Valid {
+				_m.ProbePort = uint32(value.Int64)
+			}
+		case node.FieldProbeProtocols:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field probe_protocols", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &_m.ProbeProtocols); err != nil {
+					return fmt.Errorf("unmarshal field probe_protocols: %w", err)
+				}
+			}
+		case node.FieldProbeCheckedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field probe_checked_at", values[i])
+			} else if value.Valid {
+				_m.ProbeCheckedAt = new(time.Time)
+				*_m.ProbeCheckedAt = value.Time
+			}
+		case node.FieldLastScanStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field last_scan_status", values[i])
+			} else if value.Valid {
+				_m.LastScanStatus = value.String
+			}
+		case node.FieldLastScanError:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field last_scan_error", values[i])
+			} else if value.Valid {
+				_m.LastScanError = value.String
+			}
+		case node.FieldLastScanLatencyMs:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field last_scan_latency_ms", values[i])
+			} else if value.Valid {
+				_m.LastScanLatencyMs = value.Int64
+			}
+		case node.FieldLastScanAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_scan_at", values[i])
+			} else if value.Valid {
+				_m.LastScanAt = new(time.Time)
+				*_m.LastScanAt = value.Time
 			}
 		case node.FieldLastOnlineAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -181,6 +269,40 @@ func (_m *Node) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("capabilities=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Capabilities))
+	builder.WriteString(", ")
+	builder.WriteString("public_ip=")
+	builder.WriteString(_m.PublicIP)
+	builder.WriteString(", ")
+	builder.WriteString("candidate_public_ips=")
+	builder.WriteString(fmt.Sprintf("%v", _m.CandidatePublicIps))
+	builder.WriteString(", ")
+	builder.WriteString("scan_host=")
+	builder.WriteString(_m.ScanHost)
+	builder.WriteString(", ")
+	builder.WriteString("probe_port=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ProbePort))
+	builder.WriteString(", ")
+	builder.WriteString("probe_protocols=")
+	builder.WriteString(fmt.Sprintf("%v", _m.ProbeProtocols))
+	builder.WriteString(", ")
+	if v := _m.ProbeCheckedAt; v != nil {
+		builder.WriteString("probe_checked_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
+	builder.WriteString(", ")
+	builder.WriteString("last_scan_status=")
+	builder.WriteString(_m.LastScanStatus)
+	builder.WriteString(", ")
+	builder.WriteString("last_scan_error=")
+	builder.WriteString(_m.LastScanError)
+	builder.WriteString(", ")
+	builder.WriteString("last_scan_latency_ms=")
+	builder.WriteString(fmt.Sprintf("%v", _m.LastScanLatencyMs))
+	builder.WriteString(", ")
+	if v := _m.LastScanAt; v != nil {
+		builder.WriteString("last_scan_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	if v := _m.LastOnlineAt; v != nil {
 		builder.WriteString("last_online_at=")

@@ -23,6 +23,7 @@ const (
 	UnsellableUnsupportedCapability UnsellableReason = "UNSUPPORTED_CAPABILITY"
 	UnsellableDigestMismatch        UnsellableReason = "DIGEST_MISMATCH"
 	UnsellableRuntimeLagging        UnsellableReason = "RUNTIME_LAGGING"
+	UnsellableNoCandidatePublicIP   UnsellableReason = "NO_CANDIDATE_PUBLIC_IP"
 	UnsellableManualHold            UnsellableReason = "MANUAL_HOLD"
 	UnsellableComplianceHold        UnsellableReason = "COMPLIANCE_HOLD"
 )
@@ -38,6 +39,7 @@ type StatusInput struct {
 	RuntimeDigestHash    string
 	AccountCount         uint64
 	Capabilities         []string
+	CandidatePublicIPs   []string
 	RequiredCapabilities []string
 	ManifestHash         string
 	BinaryHash           string
@@ -67,6 +69,7 @@ type Status struct {
 	RuntimeDigestHash  string
 	AccountCount       uint64
 	Capabilities       []string
+	CandidatePublicIPs []string
 	ManifestHash       string
 	BinaryHash         string
 	ExtensionABI       string

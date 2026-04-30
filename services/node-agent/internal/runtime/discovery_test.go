@@ -2,6 +2,8 @@ package runtime_test
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"net"
 	"os"
 	"path/filepath"
@@ -94,6 +96,36 @@ func TestDiscoverOverridesManifestWithXrayExtension(t *testing.T) {
 	}
 	if info.RuntimeDigest != "digest-1" || info.LastGoodGeneration != 9 {
 		t.Fatalf("runtime digest/generation not discovered: %#v", info)
+	}
+}
+
+func TestDiscoverComputesXrayBinaryHashWhenManifestMissing(t *testing.T) {
+	addr, cleanup := runtimeDiscoveryServer(t)
+	defer cleanup()
+	dir := t.TempDir()
+	binaryPath := filepath.Join(dir, "xray")
+	binaryPayload := []byte("fake-xray-binary")
+	if err := os.WriteFile(binaryPath, binaryPayload, 0o700); err != nil {
+		t.Fatalf("write binary: %v", err)
+	}
+
+	info, err := runtime.Discover(runtime.DiscoveryConfig{
+		AgentVersion: "agent-1",
+		ManifestPath: filepath.Join(dir, "missing.json"),
+		CoreMode:     "xray",
+		XrayGRPCAddr: addr,
+		BinaryPath:   binaryPath,
+	})
+	if err != nil {
+		t.Fatalf("Discover() error = %v", err)
+	}
+	expectedSum := sha256.Sum256(binaryPayload)
+	expectedHash := "sha256:" + hex.EncodeToString(expectedSum[:])
+	if info.BinarySHA256 != expectedHash {
+		t.Fatalf("binary hash = %q, want %q", info.BinarySHA256, expectedHash)
+	}
+	if info.ExtensionABI != "rayip.runtime.v1" || info.RuntimeDigest != "digest-1" {
+		t.Fatalf("runtime extension metadata not discovered: %#v", info)
 	}
 }
 

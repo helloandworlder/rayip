@@ -12,17 +12,37 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/rayip/rayip/services/api/ent/adminuser"
+	"github.com/rayip/rayip/services/api/ent/auditlog"
+	"github.com/rayip/rayip/services/api/ent/city"
+	"github.com/rayip/rayip/services/api/ent/fulfillmentattempt"
+	"github.com/rayip/rayip/services/api/ent/fulfillmentjob"
+	"github.com/rayip/rayip/services/api/ent/inventoryreservation"
+	"github.com/rayip/rayip/services/api/ent/line"
 	"github.com/rayip/rayip/services/api/ent/node"
 	"github.com/rayip/rayip/services/api/ent/nodeagentsession"
 	"github.com/rayip/rayip/services/api/ent/nodecapabilitysnapshot"
+	"github.com/rayip/rayip/services/api/ent/nodeinventoryip"
 	"github.com/rayip/rayip/services/api/ent/nodejob"
 	"github.com/rayip/rayip/services/api/ent/nodejobattempt"
 	"github.com/rayip/rayip/services/api/ent/noderuntimestatus"
 	"github.com/rayip/rayip/services/api/ent/outboxevent"
+	"github.com/rayip/rayip/services/api/ent/paymentorder"
+	"github.com/rayip/rayip/services/api/ent/product"
+	"github.com/rayip/rayip/services/api/ent/productprice"
+	"github.com/rayip/rayip/services/api/ent/proxyaccount"
+	"github.com/rayip/rayip/services/api/ent/proxyorder"
+	"github.com/rayip/rayip/services/api/ent/ratepolicy"
+	"github.com/rayip/rayip/services/api/ent/region"
 	"github.com/rayip/rayip/services/api/ent/runtimeaccountstate"
 	"github.com/rayip/rayip/services/api/ent/runtimeapplyresult"
 	"github.com/rayip/rayip/services/api/ent/runtimechangelog"
 	"github.com/rayip/rayip/services/api/ent/runtimelabaccount"
+	"github.com/rayip/rayip/services/api/ent/session"
+	"github.com/rayip/rayip/services/api/ent/user"
+	"github.com/rayip/rayip/services/api/ent/wallet"
+	"github.com/rayip/rayip/services/api/ent/wallethold"
+	"github.com/rayip/rayip/services/api/ent/walletledger"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -83,17 +103,37 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
+			adminuser.Table:              adminuser.ValidColumn,
+			auditlog.Table:               auditlog.ValidColumn,
+			city.Table:                   city.ValidColumn,
+			fulfillmentattempt.Table:     fulfillmentattempt.ValidColumn,
+			fulfillmentjob.Table:         fulfillmentjob.ValidColumn,
+			inventoryreservation.Table:   inventoryreservation.ValidColumn,
+			line.Table:                   line.ValidColumn,
 			node.Table:                   node.ValidColumn,
 			nodeagentsession.Table:       nodeagentsession.ValidColumn,
 			nodecapabilitysnapshot.Table: nodecapabilitysnapshot.ValidColumn,
+			nodeinventoryip.Table:        nodeinventoryip.ValidColumn,
 			nodejob.Table:                nodejob.ValidColumn,
 			nodejobattempt.Table:         nodejobattempt.ValidColumn,
 			noderuntimestatus.Table:      noderuntimestatus.ValidColumn,
 			outboxevent.Table:            outboxevent.ValidColumn,
+			paymentorder.Table:           paymentorder.ValidColumn,
+			product.Table:                product.ValidColumn,
+			productprice.Table:           productprice.ValidColumn,
+			proxyaccount.Table:           proxyaccount.ValidColumn,
+			proxyorder.Table:             proxyorder.ValidColumn,
+			ratepolicy.Table:             ratepolicy.ValidColumn,
+			region.Table:                 region.ValidColumn,
 			runtimeaccountstate.Table:    runtimeaccountstate.ValidColumn,
 			runtimeapplyresult.Table:     runtimeapplyresult.ValidColumn,
 			runtimechangelog.Table:       runtimechangelog.ValidColumn,
 			runtimelabaccount.Table:      runtimelabaccount.ValidColumn,
+			session.Table:                session.ValidColumn,
+			user.Table:                   user.ValidColumn,
+			wallet.Table:                 wallet.ValidColumn,
+			wallethold.Table:             wallethold.ValidColumn,
+			walletledger.Table:           walletledger.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

@@ -48,24 +48,40 @@ func (r *EntRepository) UpsertLease(ctx context.Context, input LeaseInput, now t
 			SetAgentVersion(input.AgentVersion).
 			SetXrayVersion(input.XrayVersion).
 			SetCapabilities(capabilities).
+			SetPublicIP(input.PublicIP).
+			SetCandidatePublicIps(input.CandidatePublicIPs).
+			SetScanHost(input.ScanHost).
+			SetProbePort(input.ProbePort).
+			SetProbeProtocols(input.ProbeProtocols).
 			SetLastOnlineAt(now).
 			SetCreatedAt(now).
 			SetUpdatedAt(now).
 			Save(ctx)
+		if err == nil && !input.ProbeCheckedAt.IsZero() {
+			record, err = tx.Node.UpdateOneID(record.ID).SetProbeCheckedAt(input.ProbeCheckedAt).Save(ctx)
+		}
 	}
 	if err != nil {
 		return NodeRecord{}, err
 	}
 	if record.Code == input.NodeCode && !record.CreatedAt.Equal(now) {
-		record, err = tx.Node.UpdateOneID(record.ID).
+		update := tx.Node.UpdateOneID(record.ID).
 			SetStatus(string(StatusOnline)).
 			SetBundleVersion(input.BundleVersion).
 			SetAgentVersion(input.AgentVersion).
 			SetXrayVersion(input.XrayVersion).
 			SetCapabilities(capabilities).
+			SetPublicIP(input.PublicIP).
+			SetCandidatePublicIps(input.CandidatePublicIPs).
+			SetScanHost(input.ScanHost).
+			SetProbePort(input.ProbePort).
+			SetProbeProtocols(input.ProbeProtocols).
 			SetLastOnlineAt(now).
-			SetUpdatedAt(now).
-			Save(ctx)
+			SetUpdatedAt(now)
+		if !input.ProbeCheckedAt.IsZero() {
+			update.SetProbeCheckedAt(input.ProbeCheckedAt)
+		}
+		record, err = update.Save(ctx)
 		if err != nil {
 			return NodeRecord{}, err
 		}
@@ -99,7 +115,10 @@ func (r *EntRepository) UpsertLease(ctx context.Context, input LeaseInput, now t
 		SetCreatedAt(now).
 		SetUpdatedAt(now).
 		OnConflict(sql.ConflictColumns("node_id", "bundle_version", "agent_version", "xray_version", "capabilities_hash")).
-		DoNothing().
+		Update(func(u *apiEnt.NodeCapabilitySnapshotUpsert) {
+			u.SetCapturedAt(now)
+			u.SetUpdatedAt(now)
+		}).
 		Exec(ctx); err != nil {
 		return NodeRecord{}, err
 	}
@@ -109,6 +128,17 @@ func (r *EntRepository) UpsertLease(ctx context.Context, input LeaseInput, now t
 	}
 	committed = true
 	return nodeRecordFromEnt(record), nil
+}
+
+func (r *EntRepository) Get(ctx context.Context, nodeID string) (NodeRecord, bool, error) {
+	item, err := r.client.Node.Get(ctx, nodeID)
+	if apiEnt.IsNotFound(err) {
+		return NodeRecord{}, false, nil
+	}
+	if err != nil {
+		return NodeRecord{}, false, err
+	}
+	return nodeRecordFromEnt(item), true, nil
 }
 
 func (r *EntRepository) List(ctx context.Context) ([]NodeRecord, error) {
@@ -123,22 +153,49 @@ func (r *EntRepository) List(ctx context.Context) ([]NodeRecord, error) {
 	return records, nil
 }
 
+func (r *EntRepository) SaveScanResult(ctx context.Context, nodeID string, result ScanResult) error {
+	update := r.client.Node.UpdateOneID(nodeID).
+		SetLastScanStatus(result.Status).
+		SetLastScanError(result.Error).
+		SetLastScanLatencyMs(result.LatencyMs).
+		SetUpdatedAt(result.ScannedAt)
+	if !result.ScannedAt.IsZero() {
+		update.SetLastScanAt(result.ScannedAt)
+	}
+	return update.Exec(ctx)
+}
+
 func nodeRecordFromEnt(item *apiEnt.Node) NodeRecord {
 	lastOnlineAt := time.Time{}
 	if item.LastOnlineAt != nil {
 		lastOnlineAt = *item.LastOnlineAt
 	}
-	return NodeRecord{
-		ID:            item.ID,
-		Code:          item.Code,
-		BundleVersion: item.BundleVersion,
-		AgentVersion:  item.AgentVersion,
-		XrayVersion:   item.XrayVersion,
-		Capabilities:  append([]string(nil), item.Capabilities...),
-		LastOnlineAt:  lastOnlineAt,
-		CreatedAt:     item.CreatedAt,
-		UpdatedAt:     item.UpdatedAt,
+	record := NodeRecord{
+		ID:                 item.ID,
+		Code:               item.Code,
+		BundleVersion:      item.BundleVersion,
+		AgentVersion:       item.AgentVersion,
+		XrayVersion:        item.XrayVersion,
+		Capabilities:       append([]string(nil), item.Capabilities...),
+		PublicIP:           item.PublicIP,
+		CandidatePublicIPs: append([]string(nil), item.CandidatePublicIps...),
+		ScanHost:           item.ScanHost,
+		ProbePort:          item.ProbePort,
+		ProbeProtocols:     append([]string(nil), item.ProbeProtocols...),
+		LastScanStatus:     item.LastScanStatus,
+		LastScanError:      item.LastScanError,
+		LastScanLatency:    time.Duration(item.LastScanLatencyMs) * time.Millisecond,
+		LastOnlineAt:       lastOnlineAt,
+		CreatedAt:          item.CreatedAt,
+		UpdatedAt:          item.UpdatedAt,
 	}
+	if item.ProbeCheckedAt != nil {
+		record.ProbeCheckedAt = *item.ProbeCheckedAt
+	}
+	if item.LastScanAt != nil {
+		record.LastScanAt = *item.LastScanAt
+	}
+	return record
 }
 
 func normalizeCapabilities(capabilities []string) ([]string, string, error) {

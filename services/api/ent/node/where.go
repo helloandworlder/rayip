@@ -89,6 +89,46 @@ func XrayVersion(v string) predicate.Node {
 	return predicate.Node(sql.FieldEQ(FieldXrayVersion, v))
 }
 
+// PublicIP applies equality check predicate on the "public_ip" field. It's identical to PublicIPEQ.
+func PublicIP(v string) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldPublicIP, v))
+}
+
+// ScanHost applies equality check predicate on the "scan_host" field. It's identical to ScanHostEQ.
+func ScanHost(v string) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldScanHost, v))
+}
+
+// ProbePort applies equality check predicate on the "probe_port" field. It's identical to ProbePortEQ.
+func ProbePort(v uint32) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldProbePort, v))
+}
+
+// ProbeCheckedAt applies equality check predicate on the "probe_checked_at" field. It's identical to ProbeCheckedAtEQ.
+func ProbeCheckedAt(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldProbeCheckedAt, v))
+}
+
+// LastScanStatus applies equality check predicate on the "last_scan_status" field. It's identical to LastScanStatusEQ.
+func LastScanStatus(v string) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldLastScanStatus, v))
+}
+
+// LastScanError applies equality check predicate on the "last_scan_error" field. It's identical to LastScanErrorEQ.
+func LastScanError(v string) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldLastScanError, v))
+}
+
+// LastScanLatencyMs applies equality check predicate on the "last_scan_latency_ms" field. It's identical to LastScanLatencyMsEQ.
+func LastScanLatencyMs(v int64) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldLastScanLatencyMs, v))
+}
+
+// LastScanAt applies equality check predicate on the "last_scan_at" field. It's identical to LastScanAtEQ.
+func LastScanAt(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldLastScanAt, v))
+}
+
 // LastOnlineAt applies equality check predicate on the "last_online_at" field. It's identical to LastOnlineAtEQ.
 func LastOnlineAt(v time.Time) predicate.Node {
 	return predicate.Node(sql.FieldEQ(FieldLastOnlineAt, v))
@@ -427,6 +467,446 @@ func XrayVersionEqualFold(v string) predicate.Node {
 // XrayVersionContainsFold applies the ContainsFold predicate on the "xray_version" field.
 func XrayVersionContainsFold(v string) predicate.Node {
 	return predicate.Node(sql.FieldContainsFold(FieldXrayVersion, v))
+}
+
+// PublicIPEQ applies the EQ predicate on the "public_ip" field.
+func PublicIPEQ(v string) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldPublicIP, v))
+}
+
+// PublicIPNEQ applies the NEQ predicate on the "public_ip" field.
+func PublicIPNEQ(v string) predicate.Node {
+	return predicate.Node(sql.FieldNEQ(FieldPublicIP, v))
+}
+
+// PublicIPIn applies the In predicate on the "public_ip" field.
+func PublicIPIn(vs ...string) predicate.Node {
+	return predicate.Node(sql.FieldIn(FieldPublicIP, vs...))
+}
+
+// PublicIPNotIn applies the NotIn predicate on the "public_ip" field.
+func PublicIPNotIn(vs ...string) predicate.Node {
+	return predicate.Node(sql.FieldNotIn(FieldPublicIP, vs...))
+}
+
+// PublicIPGT applies the GT predicate on the "public_ip" field.
+func PublicIPGT(v string) predicate.Node {
+	return predicate.Node(sql.FieldGT(FieldPublicIP, v))
+}
+
+// PublicIPGTE applies the GTE predicate on the "public_ip" field.
+func PublicIPGTE(v string) predicate.Node {
+	return predicate.Node(sql.FieldGTE(FieldPublicIP, v))
+}
+
+// PublicIPLT applies the LT predicate on the "public_ip" field.
+func PublicIPLT(v string) predicate.Node {
+	return predicate.Node(sql.FieldLT(FieldPublicIP, v))
+}
+
+// PublicIPLTE applies the LTE predicate on the "public_ip" field.
+func PublicIPLTE(v string) predicate.Node {
+	return predicate.Node(sql.FieldLTE(FieldPublicIP, v))
+}
+
+// PublicIPContains applies the Contains predicate on the "public_ip" field.
+func PublicIPContains(v string) predicate.Node {
+	return predicate.Node(sql.FieldContains(FieldPublicIP, v))
+}
+
+// PublicIPHasPrefix applies the HasPrefix predicate on the "public_ip" field.
+func PublicIPHasPrefix(v string) predicate.Node {
+	return predicate.Node(sql.FieldHasPrefix(FieldPublicIP, v))
+}
+
+// PublicIPHasSuffix applies the HasSuffix predicate on the "public_ip" field.
+func PublicIPHasSuffix(v string) predicate.Node {
+	return predicate.Node(sql.FieldHasSuffix(FieldPublicIP, v))
+}
+
+// PublicIPEqualFold applies the EqualFold predicate on the "public_ip" field.
+func PublicIPEqualFold(v string) predicate.Node {
+	return predicate.Node(sql.FieldEqualFold(FieldPublicIP, v))
+}
+
+// PublicIPContainsFold applies the ContainsFold predicate on the "public_ip" field.
+func PublicIPContainsFold(v string) predicate.Node {
+	return predicate.Node(sql.FieldContainsFold(FieldPublicIP, v))
+}
+
+// ScanHostEQ applies the EQ predicate on the "scan_host" field.
+func ScanHostEQ(v string) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldScanHost, v))
+}
+
+// ScanHostNEQ applies the NEQ predicate on the "scan_host" field.
+func ScanHostNEQ(v string) predicate.Node {
+	return predicate.Node(sql.FieldNEQ(FieldScanHost, v))
+}
+
+// ScanHostIn applies the In predicate on the "scan_host" field.
+func ScanHostIn(vs ...string) predicate.Node {
+	return predicate.Node(sql.FieldIn(FieldScanHost, vs...))
+}
+
+// ScanHostNotIn applies the NotIn predicate on the "scan_host" field.
+func ScanHostNotIn(vs ...string) predicate.Node {
+	return predicate.Node(sql.FieldNotIn(FieldScanHost, vs...))
+}
+
+// ScanHostGT applies the GT predicate on the "scan_host" field.
+func ScanHostGT(v string) predicate.Node {
+	return predicate.Node(sql.FieldGT(FieldScanHost, v))
+}
+
+// ScanHostGTE applies the GTE predicate on the "scan_host" field.
+func ScanHostGTE(v string) predicate.Node {
+	return predicate.Node(sql.FieldGTE(FieldScanHost, v))
+}
+
+// ScanHostLT applies the LT predicate on the "scan_host" field.
+func ScanHostLT(v string) predicate.Node {
+	return predicate.Node(sql.FieldLT(FieldScanHost, v))
+}
+
+// ScanHostLTE applies the LTE predicate on the "scan_host" field.
+func ScanHostLTE(v string) predicate.Node {
+	return predicate.Node(sql.FieldLTE(FieldScanHost, v))
+}
+
+// ScanHostContains applies the Contains predicate on the "scan_host" field.
+func ScanHostContains(v string) predicate.Node {
+	return predicate.Node(sql.FieldContains(FieldScanHost, v))
+}
+
+// ScanHostHasPrefix applies the HasPrefix predicate on the "scan_host" field.
+func ScanHostHasPrefix(v string) predicate.Node {
+	return predicate.Node(sql.FieldHasPrefix(FieldScanHost, v))
+}
+
+// ScanHostHasSuffix applies the HasSuffix predicate on the "scan_host" field.
+func ScanHostHasSuffix(v string) predicate.Node {
+	return predicate.Node(sql.FieldHasSuffix(FieldScanHost, v))
+}
+
+// ScanHostEqualFold applies the EqualFold predicate on the "scan_host" field.
+func ScanHostEqualFold(v string) predicate.Node {
+	return predicate.Node(sql.FieldEqualFold(FieldScanHost, v))
+}
+
+// ScanHostContainsFold applies the ContainsFold predicate on the "scan_host" field.
+func ScanHostContainsFold(v string) predicate.Node {
+	return predicate.Node(sql.FieldContainsFold(FieldScanHost, v))
+}
+
+// ProbePortEQ applies the EQ predicate on the "probe_port" field.
+func ProbePortEQ(v uint32) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldProbePort, v))
+}
+
+// ProbePortNEQ applies the NEQ predicate on the "probe_port" field.
+func ProbePortNEQ(v uint32) predicate.Node {
+	return predicate.Node(sql.FieldNEQ(FieldProbePort, v))
+}
+
+// ProbePortIn applies the In predicate on the "probe_port" field.
+func ProbePortIn(vs ...uint32) predicate.Node {
+	return predicate.Node(sql.FieldIn(FieldProbePort, vs...))
+}
+
+// ProbePortNotIn applies the NotIn predicate on the "probe_port" field.
+func ProbePortNotIn(vs ...uint32) predicate.Node {
+	return predicate.Node(sql.FieldNotIn(FieldProbePort, vs...))
+}
+
+// ProbePortGT applies the GT predicate on the "probe_port" field.
+func ProbePortGT(v uint32) predicate.Node {
+	return predicate.Node(sql.FieldGT(FieldProbePort, v))
+}
+
+// ProbePortGTE applies the GTE predicate on the "probe_port" field.
+func ProbePortGTE(v uint32) predicate.Node {
+	return predicate.Node(sql.FieldGTE(FieldProbePort, v))
+}
+
+// ProbePortLT applies the LT predicate on the "probe_port" field.
+func ProbePortLT(v uint32) predicate.Node {
+	return predicate.Node(sql.FieldLT(FieldProbePort, v))
+}
+
+// ProbePortLTE applies the LTE predicate on the "probe_port" field.
+func ProbePortLTE(v uint32) predicate.Node {
+	return predicate.Node(sql.FieldLTE(FieldProbePort, v))
+}
+
+// ProbeCheckedAtEQ applies the EQ predicate on the "probe_checked_at" field.
+func ProbeCheckedAtEQ(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldProbeCheckedAt, v))
+}
+
+// ProbeCheckedAtNEQ applies the NEQ predicate on the "probe_checked_at" field.
+func ProbeCheckedAtNEQ(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldNEQ(FieldProbeCheckedAt, v))
+}
+
+// ProbeCheckedAtIn applies the In predicate on the "probe_checked_at" field.
+func ProbeCheckedAtIn(vs ...time.Time) predicate.Node {
+	return predicate.Node(sql.FieldIn(FieldProbeCheckedAt, vs...))
+}
+
+// ProbeCheckedAtNotIn applies the NotIn predicate on the "probe_checked_at" field.
+func ProbeCheckedAtNotIn(vs ...time.Time) predicate.Node {
+	return predicate.Node(sql.FieldNotIn(FieldProbeCheckedAt, vs...))
+}
+
+// ProbeCheckedAtGT applies the GT predicate on the "probe_checked_at" field.
+func ProbeCheckedAtGT(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldGT(FieldProbeCheckedAt, v))
+}
+
+// ProbeCheckedAtGTE applies the GTE predicate on the "probe_checked_at" field.
+func ProbeCheckedAtGTE(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldGTE(FieldProbeCheckedAt, v))
+}
+
+// ProbeCheckedAtLT applies the LT predicate on the "probe_checked_at" field.
+func ProbeCheckedAtLT(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldLT(FieldProbeCheckedAt, v))
+}
+
+// ProbeCheckedAtLTE applies the LTE predicate on the "probe_checked_at" field.
+func ProbeCheckedAtLTE(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldLTE(FieldProbeCheckedAt, v))
+}
+
+// ProbeCheckedAtIsNil applies the IsNil predicate on the "probe_checked_at" field.
+func ProbeCheckedAtIsNil() predicate.Node {
+	return predicate.Node(sql.FieldIsNull(FieldProbeCheckedAt))
+}
+
+// ProbeCheckedAtNotNil applies the NotNil predicate on the "probe_checked_at" field.
+func ProbeCheckedAtNotNil() predicate.Node {
+	return predicate.Node(sql.FieldNotNull(FieldProbeCheckedAt))
+}
+
+// LastScanStatusEQ applies the EQ predicate on the "last_scan_status" field.
+func LastScanStatusEQ(v string) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldLastScanStatus, v))
+}
+
+// LastScanStatusNEQ applies the NEQ predicate on the "last_scan_status" field.
+func LastScanStatusNEQ(v string) predicate.Node {
+	return predicate.Node(sql.FieldNEQ(FieldLastScanStatus, v))
+}
+
+// LastScanStatusIn applies the In predicate on the "last_scan_status" field.
+func LastScanStatusIn(vs ...string) predicate.Node {
+	return predicate.Node(sql.FieldIn(FieldLastScanStatus, vs...))
+}
+
+// LastScanStatusNotIn applies the NotIn predicate on the "last_scan_status" field.
+func LastScanStatusNotIn(vs ...string) predicate.Node {
+	return predicate.Node(sql.FieldNotIn(FieldLastScanStatus, vs...))
+}
+
+// LastScanStatusGT applies the GT predicate on the "last_scan_status" field.
+func LastScanStatusGT(v string) predicate.Node {
+	return predicate.Node(sql.FieldGT(FieldLastScanStatus, v))
+}
+
+// LastScanStatusGTE applies the GTE predicate on the "last_scan_status" field.
+func LastScanStatusGTE(v string) predicate.Node {
+	return predicate.Node(sql.FieldGTE(FieldLastScanStatus, v))
+}
+
+// LastScanStatusLT applies the LT predicate on the "last_scan_status" field.
+func LastScanStatusLT(v string) predicate.Node {
+	return predicate.Node(sql.FieldLT(FieldLastScanStatus, v))
+}
+
+// LastScanStatusLTE applies the LTE predicate on the "last_scan_status" field.
+func LastScanStatusLTE(v string) predicate.Node {
+	return predicate.Node(sql.FieldLTE(FieldLastScanStatus, v))
+}
+
+// LastScanStatusContains applies the Contains predicate on the "last_scan_status" field.
+func LastScanStatusContains(v string) predicate.Node {
+	return predicate.Node(sql.FieldContains(FieldLastScanStatus, v))
+}
+
+// LastScanStatusHasPrefix applies the HasPrefix predicate on the "last_scan_status" field.
+func LastScanStatusHasPrefix(v string) predicate.Node {
+	return predicate.Node(sql.FieldHasPrefix(FieldLastScanStatus, v))
+}
+
+// LastScanStatusHasSuffix applies the HasSuffix predicate on the "last_scan_status" field.
+func LastScanStatusHasSuffix(v string) predicate.Node {
+	return predicate.Node(sql.FieldHasSuffix(FieldLastScanStatus, v))
+}
+
+// LastScanStatusEqualFold applies the EqualFold predicate on the "last_scan_status" field.
+func LastScanStatusEqualFold(v string) predicate.Node {
+	return predicate.Node(sql.FieldEqualFold(FieldLastScanStatus, v))
+}
+
+// LastScanStatusContainsFold applies the ContainsFold predicate on the "last_scan_status" field.
+func LastScanStatusContainsFold(v string) predicate.Node {
+	return predicate.Node(sql.FieldContainsFold(FieldLastScanStatus, v))
+}
+
+// LastScanErrorEQ applies the EQ predicate on the "last_scan_error" field.
+func LastScanErrorEQ(v string) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldLastScanError, v))
+}
+
+// LastScanErrorNEQ applies the NEQ predicate on the "last_scan_error" field.
+func LastScanErrorNEQ(v string) predicate.Node {
+	return predicate.Node(sql.FieldNEQ(FieldLastScanError, v))
+}
+
+// LastScanErrorIn applies the In predicate on the "last_scan_error" field.
+func LastScanErrorIn(vs ...string) predicate.Node {
+	return predicate.Node(sql.FieldIn(FieldLastScanError, vs...))
+}
+
+// LastScanErrorNotIn applies the NotIn predicate on the "last_scan_error" field.
+func LastScanErrorNotIn(vs ...string) predicate.Node {
+	return predicate.Node(sql.FieldNotIn(FieldLastScanError, vs...))
+}
+
+// LastScanErrorGT applies the GT predicate on the "last_scan_error" field.
+func LastScanErrorGT(v string) predicate.Node {
+	return predicate.Node(sql.FieldGT(FieldLastScanError, v))
+}
+
+// LastScanErrorGTE applies the GTE predicate on the "last_scan_error" field.
+func LastScanErrorGTE(v string) predicate.Node {
+	return predicate.Node(sql.FieldGTE(FieldLastScanError, v))
+}
+
+// LastScanErrorLT applies the LT predicate on the "last_scan_error" field.
+func LastScanErrorLT(v string) predicate.Node {
+	return predicate.Node(sql.FieldLT(FieldLastScanError, v))
+}
+
+// LastScanErrorLTE applies the LTE predicate on the "last_scan_error" field.
+func LastScanErrorLTE(v string) predicate.Node {
+	return predicate.Node(sql.FieldLTE(FieldLastScanError, v))
+}
+
+// LastScanErrorContains applies the Contains predicate on the "last_scan_error" field.
+func LastScanErrorContains(v string) predicate.Node {
+	return predicate.Node(sql.FieldContains(FieldLastScanError, v))
+}
+
+// LastScanErrorHasPrefix applies the HasPrefix predicate on the "last_scan_error" field.
+func LastScanErrorHasPrefix(v string) predicate.Node {
+	return predicate.Node(sql.FieldHasPrefix(FieldLastScanError, v))
+}
+
+// LastScanErrorHasSuffix applies the HasSuffix predicate on the "last_scan_error" field.
+func LastScanErrorHasSuffix(v string) predicate.Node {
+	return predicate.Node(sql.FieldHasSuffix(FieldLastScanError, v))
+}
+
+// LastScanErrorEqualFold applies the EqualFold predicate on the "last_scan_error" field.
+func LastScanErrorEqualFold(v string) predicate.Node {
+	return predicate.Node(sql.FieldEqualFold(FieldLastScanError, v))
+}
+
+// LastScanErrorContainsFold applies the ContainsFold predicate on the "last_scan_error" field.
+func LastScanErrorContainsFold(v string) predicate.Node {
+	return predicate.Node(sql.FieldContainsFold(FieldLastScanError, v))
+}
+
+// LastScanLatencyMsEQ applies the EQ predicate on the "last_scan_latency_ms" field.
+func LastScanLatencyMsEQ(v int64) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldLastScanLatencyMs, v))
+}
+
+// LastScanLatencyMsNEQ applies the NEQ predicate on the "last_scan_latency_ms" field.
+func LastScanLatencyMsNEQ(v int64) predicate.Node {
+	return predicate.Node(sql.FieldNEQ(FieldLastScanLatencyMs, v))
+}
+
+// LastScanLatencyMsIn applies the In predicate on the "last_scan_latency_ms" field.
+func LastScanLatencyMsIn(vs ...int64) predicate.Node {
+	return predicate.Node(sql.FieldIn(FieldLastScanLatencyMs, vs...))
+}
+
+// LastScanLatencyMsNotIn applies the NotIn predicate on the "last_scan_latency_ms" field.
+func LastScanLatencyMsNotIn(vs ...int64) predicate.Node {
+	return predicate.Node(sql.FieldNotIn(FieldLastScanLatencyMs, vs...))
+}
+
+// LastScanLatencyMsGT applies the GT predicate on the "last_scan_latency_ms" field.
+func LastScanLatencyMsGT(v int64) predicate.Node {
+	return predicate.Node(sql.FieldGT(FieldLastScanLatencyMs, v))
+}
+
+// LastScanLatencyMsGTE applies the GTE predicate on the "last_scan_latency_ms" field.
+func LastScanLatencyMsGTE(v int64) predicate.Node {
+	return predicate.Node(sql.FieldGTE(FieldLastScanLatencyMs, v))
+}
+
+// LastScanLatencyMsLT applies the LT predicate on the "last_scan_latency_ms" field.
+func LastScanLatencyMsLT(v int64) predicate.Node {
+	return predicate.Node(sql.FieldLT(FieldLastScanLatencyMs, v))
+}
+
+// LastScanLatencyMsLTE applies the LTE predicate on the "last_scan_latency_ms" field.
+func LastScanLatencyMsLTE(v int64) predicate.Node {
+	return predicate.Node(sql.FieldLTE(FieldLastScanLatencyMs, v))
+}
+
+// LastScanAtEQ applies the EQ predicate on the "last_scan_at" field.
+func LastScanAtEQ(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldLastScanAt, v))
+}
+
+// LastScanAtNEQ applies the NEQ predicate on the "last_scan_at" field.
+func LastScanAtNEQ(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldNEQ(FieldLastScanAt, v))
+}
+
+// LastScanAtIn applies the In predicate on the "last_scan_at" field.
+func LastScanAtIn(vs ...time.Time) predicate.Node {
+	return predicate.Node(sql.FieldIn(FieldLastScanAt, vs...))
+}
+
+// LastScanAtNotIn applies the NotIn predicate on the "last_scan_at" field.
+func LastScanAtNotIn(vs ...time.Time) predicate.Node {
+	return predicate.Node(sql.FieldNotIn(FieldLastScanAt, vs...))
+}
+
+// LastScanAtGT applies the GT predicate on the "last_scan_at" field.
+func LastScanAtGT(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldGT(FieldLastScanAt, v))
+}
+
+// LastScanAtGTE applies the GTE predicate on the "last_scan_at" field.
+func LastScanAtGTE(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldGTE(FieldLastScanAt, v))
+}
+
+// LastScanAtLT applies the LT predicate on the "last_scan_at" field.
+func LastScanAtLT(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldLT(FieldLastScanAt, v))
+}
+
+// LastScanAtLTE applies the LTE predicate on the "last_scan_at" field.
+func LastScanAtLTE(v time.Time) predicate.Node {
+	return predicate.Node(sql.FieldLTE(FieldLastScanAt, v))
+}
+
+// LastScanAtIsNil applies the IsNil predicate on the "last_scan_at" field.
+func LastScanAtIsNil() predicate.Node {
+	return predicate.Node(sql.FieldIsNull(FieldLastScanAt))
+}
+
+// LastScanAtNotNil applies the NotNil predicate on the "last_scan_at" field.
+func LastScanAtNotNil() predicate.Node {
+	return predicate.Node(sql.FieldNotNull(FieldLastScanAt))
 }
 
 // LastOnlineAtEQ applies the EQ predicate on the "last_online_at" field.

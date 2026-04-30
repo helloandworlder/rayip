@@ -61,7 +61,7 @@
 - 观测只做平台内指标，不引入 Prometheus / OpenTelemetry Collector / Loki / ClickHouse。
 - 支持 Bark 作为轻量管理员告警渠道，但通知事件先落 Postgres，Bark 只负责投递。
 - 测试部署优先 Railway 项目 `RayIP`，环境 `Test`。
-- 路线图采用 Runtime-first 的 3 个 Milestone、11 个厚 Task，以根目录 `TODO.md` 和 [路线图](./rayip-v1-roadmap.md) 为准。
+- 路线图采用“可售真实性优先、首单闭环优先”的 3 个 Milestone、11 个厚 Task，以根目录 `TODO.md` 和 [路线图](./rayip-v1-roadmap.md) 为准。
 - 用户面板必须对齐 `frontend_design/` 下的 RocketIP / IPIPD 风格截图，具体见 [用户故事与前端设计计划](./plans/rayip-v1-user-stories-and-frontend-plan.md)。
 - 正式编码前按 Task 执行薄契约冻结，具体见 [开发前契约冻结清单](./plans/rayip-v1-contract-freeze-checklist.md)。
 - 支持用户创建多个开发者 App；每个 App 独立 `AppID + AppSecret`、IP 白名单、回调地址和启停状态。

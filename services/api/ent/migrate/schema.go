@@ -9,6 +9,192 @@ import (
 )
 
 var (
+	// AdminUsersColumns holds the columns for the "admin_users" table.
+	AdminUsersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "username", Type: field.TypeString, Unique: true},
+		{Name: "password_hash", Type: field.TypeString},
+		{Name: "role", Type: field.TypeString, Default: "ADMIN"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// AdminUsersTable holds the schema information for the "admin_users" table.
+	AdminUsersTable = &schema.Table{
+		Name:       "admin_users",
+		Columns:    AdminUsersColumns,
+		PrimaryKey: []*schema.Column{AdminUsersColumns[0]},
+	}
+	// AuditLogsColumns holds the columns for the "audit_logs" table.
+	AuditLogsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "actor_id", Type: field.TypeString, Default: ""},
+		{Name: "actor_type", Type: field.TypeString, Default: ""},
+		{Name: "action", Type: field.TypeString},
+		{Name: "target_id", Type: field.TypeString, Default: ""},
+		{Name: "metadata", Type: field.TypeJSON},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// AuditLogsTable holds the schema information for the "audit_logs" table.
+	AuditLogsTable = &schema.Table{
+		Name:       "audit_logs",
+		Columns:    AuditLogsColumns,
+		PrimaryKey: []*schema.Column{AuditLogsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "auditlog_actor_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[1], AuditLogsColumns[6]},
+			},
+			{
+				Name:    "auditlog_action_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{AuditLogsColumns[3], AuditLogsColumns[6]},
+			},
+		},
+	}
+	// CitiesColumns holds the columns for the "cities" table.
+	CitiesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "region_id", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// CitiesTable holds the schema information for the "cities" table.
+	CitiesTable = &schema.Table{
+		Name:       "cities",
+		Columns:    CitiesColumns,
+		PrimaryKey: []*schema.Column{CitiesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "city_region_id",
+				Unique:  false,
+				Columns: []*schema.Column{CitiesColumns[1]},
+			},
+		},
+	}
+	// FulfillmentAttemptsColumns holds the columns for the "fulfillment_attempts" table.
+	FulfillmentAttemptsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "job_id", Type: field.TypeString},
+		{Name: "status", Type: field.TypeString},
+		{Name: "error", Type: field.TypeString, Default: ""},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// FulfillmentAttemptsTable holds the schema information for the "fulfillment_attempts" table.
+	FulfillmentAttemptsTable = &schema.Table{
+		Name:       "fulfillment_attempts",
+		Columns:    FulfillmentAttemptsColumns,
+		PrimaryKey: []*schema.Column{FulfillmentAttemptsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "fulfillmentattempt_job_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{FulfillmentAttemptsColumns[1], FulfillmentAttemptsColumns[4]},
+			},
+		},
+	}
+	// FulfillmentJobsColumns holds the columns for the "fulfillment_jobs" table.
+	FulfillmentJobsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "order_id", Type: field.TypeString},
+		{Name: "proxy_account_id", Type: field.TypeString},
+		{Name: "status", Type: field.TypeString},
+		{Name: "error_detail", Type: field.TypeString, Default: ""},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// FulfillmentJobsTable holds the schema information for the "fulfillment_jobs" table.
+	FulfillmentJobsTable = &schema.Table{
+		Name:       "fulfillment_jobs",
+		Columns:    FulfillmentJobsColumns,
+		PrimaryKey: []*schema.Column{FulfillmentJobsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "fulfillmentjob_order_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{FulfillmentJobsColumns[1], FulfillmentJobsColumns[5]},
+			},
+			{
+				Name:    "fulfillmentjob_status_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{FulfillmentJobsColumns[3], FulfillmentJobsColumns[5]},
+			},
+		},
+	}
+	// InventoryReservationsColumns holds the columns for the "inventory_reservations" table.
+	InventoryReservationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "inventory_id", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "order_id", Type: field.TypeString, Default: ""},
+		{Name: "status", Type: field.TypeString},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// InventoryReservationsTable holds the schema information for the "inventory_reservations" table.
+	InventoryReservationsTable = &schema.Table{
+		Name:       "inventory_reservations",
+		Columns:    InventoryReservationsColumns,
+		PrimaryKey: []*schema.Column{InventoryReservationsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "inventoryreservation_inventory_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{InventoryReservationsColumns[1], InventoryReservationsColumns[4]},
+			},
+			{
+				Name:    "inventoryreservation_user_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{InventoryReservationsColumns[2], InventoryReservationsColumns[6]},
+			},
+			{
+				Name:    "inventoryreservation_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{InventoryReservationsColumns[5]},
+			},
+		},
+	}
+	// LinesColumns holds the columns for the "lines" table.
+	LinesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "region_id", Type: field.TypeString},
+		{Name: "city_id", Type: field.TypeString},
+		{Name: "node_id", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// LinesTable holds the schema information for the "lines" table.
+	LinesTable = &schema.Table{
+		Name:       "lines",
+		Columns:    LinesColumns,
+		PrimaryKey: []*schema.Column{LinesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "line_region_id",
+				Unique:  false,
+				Columns: []*schema.Column{LinesColumns[1]},
+			},
+			{
+				Name:    "line_city_id",
+				Unique:  false,
+				Columns: []*schema.Column{LinesColumns[2]},
+			},
+			{
+				Name:    "line_node_id",
+				Unique:  false,
+				Columns: []*schema.Column{LinesColumns[3]},
+			},
+			{
+				Name:    "line_enabled",
+				Unique:  false,
+				Columns: []*schema.Column{LinesColumns[5]},
+			},
+		},
+	}
 	// NodesColumns holds the columns for the "nodes" table.
 	NodesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeString, Unique: true},
@@ -18,6 +204,16 @@ var (
 		{Name: "agent_version", Type: field.TypeString, Default: ""},
 		{Name: "xray_version", Type: field.TypeString, Default: ""},
 		{Name: "capabilities", Type: field.TypeJSON},
+		{Name: "public_ip", Type: field.TypeString, Default: ""},
+		{Name: "candidate_public_ips", Type: field.TypeJSON},
+		{Name: "scan_host", Type: field.TypeString, Default: ""},
+		{Name: "probe_port", Type: field.TypeUint32, Default: 0},
+		{Name: "probe_protocols", Type: field.TypeJSON},
+		{Name: "probe_checked_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_scan_status", Type: field.TypeString, Default: "UNKNOWN"},
+		{Name: "last_scan_error", Type: field.TypeString, Default: ""},
+		{Name: "last_scan_latency_ms", Type: field.TypeInt64, Default: 0},
+		{Name: "last_scan_at", Type: field.TypeTime, Nullable: true},
 		{Name: "last_online_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -36,7 +232,7 @@ var (
 			{
 				Name:    "node_last_online_at",
 				Unique:  false,
-				Columns: []*schema.Column{NodesColumns[7]},
+				Columns: []*schema.Column{NodesColumns[17]},
 			},
 		},
 	}
@@ -103,6 +299,45 @@ var (
 				Name:    "nodecapabilitysnapshot_node_id_bundle_version_agent_version_xray_version_capabilities_hash",
 				Unique:  true,
 				Columns: []*schema.Column{NodeCapabilitySnapshotsColumns[1], NodeCapabilitySnapshotsColumns[2], NodeCapabilitySnapshotsColumns[3], NodeCapabilitySnapshotsColumns[4], NodeCapabilitySnapshotsColumns[6]},
+			},
+		},
+	}
+	// NodeInventoryIpsColumns holds the columns for the "node_inventory_ips" table.
+	NodeInventoryIpsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "line_id", Type: field.TypeString},
+		{Name: "node_id", Type: field.TypeString},
+		{Name: "ip", Type: field.TypeString},
+		{Name: "port", Type: field.TypeUint32},
+		{Name: "protocols", Type: field.TypeJSON},
+		{Name: "status", Type: field.TypeString},
+		{Name: "manual_hold", Type: field.TypeBool, Default: false},
+		{Name: "compliance_hold", Type: field.TypeBool, Default: false},
+		{Name: "sold_order_id", Type: field.TypeString, Default: ""},
+		{Name: "reserved_order_id", Type: field.TypeString, Default: ""},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// NodeInventoryIpsTable holds the schema information for the "node_inventory_ips" table.
+	NodeInventoryIpsTable = &schema.Table{
+		Name:       "node_inventory_ips",
+		Columns:    NodeInventoryIpsColumns,
+		PrimaryKey: []*schema.Column{NodeInventoryIpsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "nodeinventoryip_line_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{NodeInventoryIpsColumns[1], NodeInventoryIpsColumns[6]},
+			},
+			{
+				Name:    "nodeinventoryip_node_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{NodeInventoryIpsColumns[2], NodeInventoryIpsColumns[6]},
+			},
+			{
+				Name:    "nodeinventoryip_ip_port",
+				Unique:  true,
+				Columns: []*schema.Column{NodeInventoryIpsColumns[3], NodeInventoryIpsColumns[4]},
 			},
 		},
 	}
@@ -251,6 +486,211 @@ var (
 			},
 		},
 	}
+	// PaymentOrdersColumns holds the columns for the "payment_orders" table.
+	PaymentOrdersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "amount_cents", Type: field.TypeInt64},
+		{Name: "status", Type: field.TypeString},
+		{Name: "provider", Type: field.TypeString, Default: "mock-yipay"},
+		{Name: "provider_trade_no", Type: field.TypeString, Default: ""},
+		{Name: "paid_at", Type: field.TypeTime, Nullable: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// PaymentOrdersTable holds the schema information for the "payment_orders" table.
+	PaymentOrdersTable = &schema.Table{
+		Name:       "payment_orders",
+		Columns:    PaymentOrdersColumns,
+		PrimaryKey: []*schema.Column{PaymentOrdersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "paymentorder_user_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{PaymentOrdersColumns[1], PaymentOrdersColumns[7]},
+			},
+			{
+				Name:    "paymentorder_id_provider_trade_no",
+				Unique:  false,
+				Columns: []*schema.Column{PaymentOrdersColumns[0], PaymentOrdersColumns[5]},
+			},
+			{
+				Name:    "paymentorder_status_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{PaymentOrdersColumns[3], PaymentOrdersColumns[7]},
+			},
+		},
+	}
+	// ProductsColumns holds the columns for the "products" table.
+	ProductsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "ip_type", Type: field.TypeString, Default: "原生住宅"},
+		{Name: "enabled", Type: field.TypeBool, Default: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ProductsTable holds the schema information for the "products" table.
+	ProductsTable = &schema.Table{
+		Name:       "products",
+		Columns:    ProductsColumns,
+		PrimaryKey: []*schema.Column{ProductsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "product_enabled",
+				Unique:  false,
+				Columns: []*schema.Column{ProductsColumns[3]},
+			},
+		},
+	}
+	// ProductPricesColumns holds the columns for the "product_prices" table.
+	ProductPricesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "product_id", Type: field.TypeString},
+		{Name: "protocol", Type: field.TypeString},
+		{Name: "duration_days", Type: field.TypeInt},
+		{Name: "unit_cents", Type: field.TypeInt64},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ProductPricesTable holds the schema information for the "product_prices" table.
+	ProductPricesTable = &schema.Table{
+		Name:       "product_prices",
+		Columns:    ProductPricesColumns,
+		PrimaryKey: []*schema.Column{ProductPricesColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "productprice_product_id_protocol_duration_days",
+				Unique:  true,
+				Columns: []*schema.Column{ProductPricesColumns[1], ProductPricesColumns[2], ProductPricesColumns[3]},
+			},
+		},
+	}
+	// ProxyAccountsColumns holds the columns for the "proxy_accounts" table.
+	ProxyAccountsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "order_id", Type: field.TypeString, Unique: true},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "node_id", Type: field.TypeString},
+		{Name: "inventory_id", Type: field.TypeString},
+		{Name: "protocol", Type: field.TypeString},
+		{Name: "listen_ip", Type: field.TypeString},
+		{Name: "port", Type: field.TypeUint32},
+		{Name: "username", Type: field.TypeString},
+		{Name: "password", Type: field.TypeString},
+		{Name: "connection_uri", Type: field.TypeString, Default: ""},
+		{Name: "runtime_email", Type: field.TypeString},
+		{Name: "egress_limit_bps", Type: field.TypeUint64, Default: 0},
+		{Name: "ingress_limit_bps", Type: field.TypeUint64, Default: 0},
+		{Name: "max_connections", Type: field.TypeUint32, Default: 0},
+		{Name: "status", Type: field.TypeString},
+		{Name: "lifecycle_status", Type: field.TypeString},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// ProxyAccountsTable holds the schema information for the "proxy_accounts" table.
+	ProxyAccountsTable = &schema.Table{
+		Name:       "proxy_accounts",
+		Columns:    ProxyAccountsColumns,
+		PrimaryKey: []*schema.Column{ProxyAccountsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "proxyaccount_user_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{ProxyAccountsColumns[2], ProxyAccountsColumns[15]},
+			},
+			{
+				Name:    "proxyaccount_node_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProxyAccountsColumns[3]},
+			},
+			{
+				Name:    "proxyaccount_lifecycle_status",
+				Unique:  false,
+				Columns: []*schema.Column{ProxyAccountsColumns[16]},
+			},
+		},
+	}
+	// ProxyOrdersColumns holds the columns for the "proxy_orders" table.
+	ProxyOrdersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "product_id", Type: field.TypeString},
+		{Name: "inventory_id", Type: field.TypeString},
+		{Name: "reservation_id", Type: field.TypeString, Default: ""},
+		{Name: "wallet_hold_id", Type: field.TypeString, Default: ""},
+		{Name: "proxy_account_id", Type: field.TypeString, Default: ""},
+		{Name: "idempotency_key", Type: field.TypeString},
+		{Name: "protocol", Type: field.TypeString},
+		{Name: "duration_days", Type: field.TypeInt},
+		{Name: "quantity", Type: field.TypeInt, Default: 1},
+		{Name: "amount_cents", Type: field.TypeInt64},
+		{Name: "status", Type: field.TypeString},
+		{Name: "failure_reason", Type: field.TypeString, Default: ""},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "delivered_at", Type: field.TypeTime, Nullable: true},
+		{Name: "expires_at", Type: field.TypeTime, Nullable: true},
+	}
+	// ProxyOrdersTable holds the schema information for the "proxy_orders" table.
+	ProxyOrdersTable = &schema.Table{
+		Name:       "proxy_orders",
+		Columns:    ProxyOrdersColumns,
+		PrimaryKey: []*schema.Column{ProxyOrdersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "proxyorder_user_id_idempotency_key",
+				Unique:  true,
+				Columns: []*schema.Column{ProxyOrdersColumns[1], ProxyOrdersColumns[7]},
+			},
+			{
+				Name:    "proxyorder_user_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ProxyOrdersColumns[1], ProxyOrdersColumns[14]},
+			},
+			{
+				Name:    "proxyorder_status_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{ProxyOrdersColumns[12], ProxyOrdersColumns[14]},
+			},
+			{
+				Name:    "proxyorder_proxy_account_id",
+				Unique:  false,
+				Columns: []*schema.Column{ProxyOrdersColumns[6]},
+			},
+		},
+	}
+	// RatePoliciesColumns holds the columns for the "rate_policies" table.
+	RatePoliciesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "egress_limit_bps", Type: field.TypeUint64, Default: 0},
+		{Name: "ingress_limit_bps", Type: field.TypeUint64, Default: 0},
+		{Name: "max_connections", Type: field.TypeUint32, Default: 0},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// RatePoliciesTable holds the schema information for the "rate_policies" table.
+	RatePoliciesTable = &schema.Table{
+		Name:       "rate_policies",
+		Columns:    RatePoliciesColumns,
+		PrimaryKey: []*schema.Column{RatePoliciesColumns[0]},
+	}
+	// RegionsColumns holds the columns for the "regions" table.
+	RegionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "country", Type: field.TypeString, Default: "US"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// RegionsTable holds the schema information for the "regions" table.
+	RegionsTable = &schema.Table{
+		Name:       "regions",
+		Columns:    RegionsColumns,
+		PrimaryKey: []*schema.Column{RegionsColumns[0]},
+	}
 	// RuntimeAccountStatesColumns holds the columns for the "runtime_account_states" table.
 	RuntimeAccountStatesColumns = []*schema.Column{
 		{Name: "proxy_account_id", Type: field.TypeString, Unique: true},
@@ -397,23 +837,194 @@ var (
 			},
 		},
 	}
+	// SessionsColumns holds the columns for the "sessions" table.
+	SessionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "subject_id", Type: field.TypeString},
+		{Name: "scope", Type: field.TypeString},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// SessionsTable holds the schema information for the "sessions" table.
+	SessionsTable = &schema.Table{
+		Name:       "sessions",
+		Columns:    SessionsColumns,
+		PrimaryKey: []*schema.Column{SessionsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "session_subject_id_scope",
+				Unique:  false,
+				Columns: []*schema.Column{SessionsColumns[1], SessionsColumns[2]},
+			},
+			{
+				Name:    "session_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{SessionsColumns[3]},
+			},
+		},
+	}
+	// UsersColumns holds the columns for the "users" table.
+	UsersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "password_hash", Type: field.TypeString},
+		{Name: "status", Type: field.TypeString, Default: "ACTIVE"},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// UsersTable holds the schema information for the "users" table.
+	UsersTable = &schema.Table{
+		Name:       "users",
+		Columns:    UsersColumns,
+		PrimaryKey: []*schema.Column{UsersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "user_status",
+				Unique:  false,
+				Columns: []*schema.Column{UsersColumns[3]},
+			},
+		},
+	}
+	// WalletsColumns holds the columns for the "wallets" table.
+	WalletsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "user_id", Type: field.TypeString, Unique: true},
+		{Name: "balance_cents", Type: field.TypeInt64, Default: 0},
+		{Name: "held_cents", Type: field.TypeInt64, Default: 0},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// WalletsTable holds the schema information for the "wallets" table.
+	WalletsTable = &schema.Table{
+		Name:       "wallets",
+		Columns:    WalletsColumns,
+		PrimaryKey: []*schema.Column{WalletsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "wallet_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{WalletsColumns[1]},
+			},
+		},
+	}
+	// WalletHoldsColumns holds the columns for the "wallet_holds" table.
+	WalletHoldsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "wallet_id", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "order_id", Type: field.TypeString, Unique: true},
+		{Name: "amount_cents", Type: field.TypeInt64},
+		{Name: "status", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+	}
+	// WalletHoldsTable holds the schema information for the "wallet_holds" table.
+	WalletHoldsTable = &schema.Table{
+		Name:       "wallet_holds",
+		Columns:    WalletHoldsColumns,
+		PrimaryKey: []*schema.Column{WalletHoldsColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "wallethold_user_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{WalletHoldsColumns[2], WalletHoldsColumns[5]},
+			},
+		},
+	}
+	// WalletLedgerColumns holds the columns for the "wallet_ledger" table.
+	WalletLedgerColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true},
+		{Name: "wallet_id", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeString},
+		{Name: "type", Type: field.TypeString},
+		{Name: "amount_cents", Type: field.TypeInt64},
+		{Name: "balance_after", Type: field.TypeInt64},
+		{Name: "held_after", Type: field.TypeInt64},
+		{Name: "reference_type", Type: field.TypeString, Default: ""},
+		{Name: "reference_id", Type: field.TypeString, Default: ""},
+		{Name: "idempotency_key", Type: field.TypeString, Default: ""},
+		{Name: "created_at", Type: field.TypeTime},
+	}
+	// WalletLedgerTable holds the schema information for the "wallet_ledger" table.
+	WalletLedgerTable = &schema.Table{
+		Name:       "wallet_ledger",
+		Columns:    WalletLedgerColumns,
+		PrimaryKey: []*schema.Column{WalletLedgerColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "walletledger_user_id_created_at",
+				Unique:  false,
+				Columns: []*schema.Column{WalletLedgerColumns[2], WalletLedgerColumns[10]},
+			},
+			{
+				Name:    "walletledger_reference_type_reference_id",
+				Unique:  false,
+				Columns: []*schema.Column{WalletLedgerColumns[7], WalletLedgerColumns[8]},
+			},
+			{
+				Name:    "walletledger_idempotency_key",
+				Unique:  false,
+				Columns: []*schema.Column{WalletLedgerColumns[9]},
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		AdminUsersTable,
+		AuditLogsTable,
+		CitiesTable,
+		FulfillmentAttemptsTable,
+		FulfillmentJobsTable,
+		InventoryReservationsTable,
+		LinesTable,
 		NodesTable,
 		NodeAgentSessionsTable,
 		NodeCapabilitySnapshotsTable,
+		NodeInventoryIpsTable,
 		NodeJobsTable,
 		NodeJobAttemptsTable,
 		NodeRuntimeStatusTable,
 		OutboxEventsTable,
+		PaymentOrdersTable,
+		ProductsTable,
+		ProductPricesTable,
+		ProxyAccountsTable,
+		ProxyOrdersTable,
+		RatePoliciesTable,
+		RegionsTable,
 		RuntimeAccountStatesTable,
 		RuntimeApplyResultsTable,
 		RuntimeChangeLogTable,
 		RuntimeLabAccountsTable,
+		SessionsTable,
+		UsersTable,
+		WalletsTable,
+		WalletHoldsTable,
+		WalletLedgerTable,
 	}
 )
 
 func init() {
+	AdminUsersTable.Annotation = &entsql.Annotation{
+		Table: "admin_users",
+	}
+	AuditLogsTable.Annotation = &entsql.Annotation{
+		Table: "audit_logs",
+	}
+	CitiesTable.Annotation = &entsql.Annotation{
+		Table: "cities",
+	}
+	FulfillmentAttemptsTable.Annotation = &entsql.Annotation{
+		Table: "fulfillment_attempts",
+	}
+	FulfillmentJobsTable.Annotation = &entsql.Annotation{
+		Table: "fulfillment_jobs",
+	}
+	InventoryReservationsTable.Annotation = &entsql.Annotation{
+		Table: "inventory_reservations",
+	}
+	LinesTable.Annotation = &entsql.Annotation{
+		Table: "lines",
+	}
 	NodesTable.Annotation = &entsql.Annotation{
 		Table: "nodes",
 	}
@@ -422,6 +1033,9 @@ func init() {
 	}
 	NodeCapabilitySnapshotsTable.Annotation = &entsql.Annotation{
 		Table: "node_capability_snapshots",
+	}
+	NodeInventoryIpsTable.Annotation = &entsql.Annotation{
+		Table: "node_inventory_ips",
 	}
 	NodeJobsTable.Annotation = &entsql.Annotation{
 		Table: "node_jobs",
@@ -435,6 +1049,27 @@ func init() {
 	OutboxEventsTable.Annotation = &entsql.Annotation{
 		Table: "outbox_events",
 	}
+	PaymentOrdersTable.Annotation = &entsql.Annotation{
+		Table: "payment_orders",
+	}
+	ProductsTable.Annotation = &entsql.Annotation{
+		Table: "products",
+	}
+	ProductPricesTable.Annotation = &entsql.Annotation{
+		Table: "product_prices",
+	}
+	ProxyAccountsTable.Annotation = &entsql.Annotation{
+		Table: "proxy_accounts",
+	}
+	ProxyOrdersTable.Annotation = &entsql.Annotation{
+		Table: "proxy_orders",
+	}
+	RatePoliciesTable.Annotation = &entsql.Annotation{
+		Table: "rate_policies",
+	}
+	RegionsTable.Annotation = &entsql.Annotation{
+		Table: "regions",
+	}
 	RuntimeAccountStatesTable.Annotation = &entsql.Annotation{
 		Table: "runtime_account_states",
 	}
@@ -446,5 +1081,20 @@ func init() {
 	}
 	RuntimeLabAccountsTable.Annotation = &entsql.Annotation{
 		Table: "runtime_lab_accounts",
+	}
+	SessionsTable.Annotation = &entsql.Annotation{
+		Table: "sessions",
+	}
+	UsersTable.Annotation = &entsql.Annotation{
+		Table: "users",
+	}
+	WalletsTable.Annotation = &entsql.Annotation{
+		Table: "wallets",
+	}
+	WalletHoldsTable.Annotation = &entsql.Annotation{
+		Table: "wallet_holds",
+	}
+	WalletLedgerTable.Annotation = &entsql.Annotation{
+		Table: "wallet_ledger",
 	}
 }

@@ -3,203 +3,41 @@ import {
   Activity,
   AlertTriangle,
   Boxes,
-  CircleDot,
-  Copy,
+  CreditCard,
   Gauge,
   ListChecks,
   Menu,
-  PlayCircle,
   RefreshCw,
   Server,
   Settings,
   Shield,
-  SlidersHorizontal,
-  TerminalSquare,
-  Trash2,
   Users,
   WalletCards,
 } from "lucide-react";
-import type { FormEvent, MouseEvent, ReactNode } from "react";
-import { useMemo, useState } from "react";
+import type { FormEvent, ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-type NodeStatus = "ONLINE" | "OFFLINE";
-type Protocol = "SOCKS5" | "HTTP";
-type ApplyStatus = "ACK" | "NACK" | "PARTIAL" | "FAILED" | "DUPLICATE" | "SUCCESS" | "SKIPPED";
-
-type NodeSummary = {
-  id: string;
-  code: string;
-  status: NodeStatus;
-  last_online_at: string;
-  bundle_version: string;
-  agent_version: string;
-  xray_version: string;
-  api_instance_id: string;
-  session_id: string;
-  capabilities: string[] | null;
-  lease_expires_at?: string;
-};
-
-type NodeListResponse = {
-  items: NodeSummary[];
-  total: number;
-};
-
-type RuntimeAccount = {
-  proxy_account_id: string;
-  node_id: string;
-  runtime_email: string;
-  protocol: Protocol;
-  listen_ip: string;
-  port: number;
-  username: string;
-  password: string;
-  egress_limit_bps: number;
-  ingress_limit_bps: number;
-  max_connections: number;
-  status: "ENABLED" | "DISABLED" | "DELETED";
-  policy_version: number;
-  desired_generation: number;
-  applied_generation: number;
-  created_at: string;
-  updated_at: string;
-};
-
-type RuntimeUsage = {
-  rx_bytes: number;
-  tx_bytes: number;
-  active_connections: number;
-  rx_bytes_per_second: number;
-  tx_bytes_per_second: number;
-};
-
-type RuntimeDigest = {
-  account_count: number;
-  enabled_count: number;
-  disabled_count: number;
-  max_generation: number;
-  hash: string;
-};
-
-type RuntimeResult = {
-  apply_id: string;
-  proxy_account_id?: string;
-  node_id?: string;
-  operation?: string;
-  status: ApplyStatus;
-  error_detail?: string;
-  applied_revision: number;
-  last_good_revision: number;
-  usage?: RuntimeUsage;
-  digest?: RuntimeDigest;
-  created_at?: string;
-};
-
-type AccountListResponse = {
-  items: RuntimeAccount[];
-  total: number;
-};
-
-type ResultListResponse = {
-  items: RuntimeResult[];
-  total: number;
-};
-
-type RuntimeActionResponse = {
-  account?: RuntimeAccount;
-  result: RuntimeResult;
-};
-
-type RuntimeOutboxEvent = {
-  id: string;
-  topic: string;
-  aggregate_id: string;
-  aggregate_key: string;
-  payload: Record<string, unknown>;
-  published_at?: string;
-  created_at: string;
-};
-
-type RuntimeChange = {
-  id: string;
-  node_id: string;
-  seq: number;
-  resource_name: string;
-  action: "UPSERT" | "REMOVE";
-  revision: number;
-  created_at: string;
-};
-
-type RuntimeJobResult = {
-  job_id: string;
-  node_id: string;
-  status: "PENDING" | "SUCCEEDED" | "FAILED" | "RETRYABLE";
-  base_revision: number;
-  target_revision: number;
-  accepted_revision: number;
-  last_good_revision: number;
-  apply_id: string;
-  error_detail?: string;
-};
-
-type NodeRuntimeStatus = {
-  node_id: string;
-  lease_online: boolean;
-  runtime_verdict: string;
-  expected_revision: number;
-  current_revision: number;
-  last_good_revision: number;
-  expected_digest_hash: string;
-  runtime_digest_hash: string;
-  account_count: number;
-  capabilities: string[] | null;
-  manifest_hash: string;
-  binary_hash: string;
-  extension_abi: string;
-  bundle_channel: string;
-  manual_hold: boolean;
-  compliance_hold: boolean;
-  sellable: boolean;
-  unsellable_reasons: string[] | null;
-  updated_at: string;
-};
-
-type ListResponse<T> = {
-  items: T[];
-  total: number;
-};
-
-type RuntimeStatusResponse = {
-  status: NodeRuntimeStatus;
-};
-
-type RuntimeJobResponse = {
-  result: RuntimeJobResult;
-  error?: string;
-};
-
-const nav = [
-  { label: "管理概览", icon: Gauge },
-  { label: "用户", icon: Users },
-  { label: "钱包和充值", icon: WalletCards },
-  { label: "产品和库存", icon: Boxes },
-  { label: "家宽节点", icon: Server },
-  { label: "Runtime Lab", icon: Activity, active: true },
-  { label: "任务控制台", icon: ListChecks },
-  { label: "Web SSH", icon: TerminalSquare },
-  { label: "审计和设置", icon: Settings },
-];
+type ListResponse<T> = { items: T[]; total: number };
+type User = { id: string; email: string; status: string; created_at: string };
+type PaymentOrder = { id: string; user_id: string; amount_cents: number; status: string; provider_trade_no: string; created_at: string };
+type Ledger = { id: string; user_id: string; type: string; amount_cents: number; balance_after_cents: number; held_after_cents: number; reference_id: string; created_at: string };
+type Product = { id: string; name: string; ip_type: string; enabled: boolean };
+type ProductPrice = { protocol: string; duration_days: number; unit_cents: number };
+type Inventory = { id: string; line_id: string; node_id: string; ip: string; port: number; protocols: string[]; status: string; manual_hold: boolean; compliance_hold: boolean };
+type Order = { id: string; user_id: string; proxy_account_id: string; protocol: string; amount_cents: number; status: string; failure_reason?: string; created_at: string };
+type ProxyAccount = { id: string; user_id: string; node_id: string; listen_ip: string; port: number; username: string; status: string; lifecycle_status: string; expires_at: string };
+type NodeSummary = { id: string; code: string; status: string; last_online_at: string; capabilities?: string[] };
 
 const baseURL = import.meta.env.VITE_API_BASE_URL ?? "";
+const money = (cents: number) => `¥${(cents / 100).toFixed(2)}`;
 
 async function apiJSON<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${baseURL}${path}`, {
+    credentials: "include",
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
+    headers: { "Content-Type": "application/json", ...init?.headers },
   });
   if (!response.ok) {
     const text = await response.text();
@@ -208,641 +46,335 @@ async function apiJSON<T>(path: string, init?: RequestInit): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-function fetchNodes(): Promise<NodeListResponse> {
-  return apiJSON<NodeListResponse>("/api/admin/nodes");
-}
-
-function fetchAccounts(): Promise<AccountListResponse> {
-  return apiJSON<AccountListResponse>("/api/admin/runtime-lab/accounts");
-}
-
-function fetchResults(accountID: string): Promise<ResultListResponse> {
-  if (!accountID) return Promise.resolve({ items: [], total: 0 });
-  return apiJSON<ResultListResponse>(`/api/admin/runtime-lab/accounts/${accountID}/results`);
-}
-
-function fetchOutbox(): Promise<ListResponse<RuntimeOutboxEvent>> {
-  return apiJSON<ListResponse<RuntimeOutboxEvent>>("/api/admin/runtime-control/outbox?limit=20");
-}
-
-function fetchChanges(nodeID: string): Promise<ListResponse<RuntimeChange>> {
-  if (!nodeID) return Promise.resolve({ items: [], total: 0 });
-  return apiJSON<ListResponse<RuntimeChange>>(`/api/admin/runtime-control/nodes/${nodeID}/changes?limit=20`);
-}
-
-async function fetchRuntimeStatus(nodeID: string): Promise<RuntimeStatusResponse | null> {
-  if (!nodeID) return null;
-  try {
-    return await apiJSON<RuntimeStatusResponse>(`/api/admin/nodes/${nodeID}/runtime-status`);
-  } catch {
-    return null;
-  }
-}
-
 export function App() {
   const queryClient = useQueryClient();
-  const [selectedAccountID, setSelectedAccountID] = useState("");
-  const [lastResult, setLastResult] = useState<RuntimeResult | null>(null);
-  const [form, setForm] = useState({
-    node_id: "",
-    protocol: "SOCKS5" as Protocol,
-    listen_ip: "127.0.0.1",
-    port: 18080,
-    username: "lab-user",
-    password: "lab-pass",
-    egress_limit_bps: 0,
-    ingress_limit_bps: 0,
-    max_connections: 2,
+  const [username, setUsername] = useState("admin");
+  const [password, setPassword] = useState("rayip-admin");
+  const [inventoryForm, setInventoryForm] = useState({
+    line_id: "dev-line",
+    node_id: "local-home-001",
+    ip: "203.0.113.10",
+    port: "18080",
+    protocols: "SOCKS5,HTTP",
+    status: "AVAILABLE",
   });
 
-  const nodes = useQuery({
-    queryKey: ["admin-nodes"],
-    queryFn: fetchNodes,
-    refetchInterval: 5000,
-  });
-  const accounts = useQuery({
-    queryKey: ["runtime-lab-accounts"],
-    queryFn: fetchAccounts,
-    refetchInterval: 5000,
-  });
-  const onlineNodes = nodes.data?.items.filter((node) => node.status === "ONLINE") ?? [];
-  const selectedNodeID = form.node_id || onlineNodes[0]?.id || "";
-  const results = useQuery({
-    queryKey: ["runtime-lab-results", selectedAccountID],
-    queryFn: () => fetchResults(selectedAccountID),
-    enabled: Boolean(selectedAccountID),
-  });
-  const outbox = useQuery({
-    queryKey: ["runtime-control-outbox"],
-    queryFn: fetchOutbox,
-    refetchInterval: 5000,
-  });
-  const changes = useQuery({
-    queryKey: ["runtime-control-changes", selectedNodeID],
-    queryFn: () => fetchChanges(selectedNodeID),
-    enabled: Boolean(selectedNodeID),
-    refetchInterval: 5000,
-  });
-  const runtimeStatus = useQuery({
-    queryKey: ["node-runtime-status", selectedNodeID],
-    queryFn: () => fetchRuntimeStatus(selectedNodeID),
-    enabled: Boolean(selectedNodeID),
-    refetchInterval: 5000,
+  const login = useMutation({
+    mutationFn: () => apiJSON("/api/admin/auth/login", { method: "POST", body: JSON.stringify({ username, password }) }),
+    onSuccess: () => void queryClient.invalidateQueries(),
   });
 
-  const selectedAccount = accounts.data?.items.find((account) => account.proxy_account_id === selectedAccountID);
-  const digest = lastResult?.digest;
+  const users = useQuery({ queryKey: ["admin-users"], queryFn: () => apiJSON<ListResponse<User>>("/api/admin/users"), retry: false });
+  const payments = useQuery({ queryKey: ["payment-orders"], queryFn: () => apiJSON<ListResponse<PaymentOrder>>("/api/admin/payment-orders"), enabled: users.isSuccess });
+  const ledger = useQuery({ queryKey: ["wallet-ledger"], queryFn: () => apiJSON<ListResponse<Ledger>>("/api/admin/wallet-ledger"), enabled: users.isSuccess });
+  const products = useQuery({ queryKey: ["products"], queryFn: () => apiJSON<{ items: Product[]; prices: ProductPrice[]; total: number }>("/api/admin/products"), enabled: users.isSuccess });
+  const inventory = useQuery({ queryKey: ["inventory"], queryFn: () => apiJSON<ListResponse<Inventory>>("/api/admin/inventory"), enabled: users.isSuccess });
+  const orders = useQuery({ queryKey: ["orders"], queryFn: () => apiJSON<ListResponse<Order>>("/api/admin/orders"), enabled: users.isSuccess });
+  const proxies = useQuery({ queryKey: ["proxies"], queryFn: () => apiJSON<ListResponse<ProxyAccount>>("/api/admin/proxies"), enabled: users.isSuccess });
+  const nodes = useQuery({ queryKey: ["nodes"], queryFn: () => apiJSON<ListResponse<NodeSummary>>("/api/admin/nodes"), enabled: users.isSuccess });
 
-  const invalidateLab = () => {
-    void queryClient.invalidateQueries({ queryKey: ["runtime-lab-accounts"] });
-    void queryClient.invalidateQueries({ queryKey: ["runtime-lab-results"] });
-  };
-
-  const createAccount = useMutation({
+  const addInventory = useMutation({
     mutationFn: () =>
-      apiJSON<RuntimeActionResponse>("/api/admin/runtime-lab/accounts", {
+      apiJSON("/api/admin/inventory", {
         method: "POST",
         body: JSON.stringify({
-          ...form,
-          node_id: selectedNodeID,
-          desired_generation: 1,
+          ...inventoryForm,
+          port: Number(inventoryForm.port),
+          protocols: inventoryForm.protocols.split(",").map((item) => item.trim()).filter(Boolean),
         }),
       }),
-    onSuccess: (data) => {
-      setLastResult(data.result);
-      if (data.account) setSelectedAccountID(data.account.proxy_account_id);
-      invalidateLab();
-    },
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["inventory"] }),
   });
-
-  const updatePolicy = useMutation({
-    mutationFn: (account: RuntimeAccount) =>
-      apiJSON<RuntimeActionResponse>(`/api/admin/runtime-lab/accounts/${account.proxy_account_id}/policy`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          egress_limit_bps: form.egress_limit_bps,
-          ingress_limit_bps: form.ingress_limit_bps,
-          max_connections: form.max_connections,
-          desired_generation: account.desired_generation + 1,
-        }),
-      }),
-    onSuccess: (data) => {
-      setLastResult(data.result);
-      invalidateLab();
-    },
-  });
-
-  const runAction = useMutation({
-    mutationFn: ({ account, action }: { account: RuntimeAccount; action: "disable" | "delete" | "usage" | "probe" }) => {
-      const method = action === "usage" ? "GET" : action === "delete" ? "DELETE" : "POST";
-      const suffix = action === "delete" ? "" : `/${action === "usage" ? "usage" : action}`;
-      return apiJSON<RuntimeActionResponse>(`/api/admin/runtime-lab/accounts/${account.proxy_account_id}${suffix}`, { method });
-    },
-    onSuccess: (data) => {
-      setLastResult(data.result);
-      invalidateLab();
-    },
-  });
-
-  const getDigest = useMutation({
-    mutationFn: (nodeID: string) => apiJSON<RuntimeActionResponse>(`/api/admin/runtime-lab/nodes/${nodeID}/digest`),
-    onSuccess: (data) => setLastResult(data.result),
-  });
-  const processChanges = useMutation({
-    mutationFn: (nodeID: string) => apiJSON<RuntimeJobResponse>(`/api/admin/runtime-control/nodes/${nodeID}/process`, { method: "POST" }),
+  const retryOrder = useMutation({
+    mutationFn: (orderID: string) => apiJSON(`/api/admin/orders/${orderID}/retry-fulfillment`, { method: "POST" }),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["runtime-control-changes"] });
-      void queryClient.invalidateQueries({ queryKey: ["node-runtime-status"] });
+      void queryClient.invalidateQueries({ queryKey: ["orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["proxies"] });
+      void queryClient.invalidateQueries({ queryKey: ["inventory"] });
     },
   });
+  const reconcileProxy = useMutation({
+    mutationFn: (proxyID: string) => apiJSON(`/api/admin/proxies/${proxyID}/reconcile`, { method: "POST" }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ["proxies"] }),
+  });
 
-  const busy = createAccount.isPending || updatePolicy.isPending || runAction.isPending || getDigest.isPending || processChanges.isPending;
-  const visibleResults = useMemo(() => {
-    if (lastResult) return [lastResult, ...(results.data?.items ?? []).filter((item) => item.apply_id !== lastResult.apply_id)];
-    return results.data?.items ?? [];
-  }, [lastResult, results.data?.items]);
+  if (users.isError) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-[#f3f4f6] px-6 text-[#1f2430]">
+        <form
+          className="w-full max-w-[420px] rounded-lg bg-white p-7 shadow-[0_12px_36px_rgba(15,23,42,0.08)]"
+          onSubmit={(event: FormEvent) => {
+            event.preventDefault();
+            login.mutate();
+          }}
+        >
+          <div className="mb-7 flex items-center gap-3">
+            <div className="grid size-10 place-items-center rounded-md bg-[#2563eb] text-xl font-bold text-white">R</div>
+            <div>
+              <h1 className="text-xl font-semibold">RayIP 管理端</h1>
+              <p className="mt-1 text-sm text-[#667085]">用户、钱包、库存、订单和 Runtime</p>
+            </div>
+          </div>
+          <label className="block text-sm font-medium">管理员</label>
+          <input className="field mt-2" value={username} onChange={(event) => setUsername(event.target.value)} />
+          <label className="mt-4 block text-sm font-medium">密码</label>
+          <input className="field mt-2" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+          <Button className="mt-6 w-full" type="submit" disabled={login.isPending}>登录</Button>
+          {login.isError ? <p className="mt-3 text-sm text-[#c2410c]">{errorText(login.error)}</p> : null}
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f3f4f6] text-[#1f2430]">
-      <aside className="fixed inset-y-0 left-0 hidden w-[260px] border-r border-[#e5e7eb] bg-white lg:block">
-        <div className="flex h-[64px] items-center gap-3 px-5">
-          <div className="grid size-8 place-items-center rounded-md bg-[#2563eb] text-sm font-bold text-white">R</div>
-          <div>
-            <div className="text-xl font-semibold text-[#2563eb]">RayIP</div>
-            <div className="text-xs text-[#6b7280]">Admin</div>
-          </div>
+      <aside className="fixed inset-y-0 left-0 hidden w-[270px] border-r border-[#e5e7eb] bg-white lg:block">
+        <div className="flex h-[72px] items-center gap-3 px-6">
+          <div className="grid size-9 place-items-center rounded-md bg-[#2563eb] text-lg font-bold text-white">R</div>
+          <div className="text-2xl font-semibold text-[#2563eb]">RayIP Admin</div>
         </div>
-        <nav className="space-y-1 px-3 py-4">
-          {nav.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.label}
-                className={[
-                  "flex h-10 w-full items-center gap-3 rounded-md px-3 text-sm",
-                  item.active ? "bg-[#eef2ff] text-[#2563eb]" : "text-[#394150] hover:bg-[#f6f8fb]",
-                ].join(" ")}
-              >
-                <Icon className="size-4" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+        <nav className="space-y-2 px-3">
+          {([
+            ["管理概览", Gauge, true],
+            ["用户", Users, false],
+            ["钱包和充值", WalletCards, false],
+            ["产品和库存", Boxes, false],
+            ["订单", ListChecks, false],
+            ["家宽节点", Server, false],
+            ["Runtime", Activity, false],
+            ["风控和设置", Settings, false],
+          ] satisfies Array<[string, LucideIcon, boolean]>).map(([label, Icon, active]) => (
+            <button key={String(label)} className={`flex h-10 w-full items-center gap-3 rounded-md px-3 text-left text-sm ${active ? "bg-[#eef2f7] text-[#2563eb]" : "text-[#344054]"}`}>
+              <Icon className="size-4" />
+              <span>{label}</span>
+            </button>
+          ))}
         </nav>
       </aside>
 
-      <div className="lg:pl-[260px]">
-        <header className="sticky top-0 z-10 flex h-[64px] items-center justify-between border-b border-[#e5e7eb] bg-white px-5">
-          <div className="flex items-center gap-3">
-            <button className="grid size-9 place-items-center rounded-md hover:bg-[#eef2f7]" aria-label="折叠菜单">
-              <Menu className="size-5" />
-            </button>
-            <div>
-              <div className="text-lg font-semibold">Runtime Lab</div>
-              <div className="text-xs text-[#6b7280]">T2 直连在线 NodeAgent，验证账号增量控制</div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => void nodes.refetch()} disabled={busy}>
-              <RefreshCw className="size-4" />
-              刷新
-            </Button>
-            <Button variant="outline" onClick={() => selectedNodeID && getDigest.mutate(selectedNodeID)} disabled={!selectedNodeID || busy}>
-              <Shield className="size-4" />
-              Digest
-            </Button>
-          </div>
+      <div className="lg:pl-[270px]">
+        <header className="sticky top-0 z-10 flex h-[60px] items-center justify-between border-b border-[#e5e7eb] bg-white px-6">
+          <button className="grid size-9 place-items-center rounded-md hover:bg-[#eef2f7]" aria-label="菜单">
+            <Menu className="size-5" />
+          </button>
+          <Button variant="outline" onClick={() => void queryClient.invalidateQueries()}>
+            <RefreshCw className="size-4" />
+            刷新
+          </Button>
         </header>
 
-        <main className="p-5">
-          <section className="grid gap-4 md:grid-cols-4">
-            <Stat title="在线节点" value={`${onlineNodes.length}`} hint={`总计 ${nodes.data?.total ?? 0} 台`} />
-            <Stat title="Lab 账号" value={`${accounts.data?.total ?? 0}`} hint="仅管理端实验账号" />
-            <Stat title="Digest 账号" value={`${digest?.account_count ?? "-"}`} hint={`水位 ${digest?.max_generation ?? "-"}`} />
-            <Stat title="可售状态" value={runtimeStatus.data?.status.sellable ? "SELLABLE" : "BLOCKED"} hint={runtimeStatus.data?.status.unsellable_reasons?.join(", ") || "等待节点上报"} />
+        <main className="p-6">
+          <div className="mb-6">
+            <h1 className="text-2xl font-semibold">运营控制台</h1>
+            <p className="mt-2 text-sm text-[#667085]">M2 商业闭环：用户、充值、可售库存、订单发货和 Runtime 状态</p>
+          </div>
+
+          <section className="grid gap-4 xl:grid-cols-5">
+            <Metric label="用户" value={`${users.data?.total ?? 0}`} icon={<Users className="size-5" />} />
+            <Metric label="支付单" value={`${payments.data?.total ?? 0}`} icon={<CreditCard className="size-5" />} />
+            <Metric label="库存 IP" value={`${inventory.data?.total ?? 0}`} icon={<Boxes className="size-5" />} />
+            <Metric label="订单" value={`${orders.data?.total ?? 0}`} icon={<ListChecks className="size-5" />} />
+            <Metric label="节点" value={`${nodes.data?.total ?? 0}`} icon={<Server className="size-5" />} />
           </section>
 
-          <section className="mt-4 grid gap-4 xl:grid-cols-[380px_1fr]">
-            <form className="rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05)]" onSubmit={(event) => submitCreate(event, createAccount.mutate)}>
-              <PanelHead title="创建测试账号" hint="SOCKS5 / HTTP，按 proxy_account_id 固定 runtime email" />
-              <div className="grid gap-3 p-5">
-                <Label text="在线节点">
-                  <select className="field" value={selectedNodeID} onChange={(event) => setForm({ ...form, node_id: event.target.value })}>
-                    {onlineNodes.length ? (
-                      onlineNodes.map((node) => (
-                        <option key={node.id} value={node.id}>
-                          {node.code}
-                        </option>
-                      ))
-                    ) : (
-                      <option value="">暂无在线节点</option>
-                    )}
-                  </select>
-                </Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <Label text="协议">
-                    <select className="field" value={form.protocol} onChange={(event) => setForm({ ...form, protocol: event.target.value as Protocol })}>
-                      <option value="SOCKS5">SOCKS5</option>
-                      <option value="HTTP">HTTP</option>
-                    </select>
-                  </Label>
-                  <Label text="端口">
-                    <input className="field" type="number" value={form.port} onChange={(event) => setNumber("port", event.target.value, setForm)} />
-                  </Label>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Label text="用户名">
-                    <input className="field" value={form.username} onChange={(event) => setForm({ ...form, username: event.target.value })} />
-                  </Label>
-                  <Label text="密码">
-                    <input className="field" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} />
-                  </Label>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <Label text="出站 B/s">
-                    <input className="field" type="number" value={form.egress_limit_bps} onChange={(event) => setNumber("egress_limit_bps", event.target.value, setForm)} />
-                  </Label>
-                  <Label text="入站 B/s">
-                    <input className="field" type="number" value={form.ingress_limit_bps} onChange={(event) => setNumber("ingress_limit_bps", event.target.value, setForm)} />
-                  </Label>
-                  <Label text="连接数">
-                    <input className="field" type="number" value={form.max_connections} onChange={(event) => setNumber("max_connections", event.target.value, setForm)} />
-                  </Label>
-                </div>
-                <Button type="submit" disabled={!selectedNodeID || busy}>
-                  <PlayCircle className="size-4" />
-                  创建并下发
-                </Button>
+          <section className="mt-5 grid gap-5 2xl:grid-cols-[1.1fr_0.9fr]">
+            <Panel title="用户和充值订单">
+              <div className="grid gap-5 xl:grid-cols-2">
+                <DataTable
+                  headers={["邮箱", "状态", "创建"]}
+                  rows={(users.data?.items ?? []).map((item) => [item.email, item.status, dateText(item.created_at)])}
+                />
+                <DataTable
+                  headers={["金额", "状态", "交易号"]}
+                  rows={(payments.data?.items ?? []).map((item) => [money(item.amount_cents), item.status, item.provider_trade_no || "-"])}
+                />
               </div>
-            </form>
+            </Panel>
 
-            <section className="rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
-              <PanelHead title="Runtime Lab 账号" hint="重复 generation 不会再次改 Runtime，新 generation 覆盖策略" />
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-[#f8fafc] text-xs text-[#6b7280]">
-                    <tr>
-                      <th className="px-4 py-3 font-medium">账号</th>
-                      <th className="px-4 py-3 font-medium">协议</th>
-                      <th className="px-4 py-3 font-medium">连接</th>
-                      <th className="px-4 py-3 font-medium">策略</th>
-                      <th className="px-4 py-3 font-medium">状态</th>
-                      <th className="px-4 py-3 font-medium">Revision</th>
-                      <th className="px-4 py-3 font-medium">操作</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#edf0f4]">
-                    {accounts.isLoading ? (
-                      <EmptyRow colSpan={7} text="正在读取 Runtime Lab 账号..." />
-                    ) : accounts.data?.items.length ? (
-                      accounts.data.items.map((account) => (
-                        <AccountRow
-                          key={account.proxy_account_id}
-                          account={account}
-                          selected={account.proxy_account_id === selectedAccountID}
-                          onSelect={() => setSelectedAccountID(account.proxy_account_id)}
-                          onCopy={() => void navigator.clipboard?.writeText(connectionText(account))}
-                          onPolicy={() => updatePolicy.mutate(account)}
-                          onAction={(action) => runAction.mutate({ account, action })}
-                          busy={busy}
-                        />
-                      ))
-                    ) : (
-                      <EmptyRow colSpan={7} text="暂无实验账号。选择在线节点后创建 SOCKS5 或 HTTP 账号。" />
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          </section>
-
-          <section className="mt-4 grid gap-4 xl:grid-cols-[1fr_360px]">
-            <section className="rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
-              <PanelHead title="Apply Result" hint={selectedAccount ? selectedAccount.proxy_account_id : "选择账号后查看最近结果"} />
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-[#f8fafc] text-xs text-[#6b7280]">
-                    <tr>
-                      <th className="px-4 py-3 font-medium">状态</th>
-                      <th className="px-4 py-3 font-medium">操作</th>
-                      <th className="px-4 py-3 font-medium">Generation</th>
-                      <th className="px-4 py-3 font-medium">Usage</th>
-                      <th className="px-4 py-3 font-medium">错误</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#edf0f4]">
-                    {visibleResults.length ? (
-                      visibleResults.slice(0, 8).map((result) => <ResultRow key={result.apply_id} result={result} />)
-                    ) : (
-                      <EmptyRow colSpan={5} text="暂无 apply 结果。" />
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-
-            <section className="rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
-              <PanelHead title="节点 Runtime 状态" hint="可售闸门、revision 和 digest 对账" />
-              <div className="space-y-3 p-5 text-sm">
-                <KV label="可售" value={runtimeStatus.data?.status.sellable ? "是" : "否"} />
-                <KV label="Runtime" value={runtimeStatus.data?.status.runtime_verdict ?? "-"} />
-                <KV label="Revision" value={`${runtimeStatus.data?.status.current_revision ?? "-"}/${runtimeStatus.data?.status.expected_revision ?? "-"}`} />
-                <KV label="账号数" value={`${runtimeStatus.data?.status.account_count ?? digest?.account_count ?? "-"}`} />
-                <div>
-                  <div className="mb-1 text-xs text-[#6b7280]">不可售原因</div>
-                  <div className="min-h-9 rounded-md bg-[#f8fafc] px-3 py-2 text-xs text-[#4b5565]">
-                    {runtimeStatus.data?.status.unsellable_reasons?.length ? runtimeStatus.data.status.unsellable_reasons.join(", ") : "-"}
-                  </div>
-                </div>
-                <div>
-                  <div className="mb-1 text-xs text-[#6b7280]">Digest</div>
-                  <div className="break-all rounded-md bg-[#f8fafc] px-3 py-2 font-mono text-xs text-[#4b5565]">{runtimeStatus.data?.status.runtime_digest_hash || digest?.hash || "-"}</div>
-                </div>
-              </div>
-            </section>
-          </section>
-
-          <section className="mt-4 grid gap-4 xl:grid-cols-2">
-            <section className="rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
-              <PanelHead
-                title="任务控制台"
-                hint="Postgres desired state -> outbox -> Worker -> NodeAgent"
-                action={
-                  <Button variant="outline" onClick={() => selectedNodeID && processChanges.mutate(selectedNodeID)} disabled={!selectedNodeID || busy}>
-                    <ListChecks className="size-4" />
-                    Process
-                  </Button>
-                }
+            <Panel title="钱包流水">
+              <DataTable
+                headers={["类型", "金额", "余额", "引用"]}
+                rows={(ledger.data?.items ?? []).map((item) => [item.type, money(item.amount_cents), money(item.balance_after_cents), item.reference_id.slice(0, 8)])}
               />
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-[#f8fafc] text-xs text-[#6b7280]">
-                    <tr>
-                      <th className="px-4 py-3 font-medium">Seq</th>
-                      <th className="px-4 py-3 font-medium">资源</th>
-                      <th className="px-4 py-3 font-medium">动作</th>
-                      <th className="px-4 py-3 font-medium">Revision</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#edf0f4]">
-                    {changes.data?.items.length ? (
-                      changes.data.items.map((change) => (
-                        <tr key={change.id}>
-                          <td className="px-4 py-4 text-[#4b5565]">{change.seq}</td>
-                          <td className="px-4 py-4 font-mono text-xs text-[#4b5565]">{change.resource_name}</td>
-                          <td className="px-4 py-4"><ApplyBadge status={change.action === "REMOVE" ? "NACK" : "ACK"} /></td>
-                          <td className="px-4 py-4 text-[#4b5565]">{change.revision}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <EmptyRow colSpan={4} text="暂无 runtime change log。" />
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {processChanges.data && (
-                <div className="border-t border-[#edf0f4] px-5 py-3 text-sm text-[#4b5565]">
-                  Job {processChanges.data.result.status}: {processChanges.data.result.accepted_revision}/{processChanges.data.result.target_revision}
-                  {processChanges.data.error ? ` · ${processChanges.data.error}` : ""}
-                </div>
-              )}
-            </section>
-
-            <section className="rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
-              <PanelHead title="Outbox" hint="NATS 只承载索引，Worker 回读 Postgres" />
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-[#f8fafc] text-xs text-[#6b7280]">
-                    <tr>
-                      <th className="px-4 py-3 font-medium">Topic</th>
-                      <th className="px-4 py-3 font-medium">Node</th>
-                      <th className="px-4 py-3 font-medium">Payload</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#edf0f4]">
-                    {outbox.data?.items.length ? (
-                      outbox.data.items.map((event) => (
-                        <tr key={event.id}>
-                          <td className="px-4 py-4 text-xs text-[#4b5565]">{event.topic}</td>
-                          <td className="px-4 py-4 text-xs text-[#4b5565]">{event.aggregate_key}</td>
-                          <td className="max-w-[360px] truncate px-4 py-4 font-mono text-xs text-[#4b5565]">{JSON.stringify(event.payload)}</td>
-                        </tr>
-                      ))
-                    ) : (
-                      <EmptyRow colSpan={3} text="暂无待发布 outbox。" />
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+            </Panel>
           </section>
 
-          {(nodes.isError || accounts.isError || createAccount.isError || updatePolicy.isError || runAction.isError || getDigest.isError || processChanges.isError) && (
-            <div className="mt-4 flex items-center gap-3 rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-4 py-3 text-sm text-[#b45309]">
-              <AlertTriangle className="size-5" />
-              {errorText(nodes.error || accounts.error || createAccount.error || updatePolicy.error || runAction.error || getDigest.error || processChanges.error)}
-            </div>
-          )}
+          <section className="mt-5 grid gap-5 2xl:grid-cols-[0.9fr_1.1fr]">
+            <Panel title="产品、价格和库存">
+              <div className="mb-5 grid gap-3 md:grid-cols-3">
+                {(products.data?.prices ?? []).map((price) => (
+                  <div key={`${price.protocol}-${price.duration_days}`} className="rounded-lg border border-[#e5e7eb] p-3">
+                    <div className="text-sm font-medium">{price.protocol} · {price.duration_days} 天</div>
+                    <div className="mt-2 text-lg font-semibold">{money(price.unit_cents)}</div>
+                  </div>
+                ))}
+              </div>
+              <form
+                className="grid gap-3 md:grid-cols-3"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  addInventory.mutate();
+                }}
+              >
+                <input className="field" value={inventoryForm.line_id} onChange={(event) => setInventoryForm({ ...inventoryForm, line_id: event.target.value })} placeholder="line_id" />
+                <input className="field" value={inventoryForm.node_id} onChange={(event) => setInventoryForm({ ...inventoryForm, node_id: event.target.value })} placeholder="node_id" />
+                <input className="field" value={inventoryForm.ip} onChange={(event) => setInventoryForm({ ...inventoryForm, ip: event.target.value })} placeholder="ip" />
+                <input className="field" value={inventoryForm.port} onChange={(event) => setInventoryForm({ ...inventoryForm, port: event.target.value })} placeholder="port" />
+                <input className="field" value={inventoryForm.protocols} onChange={(event) => setInventoryForm({ ...inventoryForm, protocols: event.target.value })} placeholder="SOCKS5,HTTP" />
+                <Button type="submit" disabled={addInventory.isPending}>新增库存</Button>
+              </form>
+              {addInventory.isError ? <p className="mt-3 text-sm text-[#c2410c]">{errorText(addInventory.error)}</p> : null}
+              <DataTable
+                className="mt-5"
+                headers={["IP", "节点", "协议", "状态"]}
+                rows={(inventory.data?.items ?? []).map((item) => [`${item.ip}:${item.port}`, item.node_id, item.protocols.join("/"), item.status])}
+              />
+            </Panel>
+
+            <Panel title="订单和代理生命周期">
+              <AdminOrderTable orders={orders.data?.items ?? []} onRetry={(id) => retryOrder.mutate(id)} retrying={retryOrder.isPending} />
+              <AdminProxyTable className="mt-5" proxies={proxies.data?.items ?? []} onReconcile={(id) => reconcileProxy.mutate(id)} reconciling={reconcileProxy.isPending} />
+            </Panel>
+          </section>
+
+          <section className="mt-5">
+            <Panel title="节点可售和 Runtime 状态">
+              <DataTable
+                headers={["节点", "状态", "能力", "最后在线"]}
+                rows={(nodes.data?.items ?? []).map((item) => [item.code, item.status, item.capabilities?.join("/") || "-", dateText(item.last_online_at)])}
+              />
+              <div className="mt-4 flex items-center gap-2 rounded-lg border border-[#fde68a] bg-[#fffbeb] p-3 text-sm text-[#92400e]">
+                <AlertTriangle className="size-4" />
+                可售库存必须同时满足 node_runtime_status.sellable、线路启用、库存可用、无 hold、协议能力匹配。
+              </div>
+            </Panel>
+          </section>
         </main>
       </div>
     </div>
   );
 }
 
-function submitCreate(event: FormEvent, mutate: () => void) {
-  event.preventDefault();
-  mutate();
-}
-
-function setNumber(
-  key: "port" | "egress_limit_bps" | "ingress_limit_bps" | "max_connections",
-  value: string,
-  setForm: (updater: (current: AppForm) => AppForm) => void,
-) {
-  setForm((current) => ({ ...current, [key]: Number(value) || 0 }));
-}
-
-type AppForm = {
-  node_id: string;
-  protocol: Protocol;
-  listen_ip: string;
-  port: number;
-  username: string;
-  password: string;
-  egress_limit_bps: number;
-  ingress_limit_bps: number;
-  max_connections: number;
-};
-
-function Stat({ title, value, hint }: { title: string; value: string; hint: string }) {
+function Metric({ label, value, icon }: { label: string; value: string; icon: ReactNode }) {
   return (
-    <div className="rounded-lg bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
-      <div className="text-sm text-[#6b7280]">{title}</div>
-      <div className="mt-2 text-2xl font-semibold">{value}</div>
-      <div className="mt-1 truncate text-xs text-[#8a94a6]">{hint}</div>
-    </div>
-  );
-}
-
-function PanelHead({ title, hint, action }: { title: string; hint: string; action?: ReactNode }) {
-  return (
-    <div className="flex min-h-[64px] items-center justify-between border-b border-[#e5e7eb] px-5 py-4">
-      <div>
-        <h2 className="font-semibold">{title}</h2>
-        <p className="mt-1 text-sm text-[#6b7280]">{hint}</p>
+    <div className="rounded-lg bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+      <div className="flex items-center justify-between text-[#667085]">
+        <span className="text-sm">{label}</span>
+        {icon}
       </div>
-      {action}
+      <div className="mt-3 text-2xl font-semibold">{value}</div>
     </div>
   );
 }
 
-function Label({ text, children }: { text: string; children: ReactNode }) {
+function Panel({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <label className="grid gap-1 text-xs font-medium text-[#6b7280]">
-      {text}
+    <section className="rounded-lg bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+      <div className="mb-4 flex items-center gap-2">
+        <Shield className="size-4 text-[#2563eb]" />
+        <h2 className="text-base font-semibold">{title}</h2>
+      </div>
       {children}
-    </label>
+    </section>
   );
 }
 
-function AccountRow({
-  account,
-  selected,
-  onSelect,
-  onCopy,
-  onPolicy,
-  onAction,
-  busy,
-}: {
-  account: RuntimeAccount;
-  selected: boolean;
-  onSelect: () => void;
-  onCopy: () => void;
-  onPolicy: () => void;
-  onAction: (action: "disable" | "delete" | "usage" | "probe") => void;
-  busy: boolean;
-}) {
+function DataTable({ headers, rows, className = "" }: { headers: string[]; rows: Array<Array<ReactNode>>; className?: string }) {
   return (
-    <tr className={selected ? "bg-[#f8fbff]" : ""} onClick={onSelect}>
-      <td className="px-4 py-4">
-        <div className="max-w-[180px] truncate font-medium">{account.proxy_account_id}</div>
-        <div className="text-xs text-[#6b7280]">{account.username}</div>
-      </td>
-      <td className="px-4 py-4 text-[#4b5565]">{account.protocol}</td>
-      <td className="px-4 py-4 text-[#4b5565]">
-        {account.listen_ip}:{account.port}
-      </td>
-      <td className="px-4 py-4 text-xs text-[#4b5565]">
-        <div>出 {formatBytes(account.egress_limit_bps)}/s</div>
-        <div>入 {formatBytes(account.ingress_limit_bps)}/s</div>
-        <div>连接 {account.max_connections || "不限"}</div>
-      </td>
-      <td className="px-4 py-4">
-        <StatusBadge status={account.status} />
-      </td>
-      <td className="px-4 py-4 text-[#4b5565]">
-        {account.applied_generation}/{account.desired_generation}
-      </td>
-      <td className="px-4 py-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={stop(onCopy)} disabled={busy} title="复制连接">
-            <Copy className="size-4" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={stop(onPolicy)} disabled={busy} title="更新策略">
-            <SlidersHorizontal className="size-4" />
-          </Button>
-          <Button variant="outline" size="sm" onClick={stop(() => onAction("probe"))} disabled={busy}>
-            测试
-          </Button>
-          <Button variant="outline" size="sm" onClick={stop(() => onAction("usage"))} disabled={busy}>
-            Usage
-          </Button>
-          <Button variant="ghost" size="sm" onClick={stop(() => onAction("disable"))} disabled={busy}>
-            禁用
-          </Button>
-          <Button variant="ghost" size="sm" onClick={stop(() => onAction("delete"))} disabled={busy} title="删除">
-            <Trash2 className="size-4" />
-          </Button>
-        </div>
-      </td>
-    </tr>
-  );
-}
-
-function ResultRow({ result }: { result: RuntimeResult }) {
-  return (
-    <tr>
-      <td className="px-4 py-4">
-        <ApplyBadge status={result.status} />
-      </td>
-      <td className="px-4 py-4 text-[#4b5565]">{result.operation || "-"}</td>
-      <td className="px-4 py-4 text-[#4b5565]">{result.applied_revision}/{result.last_good_revision}</td>
-      <td className="px-4 py-4 text-xs text-[#4b5565]">
-        <div>RX {formatBytes(result.usage?.rx_bytes ?? 0)}</div>
-        <div>TX {formatBytes(result.usage?.tx_bytes ?? 0)}</div>
-        <div>连接 {result.usage?.active_connections ?? 0}</div>
-      </td>
-      <td className="max-w-[320px] px-4 py-4 text-xs text-[#b45309]">{result.error_detail || "-"}</td>
-    </tr>
-  );
-}
-
-function StatusBadge({ status }: { status: RuntimeAccount["status"] }) {
-  return (
-    <span
-      className={[
-        "inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium",
-        status === "ENABLED" ? "bg-[#e8f7ee] text-[#15803d]" : "bg-[#f1f3f6] text-[#64748b]",
-      ].join(" ")}
-    >
-      <CircleDot className="size-3" />
-      {status}
-    </span>
-  );
-}
-
-function ApplyBadge({ status }: { status: ApplyStatus }) {
-  const style = status === "FAILED" || status === "NACK" || status === "PARTIAL" ? "bg-[#fff7ed] text-[#b45309]" : status === "DUPLICATE" ? "bg-[#eef2ff] text-[#2563eb]" : "bg-[#e8f7ee] text-[#15803d]";
-  return <span className={`inline-flex rounded-md px-2 py-1 text-xs font-medium ${style}`}>{status}</span>;
-}
-
-function EmptyRow({ colSpan, text }: { colSpan: number; text: string }) {
-  return (
-    <tr>
-      <td className="px-5 py-8 text-[#6b7280]" colSpan={colSpan}>
-        {text}
-      </td>
-    </tr>
-  );
-}
-
-function KV({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between border-b border-[#edf0f4] pb-2">
-      <span className="text-[#6b7280]">{label}</span>
-      <span className="font-medium">{value}</span>
+    <div className={`overflow-x-auto ${className}`}>
+      <table className="data-table">
+        <thead>
+          <tr>{headers.map((header) => <th key={header}>{header}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.length ? rows.map((row, index) => (
+            <tr key={index}>{row.map((cell, cellIndex) => <td key={cellIndex}>{cell}</td>)}</tr>
+          )) : (
+            <tr><td colSpan={headers.length} className="text-center text-[#667085]">暂无数据</td></tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
 
-function connectionText(account: RuntimeAccount) {
-  return `${account.protocol.toLowerCase()}://${account.username}:${account.password}@${account.listen_ip}:${account.port}`;
+function AdminOrderTable({ orders, onRetry, retrying }: { orders: Order[]; onRetry: (id: string) => void; retrying: boolean }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>订单</th>
+            <th>用户</th>
+            <th>金额</th>
+            <th>状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {orders.length ? orders.map((item) => (
+            <tr key={item.id}>
+              <td>{item.id.slice(0, 8)}</td>
+              <td>{item.user_id.slice(0, 8)}</td>
+              <td>{money(item.amount_cents)}</td>
+              <td>{item.failure_reason ? `${item.status} · ${item.failure_reason}` : item.status}</td>
+              <td>
+                <Button size="sm" variant="outline" disabled={retrying || item.status !== "FULFILLMENT_FAILED"} onClick={() => onRetry(item.id)}>
+                  重试发货
+                </Button>
+              </td>
+            </tr>
+          )) : (
+            <tr><td colSpan={5} className="text-center text-[#667085]">暂无数据</td></tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
-function formatBytes(value: number) {
-  if (!value) return "不限";
-  if (value >= 1024 * 1024) return `${(value / 1024 / 1024).toFixed(1)} MB`;
-  if (value >= 1024) return `${(value / 1024).toFixed(1)} KB`;
-  return `${value} B`;
+function AdminProxyTable({ proxies, onReconcile, reconciling, className = "" }: { proxies: ProxyAccount[]; onReconcile: (id: string) => void; reconciling: boolean; className?: string }) {
+  return (
+    <div className={`overflow-x-auto ${className}`}>
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>代理</th>
+            <th>节点</th>
+            <th>IP</th>
+            <th>状态</th>
+            <th>生命周期</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {proxies.length ? proxies.map((item) => (
+            <tr key={item.id}>
+              <td>{item.id.slice(0, 8)}</td>
+              <td>{item.node_id}</td>
+              <td>{item.listen_ip}:{item.port}</td>
+              <td>{item.status}</td>
+              <td>{item.lifecycle_status}</td>
+              <td>
+                <Button size="sm" variant="outline" disabled={reconciling} onClick={() => onReconcile(item.id)}>
+                  Runtime 对账
+                </Button>
+              </td>
+            </tr>
+          )) : (
+            <tr><td colSpan={6} className="text-center text-[#667085]">暂无数据</td></tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
 }
 
-function stop(fn: () => void) {
-  return (event: MouseEvent) => {
-    event.stopPropagation();
-    fn();
-  };
+function dateText(value?: string) {
+  if (!value) return "-";
+  return new Date(value).toLocaleString("zh-CN", { hour12: false });
 }
 
 function errorText(error: unknown) {
-  return error instanceof Error ? error.message : "Runtime Lab 操作失败";
+  return error instanceof Error ? error.message : "请求失败";
 }

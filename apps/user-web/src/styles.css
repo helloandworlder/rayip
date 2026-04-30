@@ -23,3 +23,85 @@ textarea,
 select {
   font: inherit;
 }
+
+.field {
+  height: 38px;
+  border-radius: 6px;
+  border: 1px solid #d8dde8;
+  background: #ffffff;
+  padding: 0 10px;
+  color: #1f2430;
+  outline: none;
+}
+
+.field:focus {
+  border-color: #3f73f6;
+  box-shadow: 0 0 0 3px rgba(63, 115, 246, 0.12);
+}
+
+.select-panel {
+  display: flex;
+  height: 76px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  border: 1px solid #dfe4ef;
+  background: #fff;
+  padding: 0 14px;
+}
+
+.select-panel span {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.select-panel select {
+  border: 0;
+  background: transparent;
+  outline: 0;
+  font-weight: 500;
+}
+
+.line-card {
+  display: flex;
+  min-height: 74px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #fbfcfe;
+  padding: 12px 14px;
+  text-align: left;
+}
+
+.line-card.selected {
+  border-color: #3f73f6;
+  box-shadow: 0 0 0 3px rgba(63, 115, 246, 0.12);
+}
+
+.line-card:disabled {
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.data-table th {
+  border-bottom: 1px solid #e5e7eb;
+  color: #667085;
+  font-weight: 600;
+  text-align: left;
+  padding: 9px 10px;
+}
+
+.data-table td {
+  border-bottom: 1px solid #eef0f4;
+  padding: 10px;
+  vertical-align: middle;
+}
