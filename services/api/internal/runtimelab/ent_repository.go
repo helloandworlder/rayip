@@ -100,6 +100,8 @@ func (r *EntRepository) SaveApplyResult(ctx context.Context, result ApplyResult)
 		SetUsage(usageMap).
 		SetDigest(digestMap).
 		SetCreatedAt(result.CreatedAt).
+		OnConflict(sql.ConflictColumns("apply_id")).
+		UpdateNewValues().
 		Exec(ctx)
 }
 
