@@ -163,7 +163,10 @@ func (r *EntRepository) LatestDigest(ctx context.Context, nodeID string) (Digest
 
 func (r *EntRepository) LatestNodeRevision(ctx context.Context, nodeID string) (uint64, bool, error) {
 	item, err := r.client.RuntimeApplyResult.Query().
-		Where(entApply.NodeID(nodeID)).
+		Where(
+			entApply.NodeID(nodeID),
+			entApply.OperationIn(string(OperationUpsert), string(OperationUpdatePolicy), string(OperationDelete)),
+		).
 		Order(apiEnt.Desc(entApply.FieldCreatedAt)).
 		First(ctx)
 	if apiEnt.IsNotFound(err) {

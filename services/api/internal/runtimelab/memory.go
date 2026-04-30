@@ -103,6 +103,9 @@ func (r *MemoryRepository) LatestNodeRevision(_ context.Context, nodeID string) 
 		if result.NodeID != nodeID {
 			continue
 		}
+		if result.Operation != OperationUpsert && result.Operation != OperationUpdatePolicy && result.Operation != OperationDelete {
+			continue
+		}
 		return result.LastGoodRevision, true, nil
 	}
 	return 0, false, nil
