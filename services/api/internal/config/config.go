@@ -72,6 +72,10 @@ func Load() (Config, error) {
 	v.SetDefault("service.env", "dev")
 	v.SetDefault("http.addr", ":8080")
 	v.SetDefault("grpc.addr", ":9090")
+	if port := os.Getenv("PORT"); port != "" {
+		v.SetDefault("http.addr", ":"+port)
+		v.SetDefault("grpc.addr", ":"+port)
+	}
 	v.SetDefault("postgres.dsn", "postgres://rayip:rayip@localhost:5432/rayip?sslmode=disable")
 	v.SetDefault("postgres.run_migrations", true)
 	v.SetDefault("redis.addr", "localhost:6379")

@@ -264,7 +264,9 @@ func RegisterLifecycle(lc fx.Lifecycle, cfg config.Config, server *grpc.Server, 
 			}
 			go func() {
 				if err := server.Serve(listener); err != nil {
-					log.Error("grpc server stopped", zap.Error(err))
+					if !errors.Is(err, net.ErrClosed) {
+						log.Error("grpc server stopped", zap.Error(err))
+					}
 				}
 			}()
 			log.Info("grpc server listening", zap.String("addr", cfg.GRPC.Addr))

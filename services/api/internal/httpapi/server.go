@@ -3,6 +3,8 @@ package httpapi
 import (
 	"context"
 	"database/sql"
+	"errors"
+	"net"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
@@ -54,7 +56,9 @@ func RegisterLifecycle(lc fx.Lifecycle, app *fiber.App, cfg config.Config, log *
 		OnStart: func(ctx context.Context) error {
 			go func() {
 				if err := app.Listen(cfg.HTTP.Addr); err != nil {
-					log.Error("http server stopped", zap.Error(err))
+					if !errors.Is(err, net.ErrClosed) {
+						log.Error("http server stopped", zap.Error(err))
+					}
 				}
 			}()
 			log.Info("http server listening", zap.String("addr", cfg.HTTP.Addr))
