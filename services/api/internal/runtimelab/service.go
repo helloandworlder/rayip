@@ -314,7 +314,7 @@ func (s *Service) nextNodeRevision(ctx context.Context, nodeID string) (uint64, 
 }
 
 func (s *Service) shouldRetryRevisionMismatch(result ApplyResult, err error) bool {
-	if err == nil {
+	if err == nil && result.Status != ApplyStatusNACK && result.Status != ApplyStatusFailed {
 		return false
 	}
 	return (result.Status == ApplyStatusNACK || result.Status == ApplyStatusFailed) && strings.Contains(result.ErrorDetail, "base revision")
