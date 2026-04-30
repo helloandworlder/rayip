@@ -295,6 +295,21 @@ func (c *XrayCore) Probe(ctx context.Context, proxyAccountID string) (Usage, err
 	return c.Usage(ctx, proxyAccountID)
 }
 
+func (c *XrayCore) SetFairnessState(ctx context.Context, state FairnessState) error {
+	_, err := c.client.SetFairnessState(ctx, &runtimev1.SetFairnessStateRequest{
+		EgressPoolBps:       state.EgressPoolBPS,
+		IngressPoolBps:      state.IngressPoolBPS,
+		WindowSeconds:       state.WindowSeconds,
+		LossRatePpm:         state.LossRatePPM,
+		RetransmitRatePpm:   state.RetransmitRatePPM,
+		TargetLossPpm:       state.TargetLossPPM,
+		TargetRetransmitPpm: state.TargetRetransmitPPM,
+		MinCongestionBps:    state.MinCongestionBPS,
+		RttMillis:           state.RTTMillis,
+	})
+	return err
+}
+
 func (c *XrayCore) Digest(ctx context.Context) (Digest, error) {
 	response, err := c.client.GetDigest(ctx, &runtimev1.GetDigestRequest{})
 	if err != nil {

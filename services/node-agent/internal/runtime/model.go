@@ -87,6 +87,18 @@ type AbuseEvent struct {
 	Threshold      uint64
 }
 
+type FairnessState struct {
+	EgressPoolBPS       uint64
+	IngressPoolBPS      uint64
+	WindowSeconds       uint32
+	LossRatePPM         uint32
+	RetransmitRatePPM   uint32
+	TargetLossPPM       uint32
+	TargetRetransmitPPM uint32
+	MinCongestionBPS    uint64
+	RTTMillis           uint32
+}
+
 type Apply struct {
 	ApplyID              string     `json:"apply_id"`
 	NodeID               string     `json:"node_id"`
