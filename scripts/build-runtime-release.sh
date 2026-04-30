@@ -56,9 +56,11 @@ cat > "$tmp_manifest" <<JSON
   "capabilities": [
     "socks5",
     "http",
+    "mixed",
     "rayip-runtime",
     "account-rate-limit",
     "smart-fair-limit",
+    "congestion-aware-fair-limit",
     "connection-limit",
     "usage-stats",
     "abuse-detection",
