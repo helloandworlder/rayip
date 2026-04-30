@@ -33,6 +33,10 @@ func (m *Manager) Apply(ctx context.Context, apply Apply) (ApplyAck, error) {
 		m.mu.Unlock()
 		return m.applyQuery(ctx, apply, lastGood)
 	}
+	if apply.FairnessState != (FairnessState{}) {
+		m.mu.Unlock()
+		return m.applyFairness(ctx, apply, lastGood)
+	}
 	if apply.Mode == ApplyModeDelta && apply.BaseRevision != lastGood {
 		ack := m.baseAckLocked(apply)
 		ack.Status = AckStatusNACK
@@ -96,6 +100,27 @@ func (m *Manager) Apply(ctx context.Context, apply Apply) (ApplyAck, error) {
 	ack.LastGoodRevision = m.lastGoodRevision
 	m.seenApplies[apply.ApplyID] = ack
 	m.mu.Unlock()
+	return ack, nil
+}
+
+func (m *Manager) applyFairness(ctx context.Context, apply Apply, lastGood uint64) (ApplyAck, error) {
+	ack := ApplyAck{
+		ApplyID:          apply.ApplyID,
+		NodeID:           apply.NodeID,
+		VersionInfo:      apply.VersionInfo,
+		Nonce:            apply.Nonce,
+		Status:           AckStatusACK,
+		AppliedRevision:  lastGood,
+		LastGoodRevision: lastGood,
+	}
+	if err := m.core.SetFairnessState(ctx, apply.FairnessState); err != nil {
+		ack.Status = AckStatusNACK
+		ack.ErrorDetail = err.Error()
+		return ack, err
+	}
+	if digest, err := m.core.Digest(ctx); err == nil {
+		ack.Digest = digest
+	}
 	return ack, nil
 }
 

@@ -26,6 +26,7 @@ const (
 	OperationUpdatePolicy Operation = "UPDATE_POLICY"
 	OperationGetUsage     Operation = "GET_USAGE"
 	OperationGetDigest    Operation = "GET_DIGEST"
+	OperationSetFairness  Operation = "SET_FAIRNESS"
 	OperationProbe        Operation = "PROBE"
 )
 
@@ -107,6 +108,7 @@ type RuntimeApply struct {
 	RemovedResourceNames []string          `json:"removed_resource_names"`
 	QueryOperation       Operation         `json:"query_operation,omitempty"`
 	QueryResourceName    string            `json:"query_resource_name,omitempty"`
+	FairnessState        FairnessState     `json:"fairness_state,omitempty"`
 }
 
 type RuntimeResource struct {
@@ -141,6 +143,18 @@ type ApplyResult struct {
 	Usage            Usage       `json:"usage,omitempty"`
 	Digest           Digest      `json:"digest,omitempty"`
 	CreatedAt        time.Time   `json:"created_at,omitempty"`
+}
+
+type FairnessState struct {
+	EgressPoolBPS       uint64 `json:"egress_pool_bps"`
+	IngressPoolBPS      uint64 `json:"ingress_pool_bps"`
+	WindowSeconds       uint32 `json:"window_seconds"`
+	LossRatePPM         uint32 `json:"loss_rate_ppm"`
+	RetransmitRatePPM   uint32 `json:"retransmit_rate_ppm"`
+	TargetLossPPM       uint32 `json:"target_loss_ppm"`
+	TargetRetransmitPPM uint32 `json:"target_retransmit_ppm"`
+	MinCongestionBPS    uint64 `json:"min_congestion_bps"`
+	RTTMillis           uint32 `json:"rtt_millis"`
 }
 
 type Usage struct {

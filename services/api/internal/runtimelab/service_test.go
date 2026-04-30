@@ -400,6 +400,41 @@ func TestGetUsageDispatchesRuntimeQueryAndStoresUsage(t *testing.T) {
 	}
 }
 
+func TestSetFairnessStateDispatchesRuntimeControl(t *testing.T) {
+	repo := runtimelab.NewMemoryRepository()
+	dispatcher := &recordingDispatcher{ack: runtimelab.ApplyResult{
+		Status:          runtimelab.ApplyStatusACK,
+		AppliedRevision: 1,
+		Digest:          runtimelab.Digest{AccountCount: 2, Hash: "digest-1"},
+	}}
+	svc := runtimelab.NewService(repo, dispatcher, time.Now)
+
+	result, err := svc.SetFairnessState(context.Background(), "node-1", runtimelab.FairnessState{
+		EgressPoolBPS:       300000,
+		IngressPoolBPS:      300000,
+		WindowSeconds:       300,
+		LossRatePPM:         20000,
+		RetransmitRatePPM:   15000,
+		TargetLossPPM:       5000,
+		TargetRetransmitPPM: 10000,
+		MinCongestionBPS:    100000,
+		RTTMillis:           80,
+	})
+	if err != nil {
+		t.Fatalf("SetFairnessState() error = %v", err)
+	}
+	if result.Status != runtimelab.ApplyStatusACK || result.Operation != runtimelab.OperationSetFairness {
+		t.Fatalf("fairness result = %#v", result)
+	}
+	if len(dispatcher.applies) != 1 {
+		t.Fatalf("dispatch count = %d, want 1", len(dispatcher.applies))
+	}
+	apply := dispatcher.applies[0]
+	if apply.NodeID != "node-1" || apply.FairnessState.EgressPoolBPS != 300000 || apply.FairnessState.LossRatePPM != 20000 {
+		t.Fatalf("fairness apply = %#v", apply)
+	}
+}
+
 func TestGetDigestReturnsLatestNodeDigest(t *testing.T) {
 	repo := runtimelab.NewMemoryRepository()
 	svc := runtimelab.NewService(repo, &recordingDispatcher{}, time.Now)

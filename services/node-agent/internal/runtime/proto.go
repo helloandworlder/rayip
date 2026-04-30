@@ -37,6 +37,24 @@ func ApplyFromProto(apply *controlv1.RuntimeApply) Apply {
 		RemovedResourceNames: append([]string(nil), apply.GetRemovedResourceNames()...),
 		QueryOperation:       apply.GetQueryOperation(),
 		QueryResourceName:    apply.GetQueryResourceName(),
+		FairnessState:        fairnessStateFromProto(apply.GetFairnessState()),
+	}
+}
+
+func fairnessStateFromProto(state *controlv1.RuntimeFairnessState) FairnessState {
+	if state == nil {
+		return FairnessState{}
+	}
+	return FairnessState{
+		EgressPoolBPS:       state.GetEgressPoolBps(),
+		IngressPoolBPS:      state.GetIngressPoolBps(),
+		WindowSeconds:       state.GetWindowSeconds(),
+		LossRatePPM:         state.GetLossRatePpm(),
+		RetransmitRatePPM:   state.GetRetransmitRatePpm(),
+		TargetLossPPM:       state.GetTargetLossPpm(),
+		TargetRetransmitPPM: state.GetTargetRetransmitPpm(),
+		MinCongestionBPS:    state.GetMinCongestionBps(),
+		RTTMillis:           state.GetRttMillis(),
 	}
 }
 

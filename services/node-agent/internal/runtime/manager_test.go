@@ -129,6 +129,42 @@ func TestManagerGetUsageQueryDoesNotAdvanceRevision(t *testing.T) {
 	}
 }
 
+func TestManagerFairnessApplyDoesNotAdvanceRevision(t *testing.T) {
+	core := runtime.NewMemoryCore()
+	manager := runtime.NewManager(core)
+	if _, err := manager.Apply(context.Background(), runtime.Apply{
+		ApplyID:        "apply-1",
+		Mode:           runtime.ApplyModeDelta,
+		VersionInfo:    "rv-1",
+		Nonce:          "nonce-1",
+		BaseRevision:   0,
+		TargetRevision: 1,
+		Resources:      []runtime.Resource{testResource("proxy/acct-1", 1)},
+	}); err != nil {
+		t.Fatalf("upsert Apply() error = %v", err)
+	}
+
+	ack, err := manager.Apply(context.Background(), runtime.Apply{
+		ApplyID: "fair-1",
+		NodeID:  "node-1",
+		FairnessState: runtime.FairnessState{
+			EgressPoolBPS:       300,
+			IngressPoolBPS:      300,
+			WindowSeconds:       300,
+			LossRatePPM:         20000,
+			TargetLossPPM:       5000,
+			TargetRetransmitPPM: 10000,
+			MinCongestionBPS:    100,
+		},
+	})
+	if err != nil {
+		t.Fatalf("fairness Apply() error = %v", err)
+	}
+	if ack.Status != runtime.AckStatusACK || ack.AppliedRevision != 1 || ack.LastGoodRevision != 1 {
+		t.Fatalf("fairness ack revisions = %#v, want revision unchanged at 1", ack)
+	}
+}
+
 func TestManagerRemovedResourceDeletesAccount(t *testing.T) {
 	core := runtime.NewMemoryCore()
 	manager := runtime.NewManager(core)

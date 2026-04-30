@@ -17,6 +17,7 @@ type Core interface {
 	Usage(ctx context.Context, proxyAccountID string) (Usage, error)
 	Probe(ctx context.Context, proxyAccountID string) (Usage, error)
 	Digest(ctx context.Context) (Digest, error)
+	SetFairnessState(ctx context.Context, state FairnessState) error
 }
 
 type MemoryCore struct {
@@ -122,6 +123,17 @@ func (c *MemoryCore) SetFairPoolBPS(bytesPerSecond uint64) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.fairPoolBPS = bytesPerSecond
+}
+
+func (c *MemoryCore) SetFairnessState(_ context.Context, state FairnessState) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if state.EgressPoolBPS > 0 {
+		c.fairPoolBPS = state.EgressPoolBPS
+		return nil
+	}
+	c.fairPoolBPS = state.IngressPoolBPS
+	return nil
 }
 
 func (c *MemoryCore) AcquireConnection(proxyAccountID string) (func(), error) {

@@ -88,4 +88,16 @@ func RegisterRuntimeLabRoutes(app *fiber.App, lab *runtimelab.Service) {
 		}
 		return c.JSON(fiber.Map{"result": result})
 	})
+
+	app.Post("/api/admin/runtime-lab/nodes/:node_id/fairness", func(c fiber.Ctx) error {
+		var input runtimelab.FairnessState
+		if err := c.Bind().Body(&input); err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+		result, err := lab.SetFairnessState(c.Context(), c.Params("node_id"), input)
+		if err != nil {
+			return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		}
+		return c.JSON(fiber.Map{"result": result})
+	})
 }

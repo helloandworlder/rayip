@@ -267,6 +267,29 @@ func (s *Service) GetDigest(ctx context.Context, nodeID string) (ApplyResult, er
 	return result, nil
 }
 
+func (s *Service) SetFairnessState(ctx context.Context, nodeID string, state FairnessState) (ApplyResult, error) {
+	if nodeID == "" {
+		return ApplyResult{}, errors.New("node_id is required")
+	}
+	apply := s.newDeltaApply(nodeID, 0, 0)
+	apply.FairnessState = state
+	result, err := s.dispatcher.DispatchRuntimeApply(ctx, apply)
+	if result.ApplyID == "" {
+		result.ApplyID = apply.ApplyID
+	}
+	result.NodeID = nodeID
+	result.Operation = OperationSetFairness
+	result.CreatedAt = s.now().UTC()
+	if err != nil {
+		result.Status = ApplyStatusFailed
+		result.ErrorDetail = err.Error()
+	}
+	if saveErr := s.repo.SaveApplyResult(ctx, result); saveErr != nil && err == nil {
+		err = saveErr
+	}
+	return result, err
+}
+
 func (s *Service) ListAccounts(ctx context.Context) ([]Account, error) {
 	return s.repo.ListAccounts(ctx)
 }

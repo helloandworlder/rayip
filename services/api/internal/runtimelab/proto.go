@@ -20,6 +20,24 @@ func ApplyToProto(apply RuntimeApply) *controlv1.RuntimeApply {
 		RemovedResourceNames: append([]string(nil), apply.RemovedResourceNames...),
 		QueryOperation:       string(apply.QueryOperation),
 		QueryResourceName:    apply.QueryResourceName,
+		FairnessState:        fairnessStateToProto(apply.FairnessState),
+	}
+}
+
+func fairnessStateToProto(state FairnessState) *controlv1.RuntimeFairnessState {
+	if state == (FairnessState{}) {
+		return nil
+	}
+	return &controlv1.RuntimeFairnessState{
+		EgressPoolBps:       state.EgressPoolBPS,
+		IngressPoolBps:      state.IngressPoolBPS,
+		WindowSeconds:       state.WindowSeconds,
+		LossRatePpm:         state.LossRatePPM,
+		RetransmitRatePpm:   state.RetransmitRatePPM,
+		TargetLossPpm:       state.TargetLossPPM,
+		TargetRetransmitPpm: state.TargetRetransmitPPM,
+		MinCongestionBps:    state.MinCongestionBPS,
+		RttMillis:           state.RTTMillis,
 	}
 }
 

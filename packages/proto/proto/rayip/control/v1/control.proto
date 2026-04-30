@@ -156,6 +156,19 @@ message RuntimeApply {
   repeated string removed_resource_names = 10;
   string query_operation = 11;
   string query_resource_name = 12;
+  RuntimeFairnessState fairness_state = 13;
+}
+
+message RuntimeFairnessState {
+  uint64 egress_pool_bps = 1;
+  uint64 ingress_pool_bps = 2;
+  uint32 window_seconds = 3;
+  uint32 loss_rate_ppm = 4;
+  uint32 retransmit_rate_ppm = 5;
+  uint32 target_loss_ppm = 6;
+  uint32 target_retransmit_ppm = 7;
+  uint64 min_congestion_bps = 8;
+  uint32 rtt_millis = 9;
 }
 
 enum RuntimeApplyMode {

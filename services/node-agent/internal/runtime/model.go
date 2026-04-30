@@ -100,18 +100,19 @@ type FairnessState struct {
 }
 
 type Apply struct {
-	ApplyID              string     `json:"apply_id"`
-	NodeID               string     `json:"node_id"`
-	Mode                 ApplyMode  `json:"mode"`
-	VersionInfo          string     `json:"version_info"`
-	Nonce                string     `json:"nonce"`
-	BaseRevision         uint64     `json:"base_revision"`
-	TargetRevision       uint64     `json:"target_revision"`
-	DeadlineUnixMS       int64      `json:"deadline_unix_ms"`
-	Resources            []Resource `json:"resources"`
-	RemovedResourceNames []string   `json:"removed_resource_names"`
-	QueryOperation       string     `json:"query_operation,omitempty"`
-	QueryResourceName    string     `json:"query_resource_name,omitempty"`
+	ApplyID              string        `json:"apply_id"`
+	NodeID               string        `json:"node_id"`
+	Mode                 ApplyMode     `json:"mode"`
+	VersionInfo          string        `json:"version_info"`
+	Nonce                string        `json:"nonce"`
+	BaseRevision         uint64        `json:"base_revision"`
+	TargetRevision       uint64        `json:"target_revision"`
+	DeadlineUnixMS       int64         `json:"deadline_unix_ms"`
+	Resources            []Resource    `json:"resources"`
+	RemovedResourceNames []string      `json:"removed_resource_names"`
+	QueryOperation       string        `json:"query_operation,omitempty"`
+	QueryResourceName    string        `json:"query_resource_name,omitempty"`
+	FairnessState        FairnessState `json:"fairness_state,omitempty"`
 }
 
 type Resource struct {
