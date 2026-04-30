@@ -17,6 +17,7 @@ type Repository interface {
 	ListApplyResults(ctx context.Context, proxyAccountID string, limit int) ([]ApplyResult, error)
 	LatestUsage(ctx context.Context, proxyAccountID string) (Usage, bool, error)
 	LatestDigest(ctx context.Context, nodeID string) (Digest, bool, error)
+	LatestNodeRevision(ctx context.Context, nodeID string) (uint64, bool, error)
 }
 
 type Dispatcher interface {
@@ -262,15 +263,38 @@ func (s *Service) ListApplyResults(ctx context.Context, proxyAccountID string, l
 }
 
 func (s *Service) dispatchResource(ctx context.Context, operation Operation, account Account, revision uint64) (ApplyResult, error) {
-	apply := s.newDeltaApply(account.NodeID, account.AppliedGeneration, revision)
-	apply.Resources = []RuntimeResource{resourceFromAccount(account, revision)}
+	nodeBaseRevision, targetRevision, err := s.nextNodeRevision(ctx, account.NodeID)
+	if err != nil {
+		return ApplyResult{}, err
+	}
+	resourceRevision := revision
+	if resourceRevision == 0 {
+		resourceRevision = targetRevision
+	}
+	apply := s.newDeltaApply(account.NodeID, nodeBaseRevision, targetRevision)
+	apply.Resources = []RuntimeResource{resourceFromAccount(account, resourceRevision)}
 	return s.dispatch(ctx, operation, account, apply)
 }
 
 func (s *Service) dispatchRemove(ctx context.Context, operation Operation, account Account, revision uint64) (ApplyResult, error) {
-	apply := s.newDeltaApply(account.NodeID, account.AppliedGeneration, revision)
+	nodeBaseRevision, targetRevision, err := s.nextNodeRevision(ctx, account.NodeID)
+	if err != nil {
+		return ApplyResult{}, err
+	}
+	apply := s.newDeltaApply(account.NodeID, nodeBaseRevision, targetRevision)
 	apply.RemovedResourceNames = []string{resourceName(account)}
 	return s.dispatch(ctx, operation, account, apply)
+}
+
+func (s *Service) nextNodeRevision(ctx context.Context, nodeID string) (uint64, uint64, error) {
+	baseRevision, ok, err := s.repo.LatestNodeRevision(ctx, nodeID)
+	if err != nil {
+		return 0, 0, err
+	}
+	if !ok {
+		baseRevision = 0
+	}
+	return baseRevision, baseRevision + 1, nil
 }
 
 func (s *Service) newDeltaApply(nodeID string, baseRevision uint64, targetRevision uint64) RuntimeApply {

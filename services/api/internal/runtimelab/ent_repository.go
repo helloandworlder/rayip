@@ -161,6 +161,20 @@ func (r *EntRepository) LatestDigest(ctx context.Context, nodeID string) (Digest
 	return Digest{}, false, nil
 }
 
+func (r *EntRepository) LatestNodeRevision(ctx context.Context, nodeID string) (uint64, bool, error) {
+	item, err := r.client.RuntimeApplyResult.Query().
+		Where(entApply.NodeID(nodeID), entApply.LastGoodRevisionGT(0)).
+		Order(apiEnt.Desc(entApply.FieldCreatedAt)).
+		First(ctx)
+	if apiEnt.IsNotFound(err) {
+		return 0, false, nil
+	}
+	if err != nil {
+		return 0, false, err
+	}
+	return item.LastGoodRevision, true, nil
+}
+
 func accountFromEnt(item *apiEnt.RuntimeLabAccount) Account {
 	expiresAt := time.Time{}
 	if item.ExpiresAt != nil {

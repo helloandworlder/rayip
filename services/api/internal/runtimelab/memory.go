@@ -94,3 +94,16 @@ func (r *MemoryRepository) LatestDigest(_ context.Context, nodeID string) (Diges
 	}
 	return Digest{}, false, nil
 }
+
+func (r *MemoryRepository) LatestNodeRevision(_ context.Context, nodeID string) (uint64, bool, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for i := len(r.results) - 1; i >= 0; i-- {
+		result := r.results[i]
+		if result.NodeID != nodeID || result.LastGoodRevision == 0 {
+			continue
+		}
+		return result.LastGoodRevision, true, nil
+	}
+	return 0, false, nil
+}

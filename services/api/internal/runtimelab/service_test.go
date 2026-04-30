@@ -99,6 +99,43 @@ func TestDisableAccountDispatchesRemovedResourceNotBusinessDisable(t *testing.T)
 	}
 }
 
+func TestCreateAccountUsesLatestNodeRevisionForSecondResource(t *testing.T) {
+	repo := runtimelab.NewMemoryRepository()
+	dispatcher := &recordingDispatcher{ack: runtimelab.ApplyResult{Status: runtimelab.ApplyStatusACK, AppliedRevision: 1, LastGoodRevision: 1}}
+	svc := runtimelab.NewService(repo, dispatcher, time.Now)
+
+	_, _, err := svc.CreateAccount(context.Background(), runtimelab.CreateAccountInput{
+		NodeID:   "node-1",
+		Protocol: runtimelab.ProtocolSOCKS5,
+		ListenIP: "0.0.0.0",
+		Port:     18080,
+		Username: "u1",
+		Password: "p1",
+	})
+	if err != nil {
+		t.Fatalf("CreateAccount() first error = %v", err)
+	}
+	dispatcher.ack = runtimelab.ApplyResult{Status: runtimelab.ApplyStatusACK, AppliedRevision: 2, LastGoodRevision: 2}
+	_, _, err = svc.CreateAccount(context.Background(), runtimelab.CreateAccountInput{
+		NodeID:   "node-1",
+		Protocol: runtimelab.ProtocolHTTP,
+		ListenIP: "0.0.0.0",
+		Port:     18081,
+		Username: "u2",
+		Password: "p2",
+	})
+	if err != nil {
+		t.Fatalf("CreateAccount() second error = %v", err)
+	}
+	if len(dispatcher.applies) != 2 {
+		t.Fatalf("dispatch count = %d, want 2", len(dispatcher.applies))
+	}
+	second := dispatcher.applies[1]
+	if second.BaseRevision != 1 || second.TargetRevision != 2 {
+		t.Fatalf("second apply revisions = base %d target %d, want 1 -> 2", second.BaseRevision, second.TargetRevision)
+	}
+}
+
 func TestCreateAccountSkipsDuplicateRevisionWithoutDispatch(t *testing.T) {
 	repo := runtimelab.NewMemoryRepository()
 	dispatcher := &recordingDispatcher{ack: runtimelab.ApplyResult{Status: runtimelab.ApplyStatusACK, AppliedRevision: 7, LastGoodRevision: 7}}
