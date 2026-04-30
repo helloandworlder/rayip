@@ -24,6 +24,7 @@ type NodeConfig struct {
 
 type APIConfig struct {
 	GRPCAddr string
+	HTTPURL  string
 	UseTLS   bool
 }
 
@@ -66,6 +67,7 @@ func Load() (Config, error) {
 	v.SetDefault("node.code", hostname)
 	v.SetDefault("node.enrollment_token", "dev-enrollment-token")
 	v.SetDefault("api.grpc_addr", "127.0.0.1:9090")
+	v.SetDefault("api.http_url", "")
 	v.SetDefault("api.tls", false)
 	v.SetDefault("runtime.agent_version", "dev-agent")
 	v.SetDefault("runtime.bundle_dir", "/opt/rayip/runtime")
@@ -100,7 +102,7 @@ func Load() (Config, error) {
 			Code:            v.GetString("node.code"),
 			EnrollmentToken: v.GetString("node.enrollment_token"),
 		},
-		API: APIConfig{GRPCAddr: grpcAddr, UseTLS: useTLS},
+		API: APIConfig{GRPCAddr: grpcAddr, HTTPURL: strings.TrimRight(v.GetString("api.http_url"), "/"), UseTLS: useTLS},
 		Runtime: RuntimeConfig{
 			AgentVersion:   v.GetString("runtime.agent_version"),
 			BundleDir:      bundleDir,

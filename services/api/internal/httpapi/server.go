@@ -11,6 +11,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/rayip/rayip/services/api/internal/commercial"
 	"github.com/rayip/rayip/services/api/internal/config"
+	"github.com/rayip/rayip/services/api/internal/grpcapi"
 	"github.com/rayip/rayip/services/api/internal/node"
 	"github.com/rayip/rayip/services/api/internal/noderuntime"
 	"github.com/rayip/rayip/services/api/internal/runtimecontrol"
@@ -23,17 +24,18 @@ import (
 type ServerParams struct {
 	fx.In
 
-	Config           config.Config
-	SQLDB            *sql.DB
-	Redis            *redis.Client
-	NATS             *nats.Conn
-	Nodes            *node.Service
-	RuntimeControl   *runtimecontrol.Service
-	RuntimeWorker    *runtimecontrol.Worker
-	ReconcilePlanner *runtimecontrol.ReconcilePlanner
-	NodeRuntime      *noderuntime.Service
-	Lab              *runtimelab.Service
-	Commercial       *commercial.Service
+	Config            config.Config
+	SQLDB             *sql.DB
+	Redis             *redis.Client
+	NATS              *nats.Conn
+	Nodes             *node.Service
+	RuntimeControl    *runtimecontrol.Service
+	RuntimeDispatcher *grpcapi.RuntimeDispatcher
+	RuntimeWorker     *runtimecontrol.Worker
+	ReconcilePlanner  *runtimecontrol.ReconcilePlanner
+	NodeRuntime       *noderuntime.Service
+	Lab               *runtimelab.Service
+	Commercial        *commercial.Service
 }
 
 func NewServer(p ServerParams) *fiber.App {
@@ -45,6 +47,13 @@ func NewServer(p ServerParams) *fiber.App {
 		ReadyCheck:  readyCheck(p.SQLDB, p.Redis, p.NATS),
 	})
 	RegisterNodeRoutes(app, p.Nodes)
+	RegisterNodeAgentRoutes(app, NodeAgentRoutesParams{
+		Config:      p.Config,
+		Nodes:       p.Nodes,
+		NodeRuntime: p.NodeRuntime,
+		Runtime:     p.RuntimeDispatcher,
+		Lab:         p.Lab,
+	})
 	RegisterCommercialRoutes(app, p.Commercial)
 	RegisterRuntimeControlRoutes(app, p.RuntimeControl, p.RuntimeWorker, p.ReconcilePlanner, p.NodeRuntime)
 	RegisterRuntimeLabRoutes(app, p.Lab)

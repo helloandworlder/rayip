@@ -42,6 +42,9 @@ func NewClient(cfg config.Config, endpoint *runtime.Endpoint, manager *runtime.M
 }
 
 func (c *Client) Run(ctx context.Context) error {
+	if c.cfg.API.HTTPURL != "" {
+		return c.runHTTP(ctx)
+	}
 	for {
 		if err := c.connectOnce(ctx); err != nil {
 			c.log.Warn("control stream ended", zap.Error(err))

@@ -38,6 +38,26 @@ func (d *RuntimeDispatcher) Register(nodeID string, stream grpcServerStream) fun
 	}
 }
 
+func (d *RuntimeDispatcher) RegisterHTTP(nodeID string) func() {
+	session := &runtimeSession{
+		nodeID:  nodeID,
+		kind:    sessionKindHTTP,
+		pending: make(chan runtimelab.RuntimeApply, 16),
+		results: map[string]chan runtimelab.ApplyResult{},
+	}
+	d.mu.Lock()
+	d.sessions[nodeID] = session
+	d.mu.Unlock()
+	return func() {
+		d.mu.Lock()
+		if d.sessions[nodeID] == session {
+			delete(d.sessions, nodeID)
+		}
+		d.mu.Unlock()
+		session.close()
+	}
+}
+
 func (d *RuntimeDispatcher) DispatchRuntimeApply(ctx context.Context, apply runtimelab.RuntimeApply) (runtimelab.ApplyResult, error) {
 	d.mu.RLock()
 	session := d.sessions[apply.NodeID]
@@ -62,13 +82,32 @@ func (d *RuntimeDispatcher) HandleResult(result runtimelab.ApplyResult) {
 	}
 }
 
+func (d *RuntimeDispatcher) PollHTTP(ctx context.Context, nodeID string) (runtimelab.RuntimeApply, bool, error) {
+	d.mu.RLock()
+	session := d.sessions[nodeID]
+	d.mu.RUnlock()
+	if session == nil || session.kind != sessionKindHTTP {
+		return runtimelab.RuntimeApply{}, false, errors.New("http node session is not registered")
+	}
+	return session.poll(ctx)
+}
+
 type grpcServerStream interface {
 	Send(*controlv1.ControlEnvelope) error
 }
 
+type sessionKind string
+
+const (
+	sessionKindGRPC sessionKind = "grpc"
+	sessionKindHTTP sessionKind = "http"
+)
+
 type runtimeSession struct {
 	nodeID  string
+	kind    sessionKind
 	stream  grpcServerStream
+	pending chan runtimelab.RuntimeApply
 	sendMu  sync.Mutex
 	mu      sync.Mutex
 	closed  bool
@@ -85,17 +124,26 @@ func (s *runtimeSession) dispatch(ctx context.Context, apply runtimelab.RuntimeA
 	s.results[apply.ApplyID] = ch
 	s.mu.Unlock()
 
-	s.sendMu.Lock()
-	err := s.stream.Send(&controlv1.ControlEnvelope{
-		RequestId: apply.ApplyID,
-		Payload: &controlv1.ControlEnvelope_RuntimeApply{
-			RuntimeApply: runtimelab.ApplyToProto(apply),
-		},
-	})
-	s.sendMu.Unlock()
-	if err != nil {
-		s.remove(apply.ApplyID)
-		return runtimelab.ApplyResult{}, err
+	if s.kind == sessionKindHTTP {
+		select {
+		case s.pending <- apply:
+		case <-ctx.Done():
+			s.remove(apply.ApplyID)
+			return runtimelab.ApplyResult{}, ctx.Err()
+		}
+	} else {
+		s.sendMu.Lock()
+		err := s.stream.Send(&controlv1.ControlEnvelope{
+			RequestId: apply.ApplyID,
+			Payload: &controlv1.ControlEnvelope_RuntimeApply{
+				RuntimeApply: runtimelab.ApplyToProto(apply),
+			},
+		})
+		s.sendMu.Unlock()
+		if err != nil {
+			s.remove(apply.ApplyID)
+			return runtimelab.ApplyResult{}, err
+		}
 	}
 
 	deadline := 8 * time.Second
@@ -119,6 +167,18 @@ func (s *runtimeSession) dispatch(ctx context.Context, apply runtimelab.RuntimeA
 	case <-ctx.Done():
 		s.remove(apply.ApplyID)
 		return runtimelab.ApplyResult{}, ctx.Err()
+	}
+}
+
+func (s *runtimeSession) poll(ctx context.Context) (runtimelab.RuntimeApply, bool, error) {
+	select {
+	case apply, ok := <-s.pending:
+		if !ok {
+			return runtimelab.RuntimeApply{}, false, errors.New("node session is closed")
+		}
+		return apply, true, nil
+	case <-ctx.Done():
+		return runtimelab.RuntimeApply{}, false, ctx.Err()
 	}
 }
 
@@ -146,6 +206,9 @@ func (s *runtimeSession) close() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.closed = true
+	if s.pending != nil {
+		close(s.pending)
+	}
 	for commandID, ch := range s.results {
 		delete(s.results, commandID)
 		close(ch)
