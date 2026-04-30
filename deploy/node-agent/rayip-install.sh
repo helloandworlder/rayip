@@ -81,7 +81,7 @@ download SHA256SUMS
 
 (
   cd "$tmp_dir"
-  shasum -a 256 -c SHA256SUMS
+  grep -v '  rayip-install.sh$' SHA256SUMS | shasum -a 256 -c -
 )
 
 install -d -m 0755 "$release_dir" "$INSTALL_ROOT/runtime" "$ENV_DIR"
