@@ -181,6 +181,53 @@ func TestCreateAccountUsesLatestNACKRevisionAfterNodeRestart(t *testing.T) {
 	}
 }
 
+func TestCreateAccountRetriesBaseRevisionMismatch(t *testing.T) {
+	repo := runtimelab.NewMemoryRepository()
+	dispatcher := &sequenceDispatcher{acks: []runtimelab.ApplyResult{
+		{
+			Status:           runtimelab.ApplyStatusNACK,
+			AppliedRevision:  0,
+			LastGoodRevision: 0,
+			ErrorDetail:      "base revision does not match last good revision",
+		},
+		{
+			Status:           runtimelab.ApplyStatusACK,
+			AppliedRevision:  1,
+			LastGoodRevision: 1,
+		},
+	}}
+	svc := runtimelab.NewService(repo, dispatcher, time.Now)
+	if err := svc.SaveApplyResult(context.Background(), runtimelab.ApplyResult{
+		ApplyID:          "old-ack",
+		NodeID:           "node-1",
+		Operation:        runtimelab.OperationUpsert,
+		Status:           runtimelab.ApplyStatusACK,
+		AppliedRevision:  1,
+		LastGoodRevision: 1,
+		CreatedAt:        time.Now(),
+	}); err != nil {
+		t.Fatalf("SaveApplyResult() error = %v", err)
+	}
+
+	_, result, err := svc.CreateAccount(context.Background(), runtimelab.CreateAccountInput{
+		NodeID:   "node-1",
+		Protocol: runtimelab.ProtocolHTTP,
+		ListenIP: "0.0.0.0",
+		Port:     18081,
+		Username: "u1",
+		Password: "p1",
+	})
+	if err != nil {
+		t.Fatalf("CreateAccount() error = %v", err)
+	}
+	if result.Status != runtimelab.ApplyStatusACK || len(dispatcher.applies) != 2 {
+		t.Fatalf("result = %#v dispatch count = %d, want ACK after retry with 2 dispatches", result, len(dispatcher.applies))
+	}
+	if dispatcher.applies[0].BaseRevision != 1 || dispatcher.applies[1].BaseRevision != 0 || dispatcher.applies[1].TargetRevision != 1 {
+		t.Fatalf("retry revisions = first %d second %d -> %d", dispatcher.applies[0].BaseRevision, dispatcher.applies[1].BaseRevision, dispatcher.applies[1].TargetRevision)
+	}
+}
+
 func TestCreateAccountIgnoresQueryResultsWhenComputingNodeRevision(t *testing.T) {
 	repo := runtimelab.NewMemoryRepository()
 	dispatcher := &recordingDispatcher{ack: runtimelab.ApplyResult{Status: runtimelab.ApplyStatusACK, AppliedRevision: 1, LastGoodRevision: 1}}
@@ -345,3 +392,28 @@ func (d *recordingDispatcher) DispatchRuntimeApply(_ context.Context, apply runt
 	d.ack.Nonce = apply.Nonce
 	return d.ack, nil
 }
+
+type sequenceDispatcher struct {
+	applies []runtimelab.RuntimeApply
+	acks    []runtimelab.ApplyResult
+}
+
+func (d *sequenceDispatcher) DispatchRuntimeApply(_ context.Context, apply runtimelab.RuntimeApply) (runtimelab.ApplyResult, error) {
+	d.applies = append(d.applies, apply)
+	ack := d.acks[0]
+	d.acks = d.acks[1:]
+	ack.ApplyID = apply.ApplyID
+	ack.NodeID = apply.NodeID
+	ack.VersionInfo = apply.VersionInfo
+	ack.Nonce = apply.Nonce
+	if ack.Status == runtimelab.ApplyStatusNACK {
+		return ack, errBaseRevisionMismatch
+	}
+	return ack, nil
+}
+
+var errBaseRevisionMismatch = errString("base revision does not match last good revision")
+
+type errString string
+
+func (e errString) Error() string { return string(e) }

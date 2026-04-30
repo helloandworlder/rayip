@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -273,7 +274,15 @@ func (s *Service) dispatchResource(ctx context.Context, operation Operation, acc
 	}
 	apply := s.newDeltaApply(account.NodeID, nodeBaseRevision, targetRevision)
 	apply.Resources = []RuntimeResource{resourceFromAccount(account, resourceRevision)}
-	return s.dispatch(ctx, operation, account, apply)
+	result, err := s.dispatch(ctx, operation, account, apply)
+	if s.shouldRetryRevisionMismatch(result, err) {
+		retryBase := result.LastGoodRevision
+		retryTarget := retryBase + 1
+		retry := s.newDeltaApply(account.NodeID, retryBase, retryTarget)
+		retry.Resources = []RuntimeResource{resourceFromAccount(account, retryTarget)}
+		return s.dispatch(ctx, operation, account, retry)
+	}
+	return result, err
 }
 
 func (s *Service) dispatchRemove(ctx context.Context, operation Operation, account Account, revision uint64) (ApplyResult, error) {
@@ -283,7 +292,14 @@ func (s *Service) dispatchRemove(ctx context.Context, operation Operation, accou
 	}
 	apply := s.newDeltaApply(account.NodeID, nodeBaseRevision, targetRevision)
 	apply.RemovedResourceNames = []string{resourceName(account)}
-	return s.dispatch(ctx, operation, account, apply)
+	result, err := s.dispatch(ctx, operation, account, apply)
+	if s.shouldRetryRevisionMismatch(result, err) {
+		retryBase := result.LastGoodRevision
+		retry := s.newDeltaApply(account.NodeID, retryBase, retryBase+1)
+		retry.RemovedResourceNames = []string{resourceName(account)}
+		return s.dispatch(ctx, operation, account, retry)
+	}
+	return result, err
 }
 
 func (s *Service) nextNodeRevision(ctx context.Context, nodeID string) (uint64, uint64, error) {
@@ -295,6 +311,13 @@ func (s *Service) nextNodeRevision(ctx context.Context, nodeID string) (uint64, 
 		baseRevision = 0
 	}
 	return baseRevision, baseRevision + 1, nil
+}
+
+func (s *Service) shouldRetryRevisionMismatch(result ApplyResult, err error) bool {
+	if err == nil {
+		return false
+	}
+	return (result.Status == ApplyStatusNACK || result.Status == ApplyStatusFailed) && strings.Contains(result.ErrorDetail, "base revision")
 }
 
 func (s *Service) newDeltaApply(nodeID string, baseRevision uint64, targetRevision uint64) RuntimeApply {
