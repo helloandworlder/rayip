@@ -54,3 +54,23 @@ func TestLoadEnvOverrides(t *testing.T) {
 		t.Fatalf("node enrollment token = %q, want ztp-token", cfg.Node.EnrollmentToken)
 	}
 }
+
+func TestLoadRedisURLEnv(t *testing.T) {
+	t.Setenv("RAYIP_REDIS_ADDR", "")
+	t.Setenv("RAYIP_REDIS_URL", "redis://:secret@redis.railway.internal:6379/2")
+
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.Redis.Addr != "redis.railway.internal:6379" {
+		t.Fatalf("redis addr = %q, want redis.railway.internal:6379", cfg.Redis.Addr)
+	}
+	if cfg.Redis.Password != "secret" {
+		t.Fatalf("redis password = %q, want secret", cfg.Redis.Password)
+	}
+	if cfg.Redis.DB != 2 {
+		t.Fatalf("redis db = %d, want 2", cfg.Redis.DB)
+	}
+}

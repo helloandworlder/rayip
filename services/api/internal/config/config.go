@@ -1,7 +1,9 @@
 package config
 
 import (
+	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -73,11 +75,29 @@ func Load() (Config, error) {
 	v.SetDefault("postgres.dsn", "postgres://rayip:rayip@localhost:5432/rayip?sslmode=disable")
 	v.SetDefault("postgres.run_migrations", true)
 	v.SetDefault("redis.addr", "localhost:6379")
+	v.SetDefault("redis.url", "")
 	v.SetDefault("redis.password", "")
 	v.SetDefault("redis.db", 0)
 	v.SetDefault("nats.url", "nats://localhost:4222")
 	v.SetDefault("node.lease_ttl_seconds", 45)
 	v.SetDefault("node.enrollment_token", "dev-enrollment-token")
+
+	redisAddr := v.GetString("redis.addr")
+	redisPassword := v.GetString("redis.password")
+	redisDB := v.GetInt("redis.db")
+	if rawURL := v.GetString("redis.url"); rawURL != "" {
+		if parsed, err := url.Parse(rawURL); err == nil {
+			if parsed.Host != "" {
+				redisAddr = parsed.Host
+			}
+			if password, ok := parsed.User.Password(); ok {
+				redisPassword = password
+			}
+			if db, err := strconv.Atoi(strings.TrimPrefix(parsed.Path, "/")); err == nil {
+				redisDB = db
+			}
+		}
+	}
 
 	return Config{
 		Service: ServiceConfig{
@@ -93,9 +113,9 @@ func Load() (Config, error) {
 			RunMigrations: v.GetBool("postgres.run_migrations"),
 		},
 		Redis: RedisConfig{
-			Addr:     v.GetString("redis.addr"),
-			Password: v.GetString("redis.password"),
-			DB:       v.GetInt("redis.db"),
+			Addr:     redisAddr,
+			Password: redisPassword,
+			DB:       redisDB,
 		},
 		NATS: NATSConfig{URL: v.GetString("nats.url")},
 		Node: NodeConfig{
