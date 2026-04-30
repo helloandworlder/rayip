@@ -15,6 +15,7 @@ const (
 	RuntimeStreamName   = "RAYIP_RUNTIME"
 	RuntimeApplySubject = "rayip.runtime.apply.v1"
 	RuntimeConsumerName = "runtime-apply-worker"
+	RuntimeQueueName    = "runtime-apply-workers"
 	outboxPublishPeriod = 2 * time.Second
 )
 
@@ -46,9 +47,9 @@ func RegisterRuntimePipelineLifecycle(lc fx.Lifecycle, service *Service, publish
 
 			stop := make(chan struct{})
 			go runOutboxPublisher(stop, service, publisher, log)
-			sub, err := js.Subscribe(RuntimeApplySubject, func(msg *nats.Msg) {
+			sub, err := js.QueueSubscribe(RuntimeApplySubject, RuntimeQueueName, func(msg *nats.Msg) {
 				handleRuntimeMessage(msg, worker, nodeRuntime, log)
-			}, nats.Durable(RuntimeConsumerName), nats.ManualAck())
+			}, nats.Durable(RuntimeConsumerName), nats.ManualAck(), nats.AckExplicit())
 			if err != nil {
 				close(stop)
 				return err

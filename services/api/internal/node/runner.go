@@ -14,6 +14,7 @@ const (
 	ScanStreamName     = "RAYIP_NODE_SCAN"
 	ScanSubject        = "rayip.node.scan.v1"
 	ScanConsumerName   = "node-scan-worker"
+	ScanQueueName      = "node-scan-workers"
 	scanSchedulePeriod = 30 * time.Second
 )
 
@@ -59,7 +60,7 @@ func RegisterScanPipelineLifecycle(lc fx.Lifecycle, conn *nats.Conn, scheduler *
 			}
 			stop := make(chan struct{})
 			go runScanScheduler(stop, scheduler, publisher, log)
-			sub, err := js.Subscribe(ScanSubject, func(msg *nats.Msg) {
+			sub, err := js.QueueSubscribe(ScanSubject, ScanQueueName, func(msg *nats.Msg) {
 				handleScanMessage(msg, worker, log)
 			}, nats.Durable(ScanConsumerName), nats.ManualAck(), nats.AckExplicit())
 			if err != nil {
