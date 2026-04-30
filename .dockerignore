@@ -1,0 +1,12 @@
+.git
+.github
+dist
+apps/*/dist
+node_modules
+**/node_modules
+.docker-bin
+.env
+.env.*
+coverage
+tmp
+*.log

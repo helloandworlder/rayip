@@ -157,6 +157,7 @@ func (r *EntRepository) SaveScanResult(ctx context.Context, nodeID string, resul
 	update := r.client.Node.UpdateOneID(nodeID).
 		SetLastScanStatus(result.Status).
 		SetLastScanError(result.Error).
+		SetLastScanReasonCode(string(result.ReasonCode)).
 		SetLastScanLatencyMs(result.LatencyMs).
 		SetUpdatedAt(result.ScannedAt)
 	if !result.ScannedAt.IsZero() {
@@ -184,6 +185,7 @@ func nodeRecordFromEnt(item *apiEnt.Node) NodeRecord {
 		ProbeProtocols:     append([]string(nil), item.ProbeProtocols...),
 		LastScanStatus:     item.LastScanStatus,
 		LastScanError:      item.LastScanError,
+		LastScanReasonCode: ScanReasonCode(item.LastScanReasonCode),
 		LastScanLatency:    time.Duration(item.LastScanLatencyMs) * time.Millisecond,
 		LastOnlineAt:       lastOnlineAt,
 		CreatedAt:          item.CreatedAt,

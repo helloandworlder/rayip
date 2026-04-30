@@ -41,6 +41,8 @@ const (
 	FieldLastScanStatus = "last_scan_status"
 	// FieldLastScanError holds the string denoting the last_scan_error field in the database.
 	FieldLastScanError = "last_scan_error"
+	// FieldLastScanReasonCode holds the string denoting the last_scan_reason_code field in the database.
+	FieldLastScanReasonCode = "last_scan_reason_code"
 	// FieldLastScanLatencyMs holds the string denoting the last_scan_latency_ms field in the database.
 	FieldLastScanLatencyMs = "last_scan_latency_ms"
 	// FieldLastScanAt holds the string denoting the last_scan_at field in the database.
@@ -72,6 +74,7 @@ var Columns = []string{
 	FieldProbeCheckedAt,
 	FieldLastScanStatus,
 	FieldLastScanError,
+	FieldLastScanReasonCode,
 	FieldLastScanLatencyMs,
 	FieldLastScanAt,
 	FieldLastOnlineAt,
@@ -114,6 +117,8 @@ var (
 	DefaultLastScanStatus string
 	// DefaultLastScanError holds the default value on creation for the "last_scan_error" field.
 	DefaultLastScanError string
+	// DefaultLastScanReasonCode holds the default value on creation for the "last_scan_reason_code" field.
+	DefaultLastScanReasonCode string
 	// DefaultLastScanLatencyMs holds the default value on creation for the "last_scan_latency_ms" field.
 	DefaultLastScanLatencyMs int64
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
@@ -185,6 +190,11 @@ func ByLastScanStatus(opts ...sql.OrderTermOption) OrderOption {
 // ByLastScanError orders the results by the last_scan_error field.
 func ByLastScanError(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLastScanError, opts...).ToFunc()
+}
+
+// ByLastScanReasonCode orders the results by the last_scan_reason_code field.
+func ByLastScanReasonCode(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastScanReasonCode, opts...).ToFunc()
 }
 
 // ByLastScanLatencyMs orders the results by the last_scan_latency_ms field.

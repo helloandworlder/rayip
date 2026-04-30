@@ -1,0 +1,38 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  runtime-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.x"
+          cache: true
+
+      - name: Build runtime artifacts
+        env:
+          RAYIP_RELEASE_VERSION: ${{ github.ref_name }}
+          RAYIP_XRAY_VERSION: ${{ github.ref_name }}
+        run: bash scripts/build-runtime-release.sh
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/rayip-node-agent-linux-amd64
+            dist/rayip-xray-linux-amd64
+            dist/runtime-manifest.json
+            dist/rayip-install.sh
+            dist/SHA256SUMS

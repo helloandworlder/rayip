@@ -62,3 +62,35 @@ func (r *MemoryRepository) ListApplyResults(_ context.Context, proxyAccountID st
 	}
 	return items, nil
 }
+
+func (r *MemoryRepository) LatestUsage(_ context.Context, proxyAccountID string) (Usage, bool, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for i := len(r.results) - 1; i >= 0; i-- {
+		result := r.results[i]
+		if result.ProxyAccountID != proxyAccountID {
+			continue
+		}
+		if result.Usage.ProxyAccountID == "" && result.Usage.RuntimeEmail == "" {
+			continue
+		}
+		return result.Usage, true, nil
+	}
+	return Usage{}, false, nil
+}
+
+func (r *MemoryRepository) LatestDigest(_ context.Context, nodeID string) (Digest, bool, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	for i := len(r.results) - 1; i >= 0; i-- {
+		result := r.results[i]
+		if result.NodeID != nodeID {
+			continue
+		}
+		if result.Digest.Hash == "" && result.Digest.AccountCount == 0 && result.Digest.MaxGeneration == 0 {
+			continue
+		}
+		return result.Digest, true, nil
+	}
+	return Digest{}, false, nil
+}

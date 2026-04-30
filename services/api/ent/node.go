@@ -46,6 +46,8 @@ type Node struct {
 	LastScanStatus string `json:"last_scan_status,omitempty"`
 	// LastScanError holds the value of the "last_scan_error" field.
 	LastScanError string `json:"last_scan_error,omitempty"`
+	// LastScanReasonCode holds the value of the "last_scan_reason_code" field.
+	LastScanReasonCode string `json:"last_scan_reason_code,omitempty"`
 	// LastScanLatencyMs holds the value of the "last_scan_latency_ms" field.
 	LastScanLatencyMs int64 `json:"last_scan_latency_ms,omitempty"`
 	// LastScanAt holds the value of the "last_scan_at" field.
@@ -68,7 +70,7 @@ func (*Node) scanValues(columns []string) ([]any, error) {
 			values[i] = new([]byte)
 		case node.FieldProbePort, node.FieldLastScanLatencyMs:
 			values[i] = new(sql.NullInt64)
-		case node.FieldID, node.FieldCode, node.FieldStatus, node.FieldBundleVersion, node.FieldAgentVersion, node.FieldXrayVersion, node.FieldPublicIP, node.FieldScanHost, node.FieldLastScanStatus, node.FieldLastScanError:
+		case node.FieldID, node.FieldCode, node.FieldStatus, node.FieldBundleVersion, node.FieldAgentVersion, node.FieldXrayVersion, node.FieldPublicIP, node.FieldScanHost, node.FieldLastScanStatus, node.FieldLastScanError, node.FieldLastScanReasonCode:
 			values[i] = new(sql.NullString)
 		case node.FieldProbeCheckedAt, node.FieldLastScanAt, node.FieldLastOnlineAt, node.FieldCreatedAt, node.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -184,6 +186,12 @@ func (_m *Node) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.LastScanError = value.String
 			}
+		case node.FieldLastScanReasonCode:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field last_scan_reason_code", values[i])
+			} else if value.Valid {
+				_m.LastScanReasonCode = value.String
+			}
 		case node.FieldLastScanLatencyMs:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field last_scan_latency_ms", values[i])
@@ -295,6 +303,9 @@ func (_m *Node) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("last_scan_error=")
 	builder.WriteString(_m.LastScanError)
+	builder.WriteString(", ")
+	builder.WriteString("last_scan_reason_code=")
+	builder.WriteString(_m.LastScanReasonCode)
 	builder.WriteString(", ")
 	builder.WriteString("last_scan_latency_ms=")
 	builder.WriteString(fmt.Sprintf("%v", _m.LastScanLatencyMs))

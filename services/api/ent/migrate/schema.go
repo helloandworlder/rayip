@@ -212,6 +212,7 @@ var (
 		{Name: "probe_checked_at", Type: field.TypeTime, Nullable: true},
 		{Name: "last_scan_status", Type: field.TypeString, Default: "UNKNOWN"},
 		{Name: "last_scan_error", Type: field.TypeString, Default: ""},
+		{Name: "last_scan_reason_code", Type: field.TypeString, Default: ""},
 		{Name: "last_scan_latency_ms", Type: field.TypeInt64, Default: 0},
 		{Name: "last_scan_at", Type: field.TypeTime, Nullable: true},
 		{Name: "last_online_at", Type: field.TypeTime, Nullable: true},
@@ -232,7 +233,7 @@ var (
 			{
 				Name:    "node_last_online_at",
 				Unique:  false,
-				Columns: []*schema.Column{NodesColumns[17]},
+				Columns: []*schema.Column{NodesColumns[18]},
 			},
 		},
 	}

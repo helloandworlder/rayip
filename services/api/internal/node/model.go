@@ -9,6 +9,20 @@ const (
 	StatusOffline Status = "OFFLINE"
 )
 
+type ScanReasonCode string
+
+const (
+	ScanReasonNoCandidatePublicIP ScanReasonCode = "no_candidate_public_ip"
+	ScanReasonPrivateIP           ScanReasonCode = "private_ip"
+	ScanReasonCGNAT               ScanReasonCode = "cgnat"
+	ScanReasonIngressUnreachable  ScanReasonCode = "ingress_unreachable"
+	ScanReasonAuthFailed          ScanReasonCode = "auth_failed"
+	ScanReasonUnsupportedProtocol ScanReasonCode = "unsupported_protocol"
+	ScanReasonEgressMismatch      ScanReasonCode = "egress_mismatch"
+	ScanReasonScanTimeout         ScanReasonCode = "scan_timeout"
+	ScanReasonDigestMismatch      ScanReasonCode = "digest_mismatch"
+)
+
 type LeaseInput struct {
 	NodeID             string
 	NodeCode           string
@@ -43,6 +57,7 @@ type NodeRecord struct {
 	ProbeCheckedAt     time.Time
 	LastScanStatus     string
 	LastScanError      string
+	LastScanReasonCode ScanReasonCode
 	LastScanLatency    time.Duration
 	LastScanAt         time.Time
 	LastOnlineAt       time.Time
@@ -90,17 +105,19 @@ type Summary struct {
 	ProbeCheckedAt     time.Time `json:"probe_checked_at"`
 	LastScanStatus     string    `json:"last_scan_status"`
 	LastScanError      string    `json:"last_scan_error,omitempty"`
+	LastScanReasonCode string    `json:"last_scan_reason_code,omitempty"`
 	LastScanLatencyMs  int64     `json:"last_scan_latency_ms"`
 	LastScanAt         time.Time `json:"last_scan_at,omitempty"`
 	LeaseExpiresAt     time.Time `json:"lease_expires_at,omitempty"`
 }
 
 type ScanResult struct {
-	NodeID    string        `json:"node_id"`
-	Target    string        `json:"target"`
-	Status    string        `json:"status"`
-	Error     string        `json:"error,omitempty"`
-	Latency   time.Duration `json:"-"`
-	LatencyMs int64         `json:"latency_ms"`
-	ScannedAt time.Time     `json:"scanned_at"`
+	NodeID     string         `json:"node_id"`
+	Target     string         `json:"target"`
+	Status     string         `json:"status"`
+	ReasonCode ScanReasonCode `json:"reason_code,omitempty"`
+	Error      string         `json:"error,omitempty"`
+	Latency    time.Duration  `json:"-"`
+	LatencyMs  int64          `json:"latency_ms"`
+	ScannedAt  time.Time      `json:"scanned_at"`
 }

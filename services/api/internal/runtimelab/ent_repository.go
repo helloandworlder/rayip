@@ -123,6 +123,42 @@ func (r *EntRepository) ListApplyResults(ctx context.Context, proxyAccountID str
 	return results, nil
 }
 
+func (r *EntRepository) LatestUsage(ctx context.Context, proxyAccountID string) (Usage, bool, error) {
+	items, err := r.ListApplyResults(ctx, proxyAccountID, 50)
+	if err != nil {
+		return Usage{}, false, err
+	}
+	for _, item := range items {
+		if item.Usage.ProxyAccountID == "" && item.Usage.RuntimeEmail == "" {
+			continue
+		}
+		return item.Usage, true, nil
+	}
+	return Usage{}, false, nil
+}
+
+func (r *EntRepository) LatestDigest(ctx context.Context, nodeID string) (Digest, bool, error) {
+	items, err := r.client.RuntimeApplyResult.Query().
+		Where(entApply.NodeID(nodeID)).
+		Order(apiEnt.Desc(entApply.FieldCreatedAt)).
+		Limit(50).
+		All(ctx)
+	if err != nil {
+		return Digest{}, false, err
+	}
+	for _, item := range items {
+		result, err := applyResultFromEnt(item)
+		if err != nil {
+			return Digest{}, false, err
+		}
+		if result.Digest.Hash == "" && result.Digest.AccountCount == 0 && result.Digest.MaxGeneration == 0 {
+			continue
+		}
+		return result.Digest, true, nil
+	}
+	return Digest{}, false, nil
+}
+
 func accountFromEnt(item *apiEnt.RuntimeLabAccount) Account {
 	expiresAt := time.Time{}
 	if item.ExpiresAt != nil {

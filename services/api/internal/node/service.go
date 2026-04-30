@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/netip"
 	"strings"
 	"time"
 )
@@ -90,12 +91,17 @@ func (s *Service) ScanNode(ctx context.Context, nodeID string) (ScanResult, erro
 	targetHosts := scanTargets(record)
 	if len(targetHosts) == 0 || record.ProbePort == 0 {
 		result := ScanResult{
-			NodeID:    record.ID,
-			Target:    fmt.Sprintf("%s:%d", firstNonEmpty(targetHosts...), record.ProbePort),
-			Status:    "FAILED",
-			Error:     "node has no candidate public ip or probe port",
-			ScannedAt: s.now().UTC(),
+			NodeID:     record.ID,
+			Target:     fmt.Sprintf("%s:%d", firstNonEmpty(targetHosts...), record.ProbePort),
+			Status:     "FAILED",
+			ReasonCode: ScanReasonNoCandidatePublicIP,
+			Error:      "node has no candidate public ip or probe port",
+			ScannedAt:  s.now().UTC(),
 		}
+		_ = s.repo.SaveScanResult(ctx, record.ID, result)
+		return result, nil
+	}
+	if result, blocked := blockedCandidateResult(record, s.now().UTC()); blocked {
 		_ = s.repo.SaveScanResult(ctx, record.ID, result)
 		return result, nil
 	}
@@ -117,6 +123,7 @@ func (s *Service) ScanNode(ctx context.Context, nodeID string) (ScanResult, erro
 		errorsByTarget = append(errorsByTarget, target+": "+err.Error())
 	}
 	if result.Status != "REACHABLE" {
+		result.ReasonCode = ScanReasonIngressUnreachable
 		result.Error = strings.Join(errorsByTarget, "; ")
 		result.Latency = s.now().UTC().Sub(start)
 		result.LatencyMs = result.Latency.Milliseconds()
@@ -185,6 +192,7 @@ func summaryFrom(record NodeRecord, lease LeaseSnapshot, now time.Time) Summary 
 		ProbeCheckedAt:     firstNonZeroTime(lease.ProbeCheckedAt, record.ProbeCheckedAt),
 		LastScanStatus:     record.LastScanStatus,
 		LastScanError:      record.LastScanError,
+		LastScanReasonCode: string(record.LastScanReasonCode),
 		LastScanLatencyMs:  record.LastScanLatency.Milliseconds(),
 		LastScanAt:         record.LastScanAt,
 		LeaseExpiresAt:     lease.ExpiresAt,
@@ -206,6 +214,43 @@ func scanTargets(record NodeRecord) []string {
 		return []string{record.PublicIP}
 	}
 	return nil
+}
+
+func blockedCandidateResult(record NodeRecord, scannedAt time.Time) (ScanResult, bool) {
+	targetHosts := append([]string(nil), record.CandidatePublicIPs...)
+	if len(targetHosts) == 0 && record.PublicIP != "" && record.ScanHost == "" {
+		targetHosts = []string{record.PublicIP}
+	}
+	for _, host := range targetHosts {
+		reason := classifyBlockedIP(host)
+		if reason == "" {
+			continue
+		}
+		return ScanResult{
+			NodeID:     record.ID,
+			Target:     net.JoinHostPort(host, fmt.Sprintf("%d", record.ProbePort)),
+			Status:     "FAILED",
+			ReasonCode: reason,
+			Error:      fmt.Sprintf("candidate public ip %s is %s", host, reason),
+			ScannedAt:  scannedAt,
+		}, true
+	}
+	return ScanResult{}, false
+}
+
+func classifyBlockedIP(host string) ScanReasonCode {
+	addr, err := netip.ParseAddr(host)
+	if err != nil {
+		return ""
+	}
+	if addr.IsPrivate() || addr.IsLoopback() || addr.IsLinkLocalUnicast() || addr.IsLinkLocalMulticast() || addr.IsMulticast() || addr.IsUnspecified() {
+		return ScanReasonPrivateIP
+	}
+	cgnat := netip.MustParsePrefix("100.64.0.0/10")
+	if addr.Is4() && cgnat.Contains(addr) {
+		return ScanReasonCGNAT
+	}
+	return ""
 }
 
 func firstNonEmpty(values ...string) string {

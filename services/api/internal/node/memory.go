@@ -85,6 +85,7 @@ func (r *MemoryRepository) SaveScanResult(_ context.Context, nodeID string, resu
 	record := r.byCode[code]
 	record.LastScanStatus = result.Status
 	record.LastScanError = result.Error
+	record.LastScanReasonCode = result.ReasonCode
 	record.LastScanLatency = result.Latency
 	record.LastScanAt = result.ScannedAt
 	record.UpdatedAt = result.ScannedAt

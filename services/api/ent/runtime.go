@@ -201,16 +201,20 @@ func init() {
 	nodeDescLastScanError := nodeFields[14].Descriptor()
 	// node.DefaultLastScanError holds the default value on creation for the last_scan_error field.
 	node.DefaultLastScanError = nodeDescLastScanError.Default.(string)
+	// nodeDescLastScanReasonCode is the schema descriptor for last_scan_reason_code field.
+	nodeDescLastScanReasonCode := nodeFields[15].Descriptor()
+	// node.DefaultLastScanReasonCode holds the default value on creation for the last_scan_reason_code field.
+	node.DefaultLastScanReasonCode = nodeDescLastScanReasonCode.Default.(string)
 	// nodeDescLastScanLatencyMs is the schema descriptor for last_scan_latency_ms field.
-	nodeDescLastScanLatencyMs := nodeFields[15].Descriptor()
+	nodeDescLastScanLatencyMs := nodeFields[16].Descriptor()
 	// node.DefaultLastScanLatencyMs holds the default value on creation for the last_scan_latency_ms field.
 	node.DefaultLastScanLatencyMs = nodeDescLastScanLatencyMs.Default.(int64)
 	// nodeDescCreatedAt is the schema descriptor for created_at field.
-	nodeDescCreatedAt := nodeFields[18].Descriptor()
+	nodeDescCreatedAt := nodeFields[19].Descriptor()
 	// node.DefaultCreatedAt holds the default value on creation for the created_at field.
 	node.DefaultCreatedAt = nodeDescCreatedAt.Default.(func() time.Time)
 	// nodeDescUpdatedAt is the schema descriptor for updated_at field.
-	nodeDescUpdatedAt := nodeFields[19].Descriptor()
+	nodeDescUpdatedAt := nodeFields[20].Descriptor()
 	// node.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	node.DefaultUpdatedAt = nodeDescUpdatedAt.Default.(func() time.Time)
 	// node.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.

@@ -15,6 +15,8 @@ type Repository interface {
 	ListAccounts(ctx context.Context) ([]Account, error)
 	SaveApplyResult(ctx context.Context, result ApplyResult) error
 	ListApplyResults(ctx context.Context, proxyAccountID string, limit int) ([]ApplyResult, error)
+	LatestUsage(ctx context.Context, proxyAccountID string) (Usage, bool, error)
+	LatestDigest(ctx context.Context, nodeID string) (Digest, bool, error)
 }
 
 type Dispatcher interface {
@@ -192,7 +194,26 @@ func (s *Service) GetUsage(ctx context.Context, proxyAccountID string) (ApplyRes
 	if !ok {
 		return ApplyResult{}, fmt.Errorf("account %s not found", proxyAccountID)
 	}
-	return s.localUnsupportedResult(ctx, OperationGetUsage, account, "usage is reported asynchronously outside runtime apply")
+	usage, ok, err := s.repo.LatestUsage(ctx, proxyAccountID)
+	if err != nil {
+		return ApplyResult{}, err
+	}
+	if !ok {
+		usage = Usage{ProxyAccountID: account.ProxyAccountID, RuntimeEmail: account.RuntimeEmail}
+	}
+	result := ApplyResult{
+		ApplyID:          uuid.NewString(),
+		ProxyAccountID:   account.ProxyAccountID,
+		NodeID:           account.NodeID,
+		Operation:        OperationGetUsage,
+		Status:           ApplyStatusACK,
+		AppliedRevision:  account.AppliedGeneration,
+		LastGoodRevision: account.AppliedGeneration,
+		Usage:            usage,
+		CreatedAt:        s.now().UTC(),
+	}
+	_ = s.repo.SaveApplyResult(ctx, result)
+	return result, nil
 }
 
 func (s *Service) ProbeAccount(ctx context.Context, proxyAccountID string) (ApplyResult, error) {
@@ -210,7 +231,23 @@ func (s *Service) GetDigest(ctx context.Context, nodeID string) (ApplyResult, er
 	if nodeID == "" {
 		return ApplyResult{}, errors.New("node_id is required")
 	}
-	return s.localUnsupportedResult(ctx, OperationGetDigest, Account{NodeID: nodeID}, "digest is reported by lease/runtime apply ack")
+	digest, ok, err := s.repo.LatestDigest(ctx, nodeID)
+	if err != nil {
+		return ApplyResult{}, err
+	}
+	if !ok {
+		return ApplyResult{}, fmt.Errorf("node %s has no runtime digest yet", nodeID)
+	}
+	result := ApplyResult{
+		ApplyID:   uuid.NewString(),
+		NodeID:    nodeID,
+		Operation: OperationGetDigest,
+		Status:    ApplyStatusACK,
+		Digest:    digest,
+		CreatedAt: s.now().UTC(),
+	}
+	_ = s.repo.SaveApplyResult(ctx, result)
+	return result, nil
 }
 
 func (s *Service) ListAccounts(ctx context.Context) ([]Account, error) {

@@ -16,13 +16,13 @@ func TestRegisterLeaseCreatesOnlineNode(t *testing.T) {
 	svc := node.NewService(repo, leases, func() time.Time { return now })
 
 	_, err := svc.RegisterLease(context.Background(), node.LeaseInput{
-		NodeCode:        "nyc-home-001",
-		SessionID:       "session-1",
-		APIInstanceID:   "api-1",
-		BundleVersion:   "bundle-0.1.0",
-		AgentVersion:    "agent-0.1.0",
-		XrayVersion:     "xray-0.1.0",
-		Capabilities:    []string{"socks5", "http"},
+		NodeCode:      "nyc-home-001",
+		SessionID:     "session-1",
+		APIInstanceID: "api-1",
+		BundleVersion: "bundle-0.1.0",
+		AgentVersion:  "agent-0.1.0",
+		XrayVersion:   "xray-0.1.0",
+		Capabilities:  []string{"socks5", "http"},
 		CandidatePublicIPs: []string{
 			"198.51.100.10",
 			"198.51.100.11",
@@ -94,8 +94,37 @@ func TestScanNodeScansEachCandidatePublicIP(t *testing.T) {
 	if result.Status != "UNREACHABLE" {
 		t.Fatalf("scan result = %#v", result)
 	}
+	if result.ReasonCode != node.ScanReasonIngressUnreachable {
+		t.Fatalf("reason code = %q, want %q", result.ReasonCode, node.ScanReasonIngressUnreachable)
+	}
 	if len(targets) != 2 || targets[0] != "204.42.251.2:9878" || targets[1] != "204.42.251.3:9878" {
 		t.Fatalf("scanned targets = %#v", targets)
+	}
+}
+
+func TestScanNodeRejectsPrivateCandidatePublicIP(t *testing.T) {
+	now := time.Date(2026, 4, 30, 9, 0, 0, 0, time.UTC)
+	repo := node.NewMemoryRepository()
+	leases := node.NewMemoryLeaseStore()
+	svc := node.NewService(repo, leases, func() time.Time { return now })
+
+	summary, err := svc.RegisterLease(context.Background(), node.LeaseInput{
+		NodeCode:           "private-ip-node",
+		SessionID:          "session-1",
+		CandidatePublicIPs: []string{"192.168.1.8"},
+		ProbePort:          18080,
+		LeaseTTLSeconds:    45,
+	})
+	if err != nil {
+		t.Fatalf("RegisterLease() error = %v", err)
+	}
+
+	result, err := svc.ScanNode(context.Background(), summary.ID)
+	if err != nil {
+		t.Fatalf("ScanNode() error = %v", err)
+	}
+	if result.Status != "FAILED" || result.ReasonCode != node.ScanReasonPrivateIP {
+		t.Fatalf("scan result = %#v", result)
 	}
 }
 
@@ -142,6 +171,9 @@ func TestScanNodePersistsReachableResult(t *testing.T) {
 	}
 	if result.Status != "REACHABLE" || result.Target == "" {
 		t.Fatalf("scan result = %#v", result)
+	}
+	if result.ReasonCode != "" {
+		t.Fatalf("reachable reason code = %q, want empty", result.ReasonCode)
 	}
 	nodes, err := svc.ListNodes(context.Background())
 	if err != nil {

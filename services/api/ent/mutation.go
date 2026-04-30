@@ -4163,6 +4163,7 @@ type NodeMutation struct {
 	probe_checked_at           *time.Time
 	last_scan_status           *string
 	last_scan_error            *string
+	last_scan_reason_code      *string
 	last_scan_latency_ms       *int64
 	addlast_scan_latency_ms    *int64
 	last_scan_at               *time.Time
@@ -4861,6 +4862,42 @@ func (m *NodeMutation) ResetLastScanError() {
 	m.last_scan_error = nil
 }
 
+// SetLastScanReasonCode sets the "last_scan_reason_code" field.
+func (m *NodeMutation) SetLastScanReasonCode(s string) {
+	m.last_scan_reason_code = &s
+}
+
+// LastScanReasonCode returns the value of the "last_scan_reason_code" field in the mutation.
+func (m *NodeMutation) LastScanReasonCode() (r string, exists bool) {
+	v := m.last_scan_reason_code
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastScanReasonCode returns the old "last_scan_reason_code" field's value of the Node entity.
+// If the Node object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *NodeMutation) OldLastScanReasonCode(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastScanReasonCode is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastScanReasonCode requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastScanReasonCode: %w", err)
+	}
+	return oldValue.LastScanReasonCode, nil
+}
+
+// ResetLastScanReasonCode resets all changes to the "last_scan_reason_code" field.
+func (m *NodeMutation) ResetLastScanReasonCode() {
+	m.last_scan_reason_code = nil
+}
+
 // SetLastScanLatencyMs sets the "last_scan_latency_ms" field.
 func (m *NodeMutation) SetLastScanLatencyMs(i int64) {
 	m.last_scan_latency_ms = &i
@@ -5121,7 +5158,7 @@ func (m *NodeMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *NodeMutation) Fields() []string {
-	fields := make([]string, 0, 19)
+	fields := make([]string, 0, 20)
 	if m.code != nil {
 		fields = append(fields, node.FieldCode)
 	}
@@ -5163,6 +5200,9 @@ func (m *NodeMutation) Fields() []string {
 	}
 	if m.last_scan_error != nil {
 		fields = append(fields, node.FieldLastScanError)
+	}
+	if m.last_scan_reason_code != nil {
+		fields = append(fields, node.FieldLastScanReasonCode)
 	}
 	if m.last_scan_latency_ms != nil {
 		fields = append(fields, node.FieldLastScanLatencyMs)
@@ -5215,6 +5255,8 @@ func (m *NodeMutation) Field(name string) (ent.Value, bool) {
 		return m.LastScanStatus()
 	case node.FieldLastScanError:
 		return m.LastScanError()
+	case node.FieldLastScanReasonCode:
+		return m.LastScanReasonCode()
 	case node.FieldLastScanLatencyMs:
 		return m.LastScanLatencyMs()
 	case node.FieldLastScanAt:
@@ -5262,6 +5304,8 @@ func (m *NodeMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldLastScanStatus(ctx)
 	case node.FieldLastScanError:
 		return m.OldLastScanError(ctx)
+	case node.FieldLastScanReasonCode:
+		return m.OldLastScanReasonCode(ctx)
 	case node.FieldLastScanLatencyMs:
 		return m.OldLastScanLatencyMs(ctx)
 	case node.FieldLastScanAt:
@@ -5378,6 +5422,13 @@ func (m *NodeMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetLastScanError(v)
+		return nil
+	case node.FieldLastScanReasonCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastScanReasonCode(v)
 		return nil
 	case node.FieldLastScanLatencyMs:
 		v, ok := value.(int64)
@@ -5552,6 +5603,9 @@ func (m *NodeMutation) ResetField(name string) error {
 		return nil
 	case node.FieldLastScanError:
 		m.ResetLastScanError()
+		return nil
+	case node.FieldLastScanReasonCode:
+		m.ResetLastScanReasonCode()
 		return nil
 	case node.FieldLastScanLatencyMs:
 		m.ResetLastScanLatencyMs()

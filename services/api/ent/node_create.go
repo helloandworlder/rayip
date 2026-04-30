@@ -187,6 +187,20 @@ func (_c *NodeCreate) SetNillableLastScanError(v *string) *NodeCreate {
 	return _c
 }
 
+// SetLastScanReasonCode sets the "last_scan_reason_code" field.
+func (_c *NodeCreate) SetLastScanReasonCode(v string) *NodeCreate {
+	_c.mutation.SetLastScanReasonCode(v)
+	return _c
+}
+
+// SetNillableLastScanReasonCode sets the "last_scan_reason_code" field if the given value is not nil.
+func (_c *NodeCreate) SetNillableLastScanReasonCode(v *string) *NodeCreate {
+	if v != nil {
+		_c.SetLastScanReasonCode(*v)
+	}
+	return _c
+}
+
 // SetLastScanLatencyMs sets the "last_scan_latency_ms" field.
 func (_c *NodeCreate) SetLastScanLatencyMs(v int64) *NodeCreate {
 	_c.mutation.SetLastScanLatencyMs(v)
@@ -346,6 +360,10 @@ func (_c *NodeCreate) defaults() {
 		v := node.DefaultLastScanError
 		_c.mutation.SetLastScanError(v)
 	}
+	if _, ok := _c.mutation.LastScanReasonCode(); !ok {
+		v := node.DefaultLastScanReasonCode
+		_c.mutation.SetLastScanReasonCode(v)
+	}
 	if _, ok := _c.mutation.LastScanLatencyMs(); !ok {
 		v := node.DefaultLastScanLatencyMs
 		_c.mutation.SetLastScanLatencyMs(v)
@@ -400,6 +418,9 @@ func (_c *NodeCreate) check() error {
 	}
 	if _, ok := _c.mutation.LastScanError(); !ok {
 		return &ValidationError{Name: "last_scan_error", err: errors.New(`ent: missing required field "Node.last_scan_error"`)}
+	}
+	if _, ok := _c.mutation.LastScanReasonCode(); !ok {
+		return &ValidationError{Name: "last_scan_reason_code", err: errors.New(`ent: missing required field "Node.last_scan_reason_code"`)}
 	}
 	if _, ok := _c.mutation.LastScanLatencyMs(); !ok {
 		return &ValidationError{Name: "last_scan_latency_ms", err: errors.New(`ent: missing required field "Node.last_scan_latency_ms"`)}
@@ -501,6 +522,10 @@ func (_c *NodeCreate) createSpec() (*Node, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.LastScanError(); ok {
 		_spec.SetField(node.FieldLastScanError, field.TypeString, value)
 		_node.LastScanError = value
+	}
+	if value, ok := _c.mutation.LastScanReasonCode(); ok {
+		_spec.SetField(node.FieldLastScanReasonCode, field.TypeString, value)
+		_node.LastScanReasonCode = value
 	}
 	if value, ok := _c.mutation.LastScanLatencyMs(); ok {
 		_spec.SetField(node.FieldLastScanLatencyMs, field.TypeInt64, value)
@@ -751,6 +776,18 @@ func (u *NodeUpsert) SetLastScanError(v string) *NodeUpsert {
 // UpdateLastScanError sets the "last_scan_error" field to the value that was provided on create.
 func (u *NodeUpsert) UpdateLastScanError() *NodeUpsert {
 	u.SetExcluded(node.FieldLastScanError)
+	return u
+}
+
+// SetLastScanReasonCode sets the "last_scan_reason_code" field.
+func (u *NodeUpsert) SetLastScanReasonCode(v string) *NodeUpsert {
+	u.Set(node.FieldLastScanReasonCode, v)
+	return u
+}
+
+// UpdateLastScanReasonCode sets the "last_scan_reason_code" field to the value that was provided on create.
+func (u *NodeUpsert) UpdateLastScanReasonCode() *NodeUpsert {
+	u.SetExcluded(node.FieldLastScanReasonCode)
 	return u
 }
 
@@ -1078,6 +1115,20 @@ func (u *NodeUpsertOne) SetLastScanError(v string) *NodeUpsertOne {
 func (u *NodeUpsertOne) UpdateLastScanError() *NodeUpsertOne {
 	return u.Update(func(s *NodeUpsert) {
 		s.UpdateLastScanError()
+	})
+}
+
+// SetLastScanReasonCode sets the "last_scan_reason_code" field.
+func (u *NodeUpsertOne) SetLastScanReasonCode(v string) *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetLastScanReasonCode(v)
+	})
+}
+
+// UpdateLastScanReasonCode sets the "last_scan_reason_code" field to the value that was provided on create.
+func (u *NodeUpsertOne) UpdateLastScanReasonCode() *NodeUpsertOne {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateLastScanReasonCode()
 	})
 }
 
@@ -1583,6 +1634,20 @@ func (u *NodeUpsertBulk) SetLastScanError(v string) *NodeUpsertBulk {
 func (u *NodeUpsertBulk) UpdateLastScanError() *NodeUpsertBulk {
 	return u.Update(func(s *NodeUpsert) {
 		s.UpdateLastScanError()
+	})
+}
+
+// SetLastScanReasonCode sets the "last_scan_reason_code" field.
+func (u *NodeUpsertBulk) SetLastScanReasonCode(v string) *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.SetLastScanReasonCode(v)
+	})
+}
+
+// UpdateLastScanReasonCode sets the "last_scan_reason_code" field to the value that was provided on create.
+func (u *NodeUpsertBulk) UpdateLastScanReasonCode() *NodeUpsertBulk {
+	return u.Update(func(s *NodeUpsert) {
+		s.UpdateLastScanReasonCode()
 	})
 }
 

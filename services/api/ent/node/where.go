@@ -119,6 +119,11 @@ func LastScanError(v string) predicate.Node {
 	return predicate.Node(sql.FieldEQ(FieldLastScanError, v))
 }
 
+// LastScanReasonCode applies equality check predicate on the "last_scan_reason_code" field. It's identical to LastScanReasonCodeEQ.
+func LastScanReasonCode(v string) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldLastScanReasonCode, v))
+}
+
 // LastScanLatencyMs applies equality check predicate on the "last_scan_latency_ms" field. It's identical to LastScanLatencyMsEQ.
 func LastScanLatencyMs(v int64) predicate.Node {
 	return predicate.Node(sql.FieldEQ(FieldLastScanLatencyMs, v))
@@ -817,6 +822,71 @@ func LastScanErrorEqualFold(v string) predicate.Node {
 // LastScanErrorContainsFold applies the ContainsFold predicate on the "last_scan_error" field.
 func LastScanErrorContainsFold(v string) predicate.Node {
 	return predicate.Node(sql.FieldContainsFold(FieldLastScanError, v))
+}
+
+// LastScanReasonCodeEQ applies the EQ predicate on the "last_scan_reason_code" field.
+func LastScanReasonCodeEQ(v string) predicate.Node {
+	return predicate.Node(sql.FieldEQ(FieldLastScanReasonCode, v))
+}
+
+// LastScanReasonCodeNEQ applies the NEQ predicate on the "last_scan_reason_code" field.
+func LastScanReasonCodeNEQ(v string) predicate.Node {
+	return predicate.Node(sql.FieldNEQ(FieldLastScanReasonCode, v))
+}
+
+// LastScanReasonCodeIn applies the In predicate on the "last_scan_reason_code" field.
+func LastScanReasonCodeIn(vs ...string) predicate.Node {
+	return predicate.Node(sql.FieldIn(FieldLastScanReasonCode, vs...))
+}
+
+// LastScanReasonCodeNotIn applies the NotIn predicate on the "last_scan_reason_code" field.
+func LastScanReasonCodeNotIn(vs ...string) predicate.Node {
+	return predicate.Node(sql.FieldNotIn(FieldLastScanReasonCode, vs...))
+}
+
+// LastScanReasonCodeGT applies the GT predicate on the "last_scan_reason_code" field.
+func LastScanReasonCodeGT(v string) predicate.Node {
+	return predicate.Node(sql.FieldGT(FieldLastScanReasonCode, v))
+}
+
+// LastScanReasonCodeGTE applies the GTE predicate on the "last_scan_reason_code" field.
+func LastScanReasonCodeGTE(v string) predicate.Node {
+	return predicate.Node(sql.FieldGTE(FieldLastScanReasonCode, v))
+}
+
+// LastScanReasonCodeLT applies the LT predicate on the "last_scan_reason_code" field.
+func LastScanReasonCodeLT(v string) predicate.Node {
+	return predicate.Node(sql.FieldLT(FieldLastScanReasonCode, v))
+}
+
+// LastScanReasonCodeLTE applies the LTE predicate on the "last_scan_reason_code" field.
+func LastScanReasonCodeLTE(v string) predicate.Node {
+	return predicate.Node(sql.FieldLTE(FieldLastScanReasonCode, v))
+}
+
+// LastScanReasonCodeContains applies the Contains predicate on the "last_scan_reason_code" field.
+func LastScanReasonCodeContains(v string) predicate.Node {
+	return predicate.Node(sql.FieldContains(FieldLastScanReasonCode, v))
+}
+
+// LastScanReasonCodeHasPrefix applies the HasPrefix predicate on the "last_scan_reason_code" field.
+func LastScanReasonCodeHasPrefix(v string) predicate.Node {
+	return predicate.Node(sql.FieldHasPrefix(FieldLastScanReasonCode, v))
+}
+
+// LastScanReasonCodeHasSuffix applies the HasSuffix predicate on the "last_scan_reason_code" field.
+func LastScanReasonCodeHasSuffix(v string) predicate.Node {
+	return predicate.Node(sql.FieldHasSuffix(FieldLastScanReasonCode, v))
+}
+
+// LastScanReasonCodeEqualFold applies the EqualFold predicate on the "last_scan_reason_code" field.
+func LastScanReasonCodeEqualFold(v string) predicate.Node {
+	return predicate.Node(sql.FieldEqualFold(FieldLastScanReasonCode, v))
+}
+
+// LastScanReasonCodeContainsFold applies the ContainsFold predicate on the "last_scan_reason_code" field.
+func LastScanReasonCodeContainsFold(v string) predicate.Node {
+	return predicate.Node(sql.FieldContainsFold(FieldLastScanReasonCode, v))
 }
 
 // LastScanLatencyMsEQ applies the EQ predicate on the "last_scan_latency_ms" field.

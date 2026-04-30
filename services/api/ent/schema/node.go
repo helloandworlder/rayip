@@ -35,6 +35,7 @@ func (Node) Fields() []ent.Field {
 		field.Time("probe_checked_at").Optional().Nillable(),
 		field.String("last_scan_status").Default("UNKNOWN"),
 		field.String("last_scan_error").Default(""),
+		field.String("last_scan_reason_code").Default(""),
 		field.Int64("last_scan_latency_ms").Default(0),
 		field.Time("last_scan_at").Optional().Nillable(),
 		field.Time("last_online_at").Optional().Nillable(),

@@ -232,6 +232,20 @@ func (_u *NodeUpdate) SetNillableLastScanError(v *string) *NodeUpdate {
 	return _u
 }
 
+// SetLastScanReasonCode sets the "last_scan_reason_code" field.
+func (_u *NodeUpdate) SetLastScanReasonCode(v string) *NodeUpdate {
+	_u.mutation.SetLastScanReasonCode(v)
+	return _u
+}
+
+// SetNillableLastScanReasonCode sets the "last_scan_reason_code" field if the given value is not nil.
+func (_u *NodeUpdate) SetNillableLastScanReasonCode(v *string) *NodeUpdate {
+	if v != nil {
+		_u.SetLastScanReasonCode(*v)
+	}
+	return _u
+}
+
 // SetLastScanLatencyMs sets the "last_scan_latency_ms" field.
 func (_u *NodeUpdate) SetLastScanLatencyMs(v int64) *NodeUpdate {
 	_u.mutation.ResetLastScanLatencyMs()
@@ -411,6 +425,9 @@ func (_u *NodeUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.LastScanError(); ok {
 		_spec.SetField(node.FieldLastScanError, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.LastScanReasonCode(); ok {
+		_spec.SetField(node.FieldLastScanReasonCode, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.LastScanLatencyMs(); ok {
 		_spec.SetField(node.FieldLastScanLatencyMs, field.TypeInt64, value)
@@ -656,6 +673,20 @@ func (_u *NodeUpdateOne) SetNillableLastScanError(v *string) *NodeUpdateOne {
 	return _u
 }
 
+// SetLastScanReasonCode sets the "last_scan_reason_code" field.
+func (_u *NodeUpdateOne) SetLastScanReasonCode(v string) *NodeUpdateOne {
+	_u.mutation.SetLastScanReasonCode(v)
+	return _u
+}
+
+// SetNillableLastScanReasonCode sets the "last_scan_reason_code" field if the given value is not nil.
+func (_u *NodeUpdateOne) SetNillableLastScanReasonCode(v *string) *NodeUpdateOne {
+	if v != nil {
+		_u.SetLastScanReasonCode(*v)
+	}
+	return _u
+}
+
 // SetLastScanLatencyMs sets the "last_scan_latency_ms" field.
 func (_u *NodeUpdateOne) SetLastScanLatencyMs(v int64) *NodeUpdateOne {
 	_u.mutation.ResetLastScanLatencyMs()
@@ -865,6 +896,9 @@ func (_u *NodeUpdateOne) sqlSave(ctx context.Context) (_node *Node, err error) {
 	}
 	if value, ok := _u.mutation.LastScanError(); ok {
 		_spec.SetField(node.FieldLastScanError, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.LastScanReasonCode(); ok {
+		_spec.SetField(node.FieldLastScanReasonCode, field.TypeString, value)
 	}
 	if value, ok := _u.mutation.LastScanLatencyMs(); ok {
 		_spec.SetField(node.FieldLastScanLatencyMs, field.TypeInt64, value)
