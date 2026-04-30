@@ -13,7 +13,6 @@ import (
 
 type Core interface {
 	UpsertAccount(ctx context.Context, account Account) error
-	DisableAccount(ctx context.Context, proxyAccountID string, generation uint64) error
 	DeleteAccount(ctx context.Context, proxyAccountID string) error
 	Usage(ctx context.Context, proxyAccountID string) (Usage, error)
 	Probe(ctx context.Context, proxyAccountID string) (Usage, error)
@@ -55,16 +54,6 @@ func (c *MemoryCore) UpsertAccount(_ context.Context, account Account) error {
 	c.accounts[account.ProxyAccountID] = account
 	c.ensureBucket(account.ProxyAccountID, DirectionEgress).setLimit(account.EgressLimitBPS)
 	c.ensureBucket(account.ProxyAccountID, DirectionIngress).setLimit(account.IngressLimitBPS)
-	return nil
-}
-
-func (c *MemoryCore) DisableAccount(_ context.Context, proxyAccountID string, generation uint64) error {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	account := c.accounts[proxyAccountID]
-	account.Status = AccountStatusDisabled
-	account.DesiredGeneration = generation
-	c.accounts[proxyAccountID] = account
 	return nil
 }
 

@@ -15,27 +15,6 @@ const (
 	AccountStatusDeleted  AccountStatus = "DELETED"
 )
 
-type Operation string
-
-const (
-	OperationUpsert       Operation = "UPSERT"
-	OperationDelete       Operation = "DELETE"
-	OperationDisable      Operation = "DISABLE"
-	OperationUpdatePolicy Operation = "UPDATE_POLICY"
-	OperationGetUsage     Operation = "GET_USAGE"
-	OperationGetDigest    Operation = "GET_DIGEST"
-	OperationProbe        Operation = "PROBE"
-)
-
-type ResultStatus string
-
-const (
-	ResultSuccess   ResultStatus = "SUCCESS"
-	ResultFailed    ResultStatus = "FAILED"
-	ResultSkipped   ResultStatus = "SKIPPED"
-	ResultDuplicate ResultStatus = "DUPLICATE"
-)
-
 type Direction string
 
 const (
@@ -48,6 +27,35 @@ type AbuseAction string
 const (
 	AbuseActionReportOnly       AbuseAction = "REPORT_ONLY"
 	AbuseActionDisableAndReport AbuseAction = "DISABLE_AND_REPORT"
+)
+
+type ApplyMode string
+
+const (
+	ApplyModeDelta    ApplyMode = "DELTA"
+	ApplyModeSnapshot ApplyMode = "SNAPSHOT"
+)
+
+type ResourceKind string
+
+const (
+	ResourceKindProxyAccount ResourceKind = "PROXY_ACCOUNT"
+)
+
+type AckStatus string
+
+const (
+	AckStatusACK     AckStatus = "ACK"
+	AckStatusNACK    AckStatus = "NACK"
+	AckStatusPartial AckStatus = "PARTIAL"
+)
+
+type ResourceResultStatus string
+
+const (
+	ResourceResultApplied ResourceResultStatus = "APPLIED"
+	ResourceResultRemoved ResourceResultStatus = "REMOVED"
+	ResourceResultFailed  ResourceResultStatus = "FAILED"
 )
 
 type Account struct {
@@ -78,23 +86,54 @@ type AbuseEvent struct {
 	Threshold      uint64
 }
 
-type Command struct {
-	CommandID         string
-	NodeID            string
-	Operation         Operation
-	Account           Account
-	DesiredGeneration uint64
-	DeadlineUnixMS    int64
+type Apply struct {
+	ApplyID              string
+	NodeID               string
+	Mode                 ApplyMode
+	VersionInfo          string
+	Nonce                string
+	BaseRevision         uint64
+	TargetRevision       uint64
+	DeadlineUnixMS       int64
+	Resources            []Resource
+	RemovedResourceNames []string
 }
 
-type Result struct {
-	CommandID         string
-	Status            ResultStatus
-	ErrorCode         string
-	ErrorMessage      string
-	AppliedGeneration uint64
-	Usage             Usage
-	Digest            Digest
+type Resource struct {
+	Name              string
+	Kind              ResourceKind
+	ResourceVersion   uint64
+	RuntimeEmail      string
+	Protocol          Protocol
+	ListenIP          string
+	Port              uint32
+	Username          string
+	Password          string
+	EgressLimitBPS    uint64
+	IngressLimitBPS   uint64
+	MaxConnections    uint32
+	Priority          uint32
+	AbuseReportPolicy string
+	ExpiresAtUnixMS   int64
+}
+
+type ApplyAck struct {
+	ApplyID          string
+	NodeID           string
+	VersionInfo      string
+	Nonce            string
+	Status           AckStatus
+	AppliedRevision  uint64
+	LastGoodRevision uint64
+	ResourceResults  []ResourceResult
+	Digest           Digest
+	ErrorDetail      string
+}
+
+type ResourceResult struct {
+	Name        string
+	Status      ResourceResultStatus
+	ErrorDetail string
 }
 
 type Usage struct {

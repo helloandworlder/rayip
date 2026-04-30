@@ -13,8 +13,8 @@
 
 - 依赖注入 / 生命周期：Uber Fx
 - HTTP：GoFiber / Fiber v3
-- 数据访问：GORM
-- 数据库迁移：Goose
+- 数据访问 / Schema：Ent
+- 数据库迁移：Ent schema migration；生产发布前用 Atlas migration directory 固化 DDL
 - 数据库：Postgres
 - 缓存 / 短期协调：Redis
 - 异步任务：NATS JetStream
@@ -27,8 +27,9 @@
 
 - Less is More 不是少用成熟库，而是少造无意义框架。
 - Fx 只负责组装依赖和生命周期，业务逻辑不依赖 Fx。
-- GORM 用于常规 CRUD；钱包、库存、订单、任务状态机必须使用显式事务、行锁、条件更新和幂等键。
-- Goose 负责生产 schema 迁移；生产禁用 GORM AutoMigrate。
+- Ent 是 V1 的 schema-as-code 主线，应用数据访问优先使用 Ent Client。
+- 钱包、库存、订单、任务状态机必须使用显式事务、行锁、条件更新和幂等键；Ent 不适合表达的锁语义允许使用 Ent SQL driver/raw SQL，但事务边界仍归领域服务控制。
+- 开发期可以用 Ent schema migration 自动同步；生产发布前必须用 Atlas migration directory 固化版本化 DDL，不允许线上临时漂移。
 - OpenAPI 用于稳定的外部 API 文档；不默认强制 oapi-codegen 生成所有 HTTP 代码。
 - GoFiber 是 V1 主线，不再以 Gin 作为默认 HTTP 框架。
 - Go API 服务必须无状态：业务事实不放进进程内存，连接句柄可丢失，重启后从 Postgres / Redis / NATS 恢复。

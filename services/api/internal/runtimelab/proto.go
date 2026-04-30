@@ -2,83 +2,85 @@ package runtimelab
 
 import controlv1 "github.com/rayip/rayip/packages/proto/gen/go/rayip/control/v1"
 
-func CommandToProto(cmd RuntimeCommand) *controlv1.RuntimeCommand {
-	return &controlv1.RuntimeCommand{
-		CommandId:         cmd.CommandID,
-		NodeId:            cmd.NodeID,
-		Operation:         operationToProto(cmd.Operation),
-		Account:           accountToProto(cmd.Account),
-		DesiredGeneration: cmd.DesiredGeneration,
-		DeadlineUnixMs:    cmd.DeadlineUnixMS,
+func ApplyToProto(apply RuntimeApply) *controlv1.RuntimeApply {
+	resources := make([]*controlv1.RuntimeResource, 0, len(apply.Resources))
+	for _, resource := range apply.Resources {
+		resources = append(resources, resourceToProto(resource))
+	}
+	return &controlv1.RuntimeApply{
+		ApplyId:              apply.ApplyID,
+		NodeId:               apply.NodeID,
+		Mode:                 applyModeToProto(apply.Mode),
+		VersionInfo:          apply.VersionInfo,
+		Nonce:                apply.Nonce,
+		BaseRevision:         apply.BaseRevision,
+		TargetRevision:       apply.TargetRevision,
+		DeadlineUnixMs:       apply.DeadlineUnixMS,
+		Resources:            resources,
+		RemovedResourceNames: append([]string(nil), apply.RemovedResourceNames...),
 	}
 }
 
-func ResultFromProto(result *controlv1.RuntimeResult) ApplyResult {
-	if result == nil {
+func ResultFromProto(ack *controlv1.RuntimeApplyAck) ApplyResult {
+	if ack == nil {
 		return ApplyResult{}
 	}
 	return ApplyResult{
-		CommandID:         result.GetCommandId(),
-		Status:            statusFromProto(result.GetStatus()),
-		ErrorCode:         result.GetErrorCode(),
-		ErrorMessage:      result.GetErrorMessage(),
-		AppliedGeneration: result.GetAppliedGeneration(),
-		Usage: Usage{
-			ProxyAccountID:    result.GetUsage().GetProxyAccountId(),
-			RuntimeEmail:      result.GetUsage().GetRuntimeEmail(),
-			RxBytes:           result.GetUsage().GetRxBytes(),
-			TxBytes:           result.GetUsage().GetTxBytes(),
-			ActiveConnections: result.GetUsage().GetActiveConnections(),
-			RxBytesPerSecond:  result.GetUsage().GetRxBytesPerSecond(),
-			TxBytesPerSecond:  result.GetUsage().GetTxBytesPerSecond(),
-		},
+		ApplyID:          ack.GetApplyId(),
+		NodeID:           ack.GetNodeId(),
+		Status:           statusFromProto(ack.GetStatus()),
+		VersionInfo:      ack.GetVersionInfo(),
+		Nonce:            ack.GetNonce(),
+		AppliedRevision:  ack.GetAppliedRevision(),
+		LastGoodRevision: ack.GetLastGoodRevision(),
+		ErrorDetail:      ack.GetErrorDetail(),
 		Digest: Digest{
-			AccountCount:  result.GetDigest().GetAccountCount(),
-			EnabledCount:  result.GetDigest().GetEnabledCount(),
-			DisabledCount: result.GetDigest().GetDisabledCount(),
-			MaxGeneration: result.GetDigest().GetMaxGeneration(),
-			Hash:          result.GetDigest().GetHash(),
+			AccountCount:  ack.GetDigest().GetAccountCount(),
+			EnabledCount:  ack.GetDigest().GetEnabledCount(),
+			DisabledCount: ack.GetDigest().GetDisabledCount(),
+			MaxGeneration: ack.GetDigest().GetMaxGeneration(),
+			Hash:          ack.GetDigest().GetHash(),
 		},
 	}
 }
 
-func accountToProto(account Account) *controlv1.RuntimeAccount {
-	return &controlv1.RuntimeAccount{
-		ProxyAccountId:    account.ProxyAccountID,
-		RuntimeEmail:      account.RuntimeEmail,
-		Protocol:          protocolToProto(account.Protocol),
-		ListenIp:          account.ListenIP,
-		Port:              account.Port,
-		Username:          account.Username,
-		Password:          account.Password,
-		ExpiresAtUnixMs:   account.ExpiresAt.UnixMilli(),
-		EgressLimitBps:    account.EgressLimitBPS,
-		IngressLimitBps:   account.IngressLimitBPS,
-		MaxConnections:    account.MaxConnections,
-		Status:            accountStatusToProto(account.Status),
-		PolicyVersion:     account.PolicyVersion,
-		DesiredGeneration: account.DesiredGeneration,
+func resourceToProto(resource RuntimeResource) *controlv1.RuntimeResource {
+	return &controlv1.RuntimeResource{
+		Name:              resource.Name,
+		Kind:              resourceKindToProto(resource.Kind),
+		ResourceVersion:   resource.ResourceVersion,
+		RuntimeEmail:      resource.RuntimeEmail,
+		Protocol:          protocolToProto(resource.Protocol),
+		ListenIp:          resource.ListenIP,
+		Port:              resource.Port,
+		Username:          resource.Username,
+		Password:          resource.Password,
+		EgressLimitBps:    resource.EgressLimitBPS,
+		IngressLimitBps:   resource.IngressLimitBPS,
+		MaxConnections:    resource.MaxConnections,
+		Priority:          resource.Priority,
+		AbuseReportPolicy: resource.AbuseReportPolicy,
+		ExpiresAtUnixMs:   resource.ExpiresAtUnixMS,
 	}
 }
 
-func operationToProto(operation Operation) controlv1.RuntimeOperation {
-	switch operation {
-	case OperationUpsert:
-		return controlv1.RuntimeOperation_RUNTIME_OPERATION_UPSERT
-	case OperationDelete:
-		return controlv1.RuntimeOperation_RUNTIME_OPERATION_DELETE
-	case OperationDisable:
-		return controlv1.RuntimeOperation_RUNTIME_OPERATION_DISABLE
-	case OperationUpdatePolicy:
-		return controlv1.RuntimeOperation_RUNTIME_OPERATION_UPDATE_POLICY
-	case OperationGetUsage:
-		return controlv1.RuntimeOperation_RUNTIME_OPERATION_GET_USAGE
-	case OperationGetDigest:
-		return controlv1.RuntimeOperation_RUNTIME_OPERATION_GET_DIGEST
-	case OperationProbe:
-		return controlv1.RuntimeOperation_RUNTIME_OPERATION_PROBE
+func applyModeToProto(mode ApplyMode) controlv1.RuntimeApplyMode {
+	switch mode {
+	case ApplyModeSnapshot:
+		return controlv1.RuntimeApplyMode_RUNTIME_APPLY_MODE_SNAPSHOT
+	case ApplyModeDelta:
+		return controlv1.RuntimeApplyMode_RUNTIME_APPLY_MODE_DELTA
 	default:
-		return controlv1.RuntimeOperation_RUNTIME_OPERATION_UNSPECIFIED
+		return controlv1.RuntimeApplyMode_RUNTIME_APPLY_MODE_UNSPECIFIED
+	}
+}
+
+func resourceKindToProto(kind ResourceKind) controlv1.RuntimeResourceKind {
+	switch kind {
+	case ResourceKindProxyAccount:
+		return controlv1.RuntimeResourceKind_RUNTIME_RESOURCE_KIND_PROXY_ACCOUNT
+	default:
+		return controlv1.RuntimeResourceKind_RUNTIME_RESOURCE_KIND_UNSPECIFIED
 	}
 }
 
@@ -93,29 +95,14 @@ func protocolToProto(protocol Protocol) controlv1.RuntimeProtocol {
 	}
 }
 
-func accountStatusToProto(status AccountStatus) controlv1.RuntimeAccountStatus {
+func statusFromProto(status controlv1.RuntimeApplyStatus) ApplyStatus {
 	switch status {
-	case AccountStatusEnabled:
-		return controlv1.RuntimeAccountStatus_RUNTIME_ACCOUNT_STATUS_ENABLED
-	case AccountStatusDisabled:
-		return controlv1.RuntimeAccountStatus_RUNTIME_ACCOUNT_STATUS_DISABLED
-	case AccountStatusDeleted:
-		return controlv1.RuntimeAccountStatus_RUNTIME_ACCOUNT_STATUS_DELETED
-	default:
-		return controlv1.RuntimeAccountStatus_RUNTIME_ACCOUNT_STATUS_UNSPECIFIED
-	}
-}
-
-func statusFromProto(status controlv1.RuntimeResultStatus) ApplyStatus {
-	switch status {
-	case controlv1.RuntimeResultStatus_RUNTIME_RESULT_STATUS_SUCCESS:
-		return ApplyStatusSuccess
-	case controlv1.RuntimeResultStatus_RUNTIME_RESULT_STATUS_FAILED:
-		return ApplyStatusFailed
-	case controlv1.RuntimeResultStatus_RUNTIME_RESULT_STATUS_SKIPPED:
-		return ApplyStatusSkipped
-	case controlv1.RuntimeResultStatus_RUNTIME_RESULT_STATUS_DUPLICATE:
-		return ApplyStatusDuplicate
+	case controlv1.RuntimeApplyStatus_RUNTIME_APPLY_STATUS_ACK:
+		return ApplyStatusACK
+	case controlv1.RuntimeApplyStatus_RUNTIME_APPLY_STATUS_NACK:
+		return ApplyStatusNACK
+	case controlv1.RuntimeApplyStatus_RUNTIME_APPLY_STATUS_PARTIAL:
+		return ApplyStatusPartial
 	default:
 		return ApplyStatusFailed
 	}

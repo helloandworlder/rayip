@@ -38,14 +38,14 @@ func (d *RuntimeDispatcher) Register(nodeID string, stream grpcServerStream) fun
 	}
 }
 
-func (d *RuntimeDispatcher) DispatchRuntimeCommand(ctx context.Context, cmd runtimelab.RuntimeCommand) (runtimelab.ApplyResult, error) {
+func (d *RuntimeDispatcher) DispatchRuntimeApply(ctx context.Context, apply runtimelab.RuntimeApply) (runtimelab.ApplyResult, error) {
 	d.mu.RLock()
-	session := d.sessions[cmd.NodeID]
+	session := d.sessions[apply.NodeID]
 	d.mu.RUnlock()
 	if session == nil {
 		return runtimelab.ApplyResult{}, errors.New("node is not connected")
 	}
-	return session.dispatch(ctx, cmd)
+	return session.dispatch(ctx, apply)
 }
 
 func (d *RuntimeDispatcher) HandleResult(result runtimelab.ApplyResult) {
@@ -75,32 +75,32 @@ type runtimeSession struct {
 	results map[string]chan runtimelab.ApplyResult
 }
 
-func (s *runtimeSession) dispatch(ctx context.Context, cmd runtimelab.RuntimeCommand) (runtimelab.ApplyResult, error) {
+func (s *runtimeSession) dispatch(ctx context.Context, apply runtimelab.RuntimeApply) (runtimelab.ApplyResult, error) {
 	ch := make(chan runtimelab.ApplyResult, 1)
 	s.mu.Lock()
 	if s.closed {
 		s.mu.Unlock()
 		return runtimelab.ApplyResult{}, errors.New("node session is closed")
 	}
-	s.results[cmd.CommandID] = ch
+	s.results[apply.ApplyID] = ch
 	s.mu.Unlock()
 
 	s.sendMu.Lock()
 	err := s.stream.Send(&controlv1.ControlEnvelope{
-		RequestId: cmd.CommandID,
-		Payload: &controlv1.ControlEnvelope_RuntimeCommand{
-			RuntimeCommand: runtimelab.CommandToProto(cmd),
+		RequestId: apply.ApplyID,
+		Payload: &controlv1.ControlEnvelope_RuntimeApply{
+			RuntimeApply: runtimelab.ApplyToProto(apply),
 		},
 	})
 	s.sendMu.Unlock()
 	if err != nil {
-		s.remove(cmd.CommandID)
+		s.remove(apply.ApplyID)
 		return runtimelab.ApplyResult{}, err
 	}
 
 	deadline := 8 * time.Second
-	if cmd.DeadlineUnixMS > 0 {
-		until := time.Until(time.UnixMilli(cmd.DeadlineUnixMS))
+	if apply.DeadlineUnixMS > 0 {
+		until := time.Until(time.UnixMilli(apply.DeadlineUnixMS))
 		if until > 0 {
 			deadline = until
 		}
@@ -114,19 +114,19 @@ func (s *runtimeSession) dispatch(ctx context.Context, cmd runtimelab.RuntimeCom
 		}
 		return result, nil
 	case <-timer.C:
-		s.remove(cmd.CommandID)
-		return runtimelab.ApplyResult{}, errors.New("runtime command timed out")
+		s.remove(apply.ApplyID)
+		return runtimelab.ApplyResult{}, errors.New("runtime apply timed out")
 	case <-ctx.Done():
-		s.remove(cmd.CommandID)
+		s.remove(apply.ApplyID)
 		return runtimelab.ApplyResult{}, ctx.Err()
 	}
 }
 
 func (s *runtimeSession) handleResult(result runtimelab.ApplyResult) bool {
 	s.mu.Lock()
-	ch := s.results[result.CommandID]
+	ch := s.results[result.ApplyID]
 	if ch != nil {
-		delete(s.results, result.CommandID)
+		delete(s.results, result.ApplyID)
 	}
 	s.mu.Unlock()
 	if ch == nil {

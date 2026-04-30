@@ -65,14 +65,14 @@ func TestXrayCoreMapsAccountPolicyAndDigest(t *testing.T) {
 		t.Fatalf("unexpected digest: %#v", digest)
 	}
 
-	if err := core.DisableAccount(context.Background(), "acct-1", 8); err != nil {
-		t.Fatalf("DisableAccount() error = %v", err)
+	if err := core.DeleteAccount(context.Background(), "acct-1"); err != nil {
+		t.Fatalf("DeleteAccount() error = %v", err)
 	}
-	if got := fake.policies["email-1"]; !got.GetDisabled() || got.GetEgressLimitBps() != 1024 || got.GetMaxConnections() != 2 {
-		t.Fatalf("disable did not preserve policy: %#v", got)
+	if got := fake.policies["email-1"]; got != nil {
+		t.Fatalf("policy after delete = %#v, want removed", got)
 	}
 	if handler.users["email-1"] != nil {
-		t.Fatalf("handler user after disable = %#v, want removed", handler.users["email-1"])
+		t.Fatalf("handler user after delete = %#v, want removed", handler.users["email-1"])
 	}
 }
 

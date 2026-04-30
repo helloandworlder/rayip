@@ -7,105 +7,128 @@ import (
 )
 
 type Manager struct {
-	core        Core
-	mu          sync.Mutex
-	generations map[string]uint64
+	core             Core
+	mu               sync.Mutex
+	lastGoodRevision uint64
+	lastSeenNonce    string
+	lastVersionInfo  string
+	seenApplies      map[string]ApplyAck
 }
 
 func NewManager(core Core) *Manager {
-	return &Manager{core: core, generations: map[string]uint64{}}
+	return &Manager{core: core, seenApplies: map[string]ApplyAck{}}
 }
 
-func (m *Manager) Apply(ctx context.Context, cmd Command) (Result, error) {
-	if cmd.CommandID == "" {
-		return Result{}, errors.New("command_id is required")
+func (m *Manager) Apply(ctx context.Context, apply Apply) (ApplyAck, error) {
+	if apply.ApplyID == "" {
+		return ApplyAck{}, errors.New("apply_id is required")
 	}
-
-	accountID := cmd.Account.ProxyAccountID
-	if accountID != "" && cmd.Operation != OperationGetUsage && cmd.Operation != OperationGetDigest && cmd.Operation != OperationProbe {
-		m.mu.Lock()
-		applied := m.generations[accountID]
-		if cmd.DesiredGeneration > 0 && applied >= cmd.DesiredGeneration {
-			m.mu.Unlock()
-			digest, _ := m.core.Digest(ctx)
-			return Result{
-				CommandID:         cmd.CommandID,
-				Status:            ResultDuplicate,
-				AppliedGeneration: applied,
-				Digest:            digest,
-			}, nil
-		}
+	m.mu.Lock()
+	if previous, ok := m.seenApplies[apply.ApplyID]; ok && apply.Nonce == m.lastSeenNonce && apply.VersionInfo == m.lastVersionInfo {
 		m.mu.Unlock()
+		return previous, nil
+	}
+	lastGood := m.lastGoodRevision
+	if apply.Mode == ApplyModeDelta && apply.BaseRevision != lastGood {
+		ack := m.baseAckLocked(apply)
+		ack.Status = AckStatusNACK
+		ack.AppliedRevision = lastGood
+		ack.ErrorDetail = "base revision does not match last good revision"
+		m.mu.Unlock()
+		return ack, errors.New(ack.ErrorDetail)
+	}
+	m.mu.Unlock()
+
+	ack := ApplyAck{
+		ApplyID:          apply.ApplyID,
+		NodeID:           apply.NodeID,
+		VersionInfo:      apply.VersionInfo,
+		Nonce:            apply.Nonce,
+		Status:           AckStatusACK,
+		AppliedRevision:  apply.TargetRevision,
+		LastGoodRevision: apply.TargetRevision,
 	}
 
-	result := Result{CommandID: cmd.CommandID, Status: ResultSuccess, AppliedGeneration: cmd.DesiredGeneration}
-	switch cmd.Operation {
-	case OperationUpsert, OperationUpdatePolicy:
-		account := cmd.Account
-		if account.RuntimeEmail == "" {
-			account.RuntimeEmail = account.ProxyAccountID
+	for _, resource := range apply.Resources {
+		if resource.Kind != ResourceKindProxyAccount {
+			ack.Status = AckStatusPartial
+			ack.ResourceResults = append(ack.ResourceResults, ResourceResult{Name: resource.Name, Status: ResourceResultFailed, ErrorDetail: "unsupported resource kind"})
+			continue
 		}
-		if account.Status == "" {
-			account.Status = AccountStatusEnabled
-		}
-		account.DesiredGeneration = cmd.DesiredGeneration
+		account := accountFromResource(resource)
 		if err := m.core.UpsertAccount(ctx, account); err != nil {
-			return failed(cmd.CommandID, cmd.DesiredGeneration, err), err
+			ack.Status = AckStatusPartial
+			ack.ResourceResults = append(ack.ResourceResults, ResourceResult{Name: resource.Name, Status: ResourceResultFailed, ErrorDetail: err.Error()})
+			continue
 		}
-		m.remember(account.ProxyAccountID, cmd.DesiredGeneration)
-	case OperationDisable:
-		if err := m.core.DisableAccount(ctx, accountID, cmd.DesiredGeneration); err != nil {
-			return failed(cmd.CommandID, cmd.DesiredGeneration, err), err
+		ack.ResourceResults = append(ack.ResourceResults, ResourceResult{Name: resource.Name, Status: ResourceResultApplied})
+	}
+	for _, name := range apply.RemovedResourceNames {
+		if err := m.core.DeleteAccount(ctx, name); err != nil {
+			ack.Status = AckStatusPartial
+			ack.ResourceResults = append(ack.ResourceResults, ResourceResult{Name: name, Status: ResourceResultFailed, ErrorDetail: err.Error()})
+			continue
 		}
-		m.remember(accountID, cmd.DesiredGeneration)
-	case OperationDelete:
-		if err := m.core.DeleteAccount(ctx, accountID); err != nil {
-			return failed(cmd.CommandID, cmd.DesiredGeneration, err), err
-		}
-		m.remember(accountID, cmd.DesiredGeneration)
-	case OperationGetUsage:
-		usage, err := m.core.Usage(ctx, accountID)
-		if err != nil {
-			return failed(cmd.CommandID, cmd.DesiredGeneration, err), err
-		}
-		result.Usage = usage
-	case OperationProbe:
-		usage, err := m.core.Probe(ctx, accountID)
-		if err != nil {
-			return failed(cmd.CommandID, cmd.DesiredGeneration, err), err
-		}
-		result.Usage = usage
-	case OperationGetDigest:
-	default:
-		err := errors.New("unsupported runtime operation")
-		return failed(cmd.CommandID, cmd.DesiredGeneration, err), err
+		ack.ResourceResults = append(ack.ResourceResults, ResourceResult{Name: name, Status: ResourceResultRemoved})
 	}
 
 	digest, err := m.core.Digest(ctx)
 	if err != nil {
-		return failed(cmd.CommandID, cmd.DesiredGeneration, err), err
+		ack.Status = AckStatusNACK
+		ack.ErrorDetail = err.Error()
+		return ack, err
 	}
-	result.Digest = digest
-	return result, nil
-}
+	ack.Digest = digest
+	if ack.Status == AckStatusPartial {
+		ack.AppliedRevision = lastGood
+		ack.LastGoodRevision = lastGood
+		return ack, errors.New("runtime apply partially failed")
+	}
 
-func (m *Manager) remember(proxyAccountID string, generation uint64) {
-	if proxyAccountID == "" {
-		return
-	}
 	m.mu.Lock()
-	defer m.mu.Unlock()
-	if generation > m.generations[proxyAccountID] {
-		m.generations[proxyAccountID] = generation
+	m.lastGoodRevision = apply.TargetRevision
+	m.lastSeenNonce = apply.Nonce
+	m.lastVersionInfo = apply.VersionInfo
+	ack.LastGoodRevision = m.lastGoodRevision
+	m.seenApplies[apply.ApplyID] = ack
+	m.mu.Unlock()
+	return ack, nil
+}
+
+func (m *Manager) baseAckLocked(apply Apply) ApplyAck {
+	return ApplyAck{
+		ApplyID:          apply.ApplyID,
+		NodeID:           apply.NodeID,
+		VersionInfo:      apply.VersionInfo,
+		Nonce:            apply.Nonce,
+		LastGoodRevision: m.lastGoodRevision,
 	}
 }
 
-func failed(commandID string, generation uint64, err error) Result {
-	return Result{
-		CommandID:         commandID,
-		Status:            ResultFailed,
-		ErrorCode:         "RUNTIME_APPLY_FAILED",
-		ErrorMessage:      err.Error(),
-		AppliedGeneration: generation,
+func accountFromResource(resource Resource) Account {
+	email := resource.RuntimeEmail
+	if email == "" {
+		email = resource.Name
+	}
+	priority := resource.Priority
+	if priority == 0 {
+		priority = 1
+	}
+	return Account{
+		ProxyAccountID:    resource.Name,
+		RuntimeEmail:      email,
+		Protocol:          resource.Protocol,
+		ListenIP:          resource.ListenIP,
+		Port:              resource.Port,
+		Username:          resource.Username,
+		Password:          resource.Password,
+		ExpiresAtUnixMS:   resource.ExpiresAtUnixMS,
+		EgressLimitBPS:    resource.EgressLimitBPS,
+		IngressLimitBPS:   resource.IngressLimitBPS,
+		MaxConnections:    resource.MaxConnections,
+		Status:            AccountStatusEnabled,
+		Priority:          priority,
+		AbuseAction:       AbuseActionReportOnly,
+		DesiredGeneration: resource.ResourceVersion,
 	}
 }

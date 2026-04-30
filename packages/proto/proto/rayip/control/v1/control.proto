@@ -16,7 +16,7 @@ message AgentEnvelope {
     LeaseRenewal lease = 11;
     MetricSnapshot metrics = 12;
     TerminalFrame terminal_frame = 13;
-    RuntimeResult runtime_result = 14;
+    RuntimeApplyAck runtime_apply_ack = 14;
   }
 }
 
@@ -27,7 +27,7 @@ message ControlEnvelope {
     AgentWelcome welcome = 10;
     ControlAck ack = 11;
     ControlPing ping = 12;
-    RuntimeCommand runtime_command = 13;
+    RuntimeApply runtime_apply = 13;
   }
 }
 
@@ -97,7 +97,7 @@ message RuntimeObservation {
   string binary_sha256 = 6;
   string manifest_sha256 = 7;
   string runtime_digest = 8;
-  uint64 last_good_generation = 9;
+  uint64 last_good_revision = 9;
 }
 
 message RuntimeVerdict {
@@ -117,82 +117,10 @@ enum RuntimeVerdictStatus {
   RUNTIME_VERDICT_STATUS_DIGEST_MISMATCH = 5;
 }
 
-message RuntimeCommand {
-  string command_id = 1;
-  string node_id = 2;
-  RuntimeOperation operation = 3;
-  RuntimeAccount account = 4;
-  uint64 desired_generation = 5;
-  int64 deadline_unix_ms = 6;
-}
-
-enum RuntimeOperation {
-  RUNTIME_OPERATION_UNSPECIFIED = 0;
-  RUNTIME_OPERATION_UPSERT = 1;
-  RUNTIME_OPERATION_DELETE = 2;
-  RUNTIME_OPERATION_DISABLE = 3;
-  RUNTIME_OPERATION_UPDATE_POLICY = 4;
-  RUNTIME_OPERATION_GET_USAGE = 5;
-  RUNTIME_OPERATION_GET_DIGEST = 6;
-  RUNTIME_OPERATION_PROBE = 7;
-}
-
-message RuntimeAccount {
-  string proxy_account_id = 1;
-  string runtime_email = 2;
-  RuntimeProtocol protocol = 3;
-  string listen_ip = 4;
-  uint32 port = 5;
-  string username = 6;
-  string password = 7;
-  int64 expires_at_unix_ms = 8;
-  uint64 egress_limit_bps = 9;
-  uint64 ingress_limit_bps = 10;
-  uint32 max_connections = 11;
-  RuntimeAccountStatus status = 12;
-  uint64 policy_version = 13;
-  uint64 desired_generation = 14;
-}
-
 enum RuntimeProtocol {
   RUNTIME_PROTOCOL_UNSPECIFIED = 0;
   RUNTIME_PROTOCOL_SOCKS5 = 1;
   RUNTIME_PROTOCOL_HTTP = 2;
-}
-
-enum RuntimeAccountStatus {
-  RUNTIME_ACCOUNT_STATUS_UNSPECIFIED = 0;
-  RUNTIME_ACCOUNT_STATUS_ENABLED = 1;
-  RUNTIME_ACCOUNT_STATUS_DISABLED = 2;
-  RUNTIME_ACCOUNT_STATUS_DELETED = 3;
-}
-
-message RuntimeResult {
-  string command_id = 1;
-  RuntimeResultStatus status = 2;
-  string error_code = 3;
-  string error_message = 4;
-  uint64 applied_generation = 5;
-  RuntimeUsage usage = 6;
-  RuntimeDigest digest = 7;
-}
-
-enum RuntimeResultStatus {
-  RUNTIME_RESULT_STATUS_UNSPECIFIED = 0;
-  RUNTIME_RESULT_STATUS_SUCCESS = 1;
-  RUNTIME_RESULT_STATUS_FAILED = 2;
-  RUNTIME_RESULT_STATUS_SKIPPED = 3;
-  RUNTIME_RESULT_STATUS_DUPLICATE = 4;
-}
-
-message RuntimeUsage {
-  string proxy_account_id = 1;
-  string runtime_email = 2;
-  uint64 rx_bytes = 3;
-  uint64 tx_bytes = 4;
-  uint64 active_connections = 5;
-  uint64 rx_bytes_per_second = 6;
-  uint64 tx_bytes_per_second = 7;
 }
 
 message RuntimeDigest {
@@ -201,4 +129,79 @@ message RuntimeDigest {
   uint64 disabled_count = 3;
   uint64 max_generation = 4;
   string hash = 5;
+}
+
+message RuntimeApply {
+  string apply_id = 1;
+  string node_id = 2;
+  RuntimeApplyMode mode = 3;
+  string version_info = 4;
+  string nonce = 5;
+  uint64 base_revision = 6;
+  uint64 target_revision = 7;
+  int64 deadline_unix_ms = 8;
+  repeated RuntimeResource resources = 9;
+  repeated string removed_resource_names = 10;
+}
+
+enum RuntimeApplyMode {
+  RUNTIME_APPLY_MODE_UNSPECIFIED = 0;
+  RUNTIME_APPLY_MODE_DELTA = 1;
+  RUNTIME_APPLY_MODE_SNAPSHOT = 2;
+}
+
+message RuntimeResource {
+  string name = 1;
+  RuntimeResourceKind kind = 2;
+  uint64 resource_version = 3;
+  string runtime_email = 4;
+  RuntimeProtocol protocol = 5;
+  string listen_ip = 6;
+  uint32 port = 7;
+  string username = 8;
+  string password = 9;
+  uint64 egress_limit_bps = 10;
+  uint64 ingress_limit_bps = 11;
+  uint32 max_connections = 12;
+  uint32 priority = 13;
+  string abuse_report_policy = 14;
+  int64 expires_at_unix_ms = 15;
+}
+
+enum RuntimeResourceKind {
+  RUNTIME_RESOURCE_KIND_UNSPECIFIED = 0;
+  RUNTIME_RESOURCE_KIND_PROXY_ACCOUNT = 1;
+}
+
+message RuntimeApplyAck {
+  string apply_id = 1;
+  string node_id = 2;
+  string version_info = 3;
+  string nonce = 4;
+  RuntimeApplyStatus status = 5;
+  uint64 applied_revision = 6;
+  uint64 last_good_revision = 7;
+  repeated RuntimeResourceResult resource_results = 8;
+  RuntimeDigest digest = 9;
+  string error_detail = 10;
+}
+
+enum RuntimeApplyStatus {
+  RUNTIME_APPLY_STATUS_UNSPECIFIED = 0;
+  RUNTIME_APPLY_STATUS_ACK = 1;
+  RUNTIME_APPLY_STATUS_NACK = 2;
+  RUNTIME_APPLY_STATUS_PARTIAL = 3;
+}
+
+message RuntimeResourceResult {
+  string name = 1;
+  RuntimeResourceApplyStatus status = 2;
+  string error_detail = 3;
+}
+
+enum RuntimeResourceApplyStatus {
+  RUNTIME_RESOURCE_APPLY_STATUS_UNSPECIFIED = 0;
+  RUNTIME_RESOURCE_APPLY_STATUS_APPLIED = 1;
+  RUNTIME_RESOURCE_APPLY_STATUS_REMOVED = 2;
+  RUNTIME_RESOURCE_APPLY_STATUS_FAILED = 3;
 }

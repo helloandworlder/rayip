@@ -7,8 +7,8 @@
 RayIP V1 主线采用成熟 Go 技术栈：
 
 - GoFiber / Fiber v3
-- GORM
-- Goose
+- Ent
+- Atlas / Ent schema migration
 - Zap
 - Viper
 - Uber Fx
@@ -48,35 +48,33 @@ Less is More 的含义是：
 
 > V1 使用 GoFiber / Fiber v3。
 
-## 3. GORM / Ent / Bun / pgx/sqlc
+## 3. Ent / GORM / Bun / pgx/sqlc
 
 当前建议：
 
-- V1 使用 GORM + Goose。
-- 关键交易路径允许通过 GORM 执行 raw SQL。
-- Ent 作为长期 schema-as-code 选择保留。
-- Bun 是 GORM 不够透明时的备选。
+- V1 使用 Ent 作为 schema-as-code 和应用数据访问主线。
+- 开发期使用 Ent schema migration，生产发布前使用 Atlas migration directory 固化 DDL。
+- 关键交易路径允许通过 Ent SQL driver/raw SQL 执行行锁、条件更新和幂等门闩。
+- GORM 不作为 RayIP V1 主线。
+- Bun 是 Ent 不适合表达某些查询时的备选。
 - pgx/sqlc 不作为 V1 默认。
 
 理由：
 
-- GORM 对管理后台 CRUD、关系加载、快速迭代更友好。
-- Goose 控制生产 schema 迁移。
-- 钱包、库存、订单状态机用显式事务和锁，不依赖 GORM 魔法。
-- Ent 很强，但也是代码生成工作流；V1 不需要为了类型安全引入过重流程。
+- RayIP 后续会有钱包、库存、订单、Runtime desired state、outbox 和审计日志，schema 演进成本高，Ent 的 schema-as-code 更适合长期维护。
+- Ent codegen 带来的流程成本在 V1 早期可以接受，且比后期从 GORM 迁移更低。
+- 钱包、库存、订单状态机用显式事务和锁，不依赖 ORM 魔法。
+- Atlas/Ent migration 能把 schema 变更固化为可审查 DDL，适合生产发布门槛。
 - pgx/sqlc 最显式，但会增加大量 SQL 和生成代码维护。
 
-## 4. Goose 的作用
+## 4. Atlas / Ent migration 的作用
 
-Goose 只负责数据库迁移：
+Ent schema 是业务表结构的源头。迁移策略分两层：
 
-- 建表
-- 改字段
-- 建索引
-- 加约束
-- 记录迁移版本
+- 开发期：`client.Schema.Create` 用于本地/Test 快速同步 schema。
+- 生产期：发布前用 Atlas migration directory 生成、审查和执行版本化 DDL。
 
-GORM 负责应用数据访问。生产环境不使用 AutoMigrate。
+应用数据访问默认走 Ent Client。生产环境不允许只靠运行时自动迁移完成不可回滚的 schema 变更。
 
 ## 5. OpenAPI / oapi-codegen
 

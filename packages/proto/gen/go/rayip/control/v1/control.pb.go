@@ -79,70 +79,6 @@ func (RuntimeVerdictStatus) EnumDescriptor() ([]byte, []int) {
 	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{0}
 }
 
-type RuntimeOperation int32
-
-const (
-	RuntimeOperation_RUNTIME_OPERATION_UNSPECIFIED   RuntimeOperation = 0
-	RuntimeOperation_RUNTIME_OPERATION_UPSERT        RuntimeOperation = 1
-	RuntimeOperation_RUNTIME_OPERATION_DELETE        RuntimeOperation = 2
-	RuntimeOperation_RUNTIME_OPERATION_DISABLE       RuntimeOperation = 3
-	RuntimeOperation_RUNTIME_OPERATION_UPDATE_POLICY RuntimeOperation = 4
-	RuntimeOperation_RUNTIME_OPERATION_GET_USAGE     RuntimeOperation = 5
-	RuntimeOperation_RUNTIME_OPERATION_GET_DIGEST    RuntimeOperation = 6
-	RuntimeOperation_RUNTIME_OPERATION_PROBE         RuntimeOperation = 7
-)
-
-// Enum value maps for RuntimeOperation.
-var (
-	RuntimeOperation_name = map[int32]string{
-		0: "RUNTIME_OPERATION_UNSPECIFIED",
-		1: "RUNTIME_OPERATION_UPSERT",
-		2: "RUNTIME_OPERATION_DELETE",
-		3: "RUNTIME_OPERATION_DISABLE",
-		4: "RUNTIME_OPERATION_UPDATE_POLICY",
-		5: "RUNTIME_OPERATION_GET_USAGE",
-		6: "RUNTIME_OPERATION_GET_DIGEST",
-		7: "RUNTIME_OPERATION_PROBE",
-	}
-	RuntimeOperation_value = map[string]int32{
-		"RUNTIME_OPERATION_UNSPECIFIED":   0,
-		"RUNTIME_OPERATION_UPSERT":        1,
-		"RUNTIME_OPERATION_DELETE":        2,
-		"RUNTIME_OPERATION_DISABLE":       3,
-		"RUNTIME_OPERATION_UPDATE_POLICY": 4,
-		"RUNTIME_OPERATION_GET_USAGE":     5,
-		"RUNTIME_OPERATION_GET_DIGEST":    6,
-		"RUNTIME_OPERATION_PROBE":         7,
-	}
-)
-
-func (x RuntimeOperation) Enum() *RuntimeOperation {
-	p := new(RuntimeOperation)
-	*p = x
-	return p
-}
-
-func (x RuntimeOperation) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (RuntimeOperation) Descriptor() protoreflect.EnumDescriptor {
-	return file_rayip_control_v1_control_proto_enumTypes[1].Descriptor()
-}
-
-func (RuntimeOperation) Type() protoreflect.EnumType {
-	return &file_rayip_control_v1_control_proto_enumTypes[1]
-}
-
-func (x RuntimeOperation) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use RuntimeOperation.Descriptor instead.
-func (RuntimeOperation) EnumDescriptor() ([]byte, []int) {
-	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{1}
-}
-
 type RuntimeProtocol int32
 
 const (
@@ -176,11 +112,11 @@ func (x RuntimeProtocol) String() string {
 }
 
 func (RuntimeProtocol) Descriptor() protoreflect.EnumDescriptor {
-	return file_rayip_control_v1_control_proto_enumTypes[2].Descriptor()
+	return file_rayip_control_v1_control_proto_enumTypes[1].Descriptor()
 }
 
 func (RuntimeProtocol) Type() protoreflect.EnumType {
-	return &file_rayip_control_v1_control_proto_enumTypes[2]
+	return &file_rayip_control_v1_control_proto_enumTypes[1]
 }
 
 func (x RuntimeProtocol) Number() protoreflect.EnumNumber {
@@ -189,114 +125,206 @@ func (x RuntimeProtocol) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use RuntimeProtocol.Descriptor instead.
 func (RuntimeProtocol) EnumDescriptor() ([]byte, []int) {
+	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{1}
+}
+
+type RuntimeApplyMode int32
+
+const (
+	RuntimeApplyMode_RUNTIME_APPLY_MODE_UNSPECIFIED RuntimeApplyMode = 0
+	RuntimeApplyMode_RUNTIME_APPLY_MODE_DELTA       RuntimeApplyMode = 1
+	RuntimeApplyMode_RUNTIME_APPLY_MODE_SNAPSHOT    RuntimeApplyMode = 2
+)
+
+// Enum value maps for RuntimeApplyMode.
+var (
+	RuntimeApplyMode_name = map[int32]string{
+		0: "RUNTIME_APPLY_MODE_UNSPECIFIED",
+		1: "RUNTIME_APPLY_MODE_DELTA",
+		2: "RUNTIME_APPLY_MODE_SNAPSHOT",
+	}
+	RuntimeApplyMode_value = map[string]int32{
+		"RUNTIME_APPLY_MODE_UNSPECIFIED": 0,
+		"RUNTIME_APPLY_MODE_DELTA":       1,
+		"RUNTIME_APPLY_MODE_SNAPSHOT":    2,
+	}
+)
+
+func (x RuntimeApplyMode) Enum() *RuntimeApplyMode {
+	p := new(RuntimeApplyMode)
+	*p = x
+	return p
+}
+
+func (x RuntimeApplyMode) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RuntimeApplyMode) Descriptor() protoreflect.EnumDescriptor {
+	return file_rayip_control_v1_control_proto_enumTypes[2].Descriptor()
+}
+
+func (RuntimeApplyMode) Type() protoreflect.EnumType {
+	return &file_rayip_control_v1_control_proto_enumTypes[2]
+}
+
+func (x RuntimeApplyMode) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RuntimeApplyMode.Descriptor instead.
+func (RuntimeApplyMode) EnumDescriptor() ([]byte, []int) {
 	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{2}
 }
 
-type RuntimeAccountStatus int32
+type RuntimeResourceKind int32
 
 const (
-	RuntimeAccountStatus_RUNTIME_ACCOUNT_STATUS_UNSPECIFIED RuntimeAccountStatus = 0
-	RuntimeAccountStatus_RUNTIME_ACCOUNT_STATUS_ENABLED     RuntimeAccountStatus = 1
-	RuntimeAccountStatus_RUNTIME_ACCOUNT_STATUS_DISABLED    RuntimeAccountStatus = 2
-	RuntimeAccountStatus_RUNTIME_ACCOUNT_STATUS_DELETED     RuntimeAccountStatus = 3
+	RuntimeResourceKind_RUNTIME_RESOURCE_KIND_UNSPECIFIED   RuntimeResourceKind = 0
+	RuntimeResourceKind_RUNTIME_RESOURCE_KIND_PROXY_ACCOUNT RuntimeResourceKind = 1
 )
 
-// Enum value maps for RuntimeAccountStatus.
+// Enum value maps for RuntimeResourceKind.
 var (
-	RuntimeAccountStatus_name = map[int32]string{
-		0: "RUNTIME_ACCOUNT_STATUS_UNSPECIFIED",
-		1: "RUNTIME_ACCOUNT_STATUS_ENABLED",
-		2: "RUNTIME_ACCOUNT_STATUS_DISABLED",
-		3: "RUNTIME_ACCOUNT_STATUS_DELETED",
+	RuntimeResourceKind_name = map[int32]string{
+		0: "RUNTIME_RESOURCE_KIND_UNSPECIFIED",
+		1: "RUNTIME_RESOURCE_KIND_PROXY_ACCOUNT",
 	}
-	RuntimeAccountStatus_value = map[string]int32{
-		"RUNTIME_ACCOUNT_STATUS_UNSPECIFIED": 0,
-		"RUNTIME_ACCOUNT_STATUS_ENABLED":     1,
-		"RUNTIME_ACCOUNT_STATUS_DISABLED":    2,
-		"RUNTIME_ACCOUNT_STATUS_DELETED":     3,
+	RuntimeResourceKind_value = map[string]int32{
+		"RUNTIME_RESOURCE_KIND_UNSPECIFIED":   0,
+		"RUNTIME_RESOURCE_KIND_PROXY_ACCOUNT": 1,
 	}
 )
 
-func (x RuntimeAccountStatus) Enum() *RuntimeAccountStatus {
-	p := new(RuntimeAccountStatus)
+func (x RuntimeResourceKind) Enum() *RuntimeResourceKind {
+	p := new(RuntimeResourceKind)
 	*p = x
 	return p
 }
 
-func (x RuntimeAccountStatus) String() string {
+func (x RuntimeResourceKind) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (RuntimeAccountStatus) Descriptor() protoreflect.EnumDescriptor {
+func (RuntimeResourceKind) Descriptor() protoreflect.EnumDescriptor {
 	return file_rayip_control_v1_control_proto_enumTypes[3].Descriptor()
 }
 
-func (RuntimeAccountStatus) Type() protoreflect.EnumType {
+func (RuntimeResourceKind) Type() protoreflect.EnumType {
 	return &file_rayip_control_v1_control_proto_enumTypes[3]
 }
 
-func (x RuntimeAccountStatus) Number() protoreflect.EnumNumber {
+func (x RuntimeResourceKind) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use RuntimeAccountStatus.Descriptor instead.
-func (RuntimeAccountStatus) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use RuntimeResourceKind.Descriptor instead.
+func (RuntimeResourceKind) EnumDescriptor() ([]byte, []int) {
 	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{3}
 }
 
-type RuntimeResultStatus int32
+type RuntimeApplyStatus int32
 
 const (
-	RuntimeResultStatus_RUNTIME_RESULT_STATUS_UNSPECIFIED RuntimeResultStatus = 0
-	RuntimeResultStatus_RUNTIME_RESULT_STATUS_SUCCESS     RuntimeResultStatus = 1
-	RuntimeResultStatus_RUNTIME_RESULT_STATUS_FAILED      RuntimeResultStatus = 2
-	RuntimeResultStatus_RUNTIME_RESULT_STATUS_SKIPPED     RuntimeResultStatus = 3
-	RuntimeResultStatus_RUNTIME_RESULT_STATUS_DUPLICATE   RuntimeResultStatus = 4
+	RuntimeApplyStatus_RUNTIME_APPLY_STATUS_UNSPECIFIED RuntimeApplyStatus = 0
+	RuntimeApplyStatus_RUNTIME_APPLY_STATUS_ACK         RuntimeApplyStatus = 1
+	RuntimeApplyStatus_RUNTIME_APPLY_STATUS_NACK        RuntimeApplyStatus = 2
+	RuntimeApplyStatus_RUNTIME_APPLY_STATUS_PARTIAL     RuntimeApplyStatus = 3
 )
 
-// Enum value maps for RuntimeResultStatus.
+// Enum value maps for RuntimeApplyStatus.
 var (
-	RuntimeResultStatus_name = map[int32]string{
-		0: "RUNTIME_RESULT_STATUS_UNSPECIFIED",
-		1: "RUNTIME_RESULT_STATUS_SUCCESS",
-		2: "RUNTIME_RESULT_STATUS_FAILED",
-		3: "RUNTIME_RESULT_STATUS_SKIPPED",
-		4: "RUNTIME_RESULT_STATUS_DUPLICATE",
+	RuntimeApplyStatus_name = map[int32]string{
+		0: "RUNTIME_APPLY_STATUS_UNSPECIFIED",
+		1: "RUNTIME_APPLY_STATUS_ACK",
+		2: "RUNTIME_APPLY_STATUS_NACK",
+		3: "RUNTIME_APPLY_STATUS_PARTIAL",
 	}
-	RuntimeResultStatus_value = map[string]int32{
-		"RUNTIME_RESULT_STATUS_UNSPECIFIED": 0,
-		"RUNTIME_RESULT_STATUS_SUCCESS":     1,
-		"RUNTIME_RESULT_STATUS_FAILED":      2,
-		"RUNTIME_RESULT_STATUS_SKIPPED":     3,
-		"RUNTIME_RESULT_STATUS_DUPLICATE":   4,
+	RuntimeApplyStatus_value = map[string]int32{
+		"RUNTIME_APPLY_STATUS_UNSPECIFIED": 0,
+		"RUNTIME_APPLY_STATUS_ACK":         1,
+		"RUNTIME_APPLY_STATUS_NACK":        2,
+		"RUNTIME_APPLY_STATUS_PARTIAL":     3,
 	}
 )
 
-func (x RuntimeResultStatus) Enum() *RuntimeResultStatus {
-	p := new(RuntimeResultStatus)
+func (x RuntimeApplyStatus) Enum() *RuntimeApplyStatus {
+	p := new(RuntimeApplyStatus)
 	*p = x
 	return p
 }
 
-func (x RuntimeResultStatus) String() string {
+func (x RuntimeApplyStatus) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (RuntimeResultStatus) Descriptor() protoreflect.EnumDescriptor {
+func (RuntimeApplyStatus) Descriptor() protoreflect.EnumDescriptor {
 	return file_rayip_control_v1_control_proto_enumTypes[4].Descriptor()
 }
 
-func (RuntimeResultStatus) Type() protoreflect.EnumType {
+func (RuntimeApplyStatus) Type() protoreflect.EnumType {
 	return &file_rayip_control_v1_control_proto_enumTypes[4]
 }
 
-func (x RuntimeResultStatus) Number() protoreflect.EnumNumber {
+func (x RuntimeApplyStatus) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use RuntimeResultStatus.Descriptor instead.
-func (RuntimeResultStatus) EnumDescriptor() ([]byte, []int) {
+// Deprecated: Use RuntimeApplyStatus.Descriptor instead.
+func (RuntimeApplyStatus) EnumDescriptor() ([]byte, []int) {
 	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{4}
+}
+
+type RuntimeResourceApplyStatus int32
+
+const (
+	RuntimeResourceApplyStatus_RUNTIME_RESOURCE_APPLY_STATUS_UNSPECIFIED RuntimeResourceApplyStatus = 0
+	RuntimeResourceApplyStatus_RUNTIME_RESOURCE_APPLY_STATUS_APPLIED     RuntimeResourceApplyStatus = 1
+	RuntimeResourceApplyStatus_RUNTIME_RESOURCE_APPLY_STATUS_REMOVED     RuntimeResourceApplyStatus = 2
+	RuntimeResourceApplyStatus_RUNTIME_RESOURCE_APPLY_STATUS_FAILED      RuntimeResourceApplyStatus = 3
+)
+
+// Enum value maps for RuntimeResourceApplyStatus.
+var (
+	RuntimeResourceApplyStatus_name = map[int32]string{
+		0: "RUNTIME_RESOURCE_APPLY_STATUS_UNSPECIFIED",
+		1: "RUNTIME_RESOURCE_APPLY_STATUS_APPLIED",
+		2: "RUNTIME_RESOURCE_APPLY_STATUS_REMOVED",
+		3: "RUNTIME_RESOURCE_APPLY_STATUS_FAILED",
+	}
+	RuntimeResourceApplyStatus_value = map[string]int32{
+		"RUNTIME_RESOURCE_APPLY_STATUS_UNSPECIFIED": 0,
+		"RUNTIME_RESOURCE_APPLY_STATUS_APPLIED":     1,
+		"RUNTIME_RESOURCE_APPLY_STATUS_REMOVED":     2,
+		"RUNTIME_RESOURCE_APPLY_STATUS_FAILED":      3,
+	}
+)
+
+func (x RuntimeResourceApplyStatus) Enum() *RuntimeResourceApplyStatus {
+	p := new(RuntimeResourceApplyStatus)
+	*p = x
+	return p
+}
+
+func (x RuntimeResourceApplyStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RuntimeResourceApplyStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_rayip_control_v1_control_proto_enumTypes[5].Descriptor()
+}
+
+func (RuntimeResourceApplyStatus) Type() protoreflect.EnumType {
+	return &file_rayip_control_v1_control_proto_enumTypes[5]
+}
+
+func (x RuntimeResourceApplyStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RuntimeResourceApplyStatus.Descriptor instead.
+func (RuntimeResourceApplyStatus) EnumDescriptor() ([]byte, []int) {
+	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{5}
 }
 
 type AgentEnvelope struct {
@@ -308,7 +336,7 @@ type AgentEnvelope struct {
 	//	*AgentEnvelope_Lease
 	//	*AgentEnvelope_Metrics
 	//	*AgentEnvelope_TerminalFrame
-	//	*AgentEnvelope_RuntimeResult
+	//	*AgentEnvelope_RuntimeApplyAck
 	Payload       isAgentEnvelope_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -394,10 +422,10 @@ func (x *AgentEnvelope) GetTerminalFrame() *TerminalFrame {
 	return nil
 }
 
-func (x *AgentEnvelope) GetRuntimeResult() *RuntimeResult {
+func (x *AgentEnvelope) GetRuntimeApplyAck() *RuntimeApplyAck {
 	if x != nil {
-		if x, ok := x.Payload.(*AgentEnvelope_RuntimeResult); ok {
-			return x.RuntimeResult
+		if x, ok := x.Payload.(*AgentEnvelope_RuntimeApplyAck); ok {
+			return x.RuntimeApplyAck
 		}
 	}
 	return nil
@@ -423,8 +451,8 @@ type AgentEnvelope_TerminalFrame struct {
 	TerminalFrame *TerminalFrame `protobuf:"bytes,13,opt,name=terminal_frame,json=terminalFrame,proto3,oneof"`
 }
 
-type AgentEnvelope_RuntimeResult struct {
-	RuntimeResult *RuntimeResult `protobuf:"bytes,14,opt,name=runtime_result,json=runtimeResult,proto3,oneof"`
+type AgentEnvelope_RuntimeApplyAck struct {
+	RuntimeApplyAck *RuntimeApplyAck `protobuf:"bytes,14,opt,name=runtime_apply_ack,json=runtimeApplyAck,proto3,oneof"`
 }
 
 func (*AgentEnvelope_Hello) isAgentEnvelope_Payload() {}
@@ -435,7 +463,7 @@ func (*AgentEnvelope_Metrics) isAgentEnvelope_Payload() {}
 
 func (*AgentEnvelope_TerminalFrame) isAgentEnvelope_Payload() {}
 
-func (*AgentEnvelope_RuntimeResult) isAgentEnvelope_Payload() {}
+func (*AgentEnvelope_RuntimeApplyAck) isAgentEnvelope_Payload() {}
 
 type ControlEnvelope struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
@@ -445,7 +473,7 @@ type ControlEnvelope struct {
 	//	*ControlEnvelope_Welcome
 	//	*ControlEnvelope_Ack
 	//	*ControlEnvelope_Ping
-	//	*ControlEnvelope_RuntimeCommand
+	//	*ControlEnvelope_RuntimeApply
 	Payload       isControlEnvelope_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -522,10 +550,10 @@ func (x *ControlEnvelope) GetPing() *ControlPing {
 	return nil
 }
 
-func (x *ControlEnvelope) GetRuntimeCommand() *RuntimeCommand {
+func (x *ControlEnvelope) GetRuntimeApply() *RuntimeApply {
 	if x != nil {
-		if x, ok := x.Payload.(*ControlEnvelope_RuntimeCommand); ok {
-			return x.RuntimeCommand
+		if x, ok := x.Payload.(*ControlEnvelope_RuntimeApply); ok {
+			return x.RuntimeApply
 		}
 	}
 	return nil
@@ -547,8 +575,8 @@ type ControlEnvelope_Ping struct {
 	Ping *ControlPing `protobuf:"bytes,12,opt,name=ping,proto3,oneof"`
 }
 
-type ControlEnvelope_RuntimeCommand struct {
-	RuntimeCommand *RuntimeCommand `protobuf:"bytes,13,opt,name=runtime_command,json=runtimeCommand,proto3,oneof"`
+type ControlEnvelope_RuntimeApply struct {
+	RuntimeApply *RuntimeApply `protobuf:"bytes,13,opt,name=runtime_apply,json=runtimeApply,proto3,oneof"`
 }
 
 func (*ControlEnvelope_Welcome) isControlEnvelope_Payload() {}
@@ -557,7 +585,7 @@ func (*ControlEnvelope_Ack) isControlEnvelope_Payload() {}
 
 func (*ControlEnvelope_Ping) isControlEnvelope_Payload() {}
 
-func (*ControlEnvelope_RuntimeCommand) isControlEnvelope_Payload() {}
+func (*ControlEnvelope_RuntimeApply) isControlEnvelope_Payload() {}
 
 type AgentHello struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
@@ -1100,18 +1128,18 @@ func (x *ControlPing) GetUnixMilli() int64 {
 }
 
 type RuntimeObservation struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	AgentVersion       string                 `protobuf:"bytes,1,opt,name=agent_version,json=agentVersion,proto3" json:"agent_version,omitempty"`
-	XrayVersion        string                 `protobuf:"bytes,2,opt,name=xray_version,json=xrayVersion,proto3" json:"xray_version,omitempty"`
-	BundleVersion      string                 `protobuf:"bytes,3,opt,name=bundle_version,json=bundleVersion,proto3" json:"bundle_version,omitempty"`
-	ExtensionAbi       string                 `protobuf:"bytes,4,opt,name=extension_abi,json=extensionAbi,proto3" json:"extension_abi,omitempty"`
-	Capabilities       []string               `protobuf:"bytes,5,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
-	BinarySha256       string                 `protobuf:"bytes,6,opt,name=binary_sha256,json=binarySha256,proto3" json:"binary_sha256,omitempty"`
-	ManifestSha256     string                 `protobuf:"bytes,7,opt,name=manifest_sha256,json=manifestSha256,proto3" json:"manifest_sha256,omitempty"`
-	RuntimeDigest      string                 `protobuf:"bytes,8,opt,name=runtime_digest,json=runtimeDigest,proto3" json:"runtime_digest,omitempty"`
-	LastGoodGeneration uint64                 `protobuf:"varint,9,opt,name=last_good_generation,json=lastGoodGeneration,proto3" json:"last_good_generation,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	AgentVersion     string                 `protobuf:"bytes,1,opt,name=agent_version,json=agentVersion,proto3" json:"agent_version,omitempty"`
+	XrayVersion      string                 `protobuf:"bytes,2,opt,name=xray_version,json=xrayVersion,proto3" json:"xray_version,omitempty"`
+	BundleVersion    string                 `protobuf:"bytes,3,opt,name=bundle_version,json=bundleVersion,proto3" json:"bundle_version,omitempty"`
+	ExtensionAbi     string                 `protobuf:"bytes,4,opt,name=extension_abi,json=extensionAbi,proto3" json:"extension_abi,omitempty"`
+	Capabilities     []string               `protobuf:"bytes,5,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
+	BinarySha256     string                 `protobuf:"bytes,6,opt,name=binary_sha256,json=binarySha256,proto3" json:"binary_sha256,omitempty"`
+	ManifestSha256   string                 `protobuf:"bytes,7,opt,name=manifest_sha256,json=manifestSha256,proto3" json:"manifest_sha256,omitempty"`
+	RuntimeDigest    string                 `protobuf:"bytes,8,opt,name=runtime_digest,json=runtimeDigest,proto3" json:"runtime_digest,omitempty"`
+	LastGoodRevision uint64                 `protobuf:"varint,9,opt,name=last_good_revision,json=lastGoodRevision,proto3" json:"last_good_revision,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *RuntimeObservation) Reset() {
@@ -1200,9 +1228,9 @@ func (x *RuntimeObservation) GetRuntimeDigest() string {
 	return ""
 }
 
-func (x *RuntimeObservation) GetLastGoodGeneration() uint64 {
+func (x *RuntimeObservation) GetLastGoodRevision() uint64 {
 	if x != nil {
-		return x.LastGoodGeneration
+		return x.LastGoodRevision
 	}
 	return 0
 }
@@ -1283,422 +1311,6 @@ func (x *RuntimeVerdict) GetRequiredExtensionAbi() string {
 	return ""
 }
 
-type RuntimeCommand struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	CommandId         string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
-	NodeId            string                 `protobuf:"bytes,2,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
-	Operation         RuntimeOperation       `protobuf:"varint,3,opt,name=operation,proto3,enum=rayip.control.v1.RuntimeOperation" json:"operation,omitempty"`
-	Account           *RuntimeAccount        `protobuf:"bytes,4,opt,name=account,proto3" json:"account,omitempty"`
-	DesiredGeneration uint64                 `protobuf:"varint,5,opt,name=desired_generation,json=desiredGeneration,proto3" json:"desired_generation,omitempty"`
-	DeadlineUnixMs    int64                  `protobuf:"varint,6,opt,name=deadline_unix_ms,json=deadlineUnixMs,proto3" json:"deadline_unix_ms,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *RuntimeCommand) Reset() {
-	*x = RuntimeCommand{}
-	mi := &file_rayip_control_v1_control_proto_msgTypes[11]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RuntimeCommand) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RuntimeCommand) ProtoMessage() {}
-
-func (x *RuntimeCommand) ProtoReflect() protoreflect.Message {
-	mi := &file_rayip_control_v1_control_proto_msgTypes[11]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RuntimeCommand.ProtoReflect.Descriptor instead.
-func (*RuntimeCommand) Descriptor() ([]byte, []int) {
-	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *RuntimeCommand) GetCommandId() string {
-	if x != nil {
-		return x.CommandId
-	}
-	return ""
-}
-
-func (x *RuntimeCommand) GetNodeId() string {
-	if x != nil {
-		return x.NodeId
-	}
-	return ""
-}
-
-func (x *RuntimeCommand) GetOperation() RuntimeOperation {
-	if x != nil {
-		return x.Operation
-	}
-	return RuntimeOperation_RUNTIME_OPERATION_UNSPECIFIED
-}
-
-func (x *RuntimeCommand) GetAccount() *RuntimeAccount {
-	if x != nil {
-		return x.Account
-	}
-	return nil
-}
-
-func (x *RuntimeCommand) GetDesiredGeneration() uint64 {
-	if x != nil {
-		return x.DesiredGeneration
-	}
-	return 0
-}
-
-func (x *RuntimeCommand) GetDeadlineUnixMs() int64 {
-	if x != nil {
-		return x.DeadlineUnixMs
-	}
-	return 0
-}
-
-type RuntimeAccount struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	ProxyAccountId    string                 `protobuf:"bytes,1,opt,name=proxy_account_id,json=proxyAccountId,proto3" json:"proxy_account_id,omitempty"`
-	RuntimeEmail      string                 `protobuf:"bytes,2,opt,name=runtime_email,json=runtimeEmail,proto3" json:"runtime_email,omitempty"`
-	Protocol          RuntimeProtocol        `protobuf:"varint,3,opt,name=protocol,proto3,enum=rayip.control.v1.RuntimeProtocol" json:"protocol,omitempty"`
-	ListenIp          string                 `protobuf:"bytes,4,opt,name=listen_ip,json=listenIp,proto3" json:"listen_ip,omitempty"`
-	Port              uint32                 `protobuf:"varint,5,opt,name=port,proto3" json:"port,omitempty"`
-	Username          string                 `protobuf:"bytes,6,opt,name=username,proto3" json:"username,omitempty"`
-	Password          string                 `protobuf:"bytes,7,opt,name=password,proto3" json:"password,omitempty"`
-	ExpiresAtUnixMs   int64                  `protobuf:"varint,8,opt,name=expires_at_unix_ms,json=expiresAtUnixMs,proto3" json:"expires_at_unix_ms,omitempty"`
-	EgressLimitBps    uint64                 `protobuf:"varint,9,opt,name=egress_limit_bps,json=egressLimitBps,proto3" json:"egress_limit_bps,omitempty"`
-	IngressLimitBps   uint64                 `protobuf:"varint,10,opt,name=ingress_limit_bps,json=ingressLimitBps,proto3" json:"ingress_limit_bps,omitempty"`
-	MaxConnections    uint32                 `protobuf:"varint,11,opt,name=max_connections,json=maxConnections,proto3" json:"max_connections,omitempty"`
-	Status            RuntimeAccountStatus   `protobuf:"varint,12,opt,name=status,proto3,enum=rayip.control.v1.RuntimeAccountStatus" json:"status,omitempty"`
-	PolicyVersion     uint64                 `protobuf:"varint,13,opt,name=policy_version,json=policyVersion,proto3" json:"policy_version,omitempty"`
-	DesiredGeneration uint64                 `protobuf:"varint,14,opt,name=desired_generation,json=desiredGeneration,proto3" json:"desired_generation,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *RuntimeAccount) Reset() {
-	*x = RuntimeAccount{}
-	mi := &file_rayip_control_v1_control_proto_msgTypes[12]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RuntimeAccount) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RuntimeAccount) ProtoMessage() {}
-
-func (x *RuntimeAccount) ProtoReflect() protoreflect.Message {
-	mi := &file_rayip_control_v1_control_proto_msgTypes[12]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RuntimeAccount.ProtoReflect.Descriptor instead.
-func (*RuntimeAccount) Descriptor() ([]byte, []int) {
-	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{12}
-}
-
-func (x *RuntimeAccount) GetProxyAccountId() string {
-	if x != nil {
-		return x.ProxyAccountId
-	}
-	return ""
-}
-
-func (x *RuntimeAccount) GetRuntimeEmail() string {
-	if x != nil {
-		return x.RuntimeEmail
-	}
-	return ""
-}
-
-func (x *RuntimeAccount) GetProtocol() RuntimeProtocol {
-	if x != nil {
-		return x.Protocol
-	}
-	return RuntimeProtocol_RUNTIME_PROTOCOL_UNSPECIFIED
-}
-
-func (x *RuntimeAccount) GetListenIp() string {
-	if x != nil {
-		return x.ListenIp
-	}
-	return ""
-}
-
-func (x *RuntimeAccount) GetPort() uint32 {
-	if x != nil {
-		return x.Port
-	}
-	return 0
-}
-
-func (x *RuntimeAccount) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
-}
-
-func (x *RuntimeAccount) GetPassword() string {
-	if x != nil {
-		return x.Password
-	}
-	return ""
-}
-
-func (x *RuntimeAccount) GetExpiresAtUnixMs() int64 {
-	if x != nil {
-		return x.ExpiresAtUnixMs
-	}
-	return 0
-}
-
-func (x *RuntimeAccount) GetEgressLimitBps() uint64 {
-	if x != nil {
-		return x.EgressLimitBps
-	}
-	return 0
-}
-
-func (x *RuntimeAccount) GetIngressLimitBps() uint64 {
-	if x != nil {
-		return x.IngressLimitBps
-	}
-	return 0
-}
-
-func (x *RuntimeAccount) GetMaxConnections() uint32 {
-	if x != nil {
-		return x.MaxConnections
-	}
-	return 0
-}
-
-func (x *RuntimeAccount) GetStatus() RuntimeAccountStatus {
-	if x != nil {
-		return x.Status
-	}
-	return RuntimeAccountStatus_RUNTIME_ACCOUNT_STATUS_UNSPECIFIED
-}
-
-func (x *RuntimeAccount) GetPolicyVersion() uint64 {
-	if x != nil {
-		return x.PolicyVersion
-	}
-	return 0
-}
-
-func (x *RuntimeAccount) GetDesiredGeneration() uint64 {
-	if x != nil {
-		return x.DesiredGeneration
-	}
-	return 0
-}
-
-type RuntimeResult struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	CommandId         string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
-	Status            RuntimeResultStatus    `protobuf:"varint,2,opt,name=status,proto3,enum=rayip.control.v1.RuntimeResultStatus" json:"status,omitempty"`
-	ErrorCode         string                 `protobuf:"bytes,3,opt,name=error_code,json=errorCode,proto3" json:"error_code,omitempty"`
-	ErrorMessage      string                 `protobuf:"bytes,4,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
-	AppliedGeneration uint64                 `protobuf:"varint,5,opt,name=applied_generation,json=appliedGeneration,proto3" json:"applied_generation,omitempty"`
-	Usage             *RuntimeUsage          `protobuf:"bytes,6,opt,name=usage,proto3" json:"usage,omitempty"`
-	Digest            *RuntimeDigest         `protobuf:"bytes,7,opt,name=digest,proto3" json:"digest,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *RuntimeResult) Reset() {
-	*x = RuntimeResult{}
-	mi := &file_rayip_control_v1_control_proto_msgTypes[13]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RuntimeResult) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RuntimeResult) ProtoMessage() {}
-
-func (x *RuntimeResult) ProtoReflect() protoreflect.Message {
-	mi := &file_rayip_control_v1_control_proto_msgTypes[13]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RuntimeResult.ProtoReflect.Descriptor instead.
-func (*RuntimeResult) Descriptor() ([]byte, []int) {
-	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{13}
-}
-
-func (x *RuntimeResult) GetCommandId() string {
-	if x != nil {
-		return x.CommandId
-	}
-	return ""
-}
-
-func (x *RuntimeResult) GetStatus() RuntimeResultStatus {
-	if x != nil {
-		return x.Status
-	}
-	return RuntimeResultStatus_RUNTIME_RESULT_STATUS_UNSPECIFIED
-}
-
-func (x *RuntimeResult) GetErrorCode() string {
-	if x != nil {
-		return x.ErrorCode
-	}
-	return ""
-}
-
-func (x *RuntimeResult) GetErrorMessage() string {
-	if x != nil {
-		return x.ErrorMessage
-	}
-	return ""
-}
-
-func (x *RuntimeResult) GetAppliedGeneration() uint64 {
-	if x != nil {
-		return x.AppliedGeneration
-	}
-	return 0
-}
-
-func (x *RuntimeResult) GetUsage() *RuntimeUsage {
-	if x != nil {
-		return x.Usage
-	}
-	return nil
-}
-
-func (x *RuntimeResult) GetDigest() *RuntimeDigest {
-	if x != nil {
-		return x.Digest
-	}
-	return nil
-}
-
-type RuntimeUsage struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	ProxyAccountId    string                 `protobuf:"bytes,1,opt,name=proxy_account_id,json=proxyAccountId,proto3" json:"proxy_account_id,omitempty"`
-	RuntimeEmail      string                 `protobuf:"bytes,2,opt,name=runtime_email,json=runtimeEmail,proto3" json:"runtime_email,omitempty"`
-	RxBytes           uint64                 `protobuf:"varint,3,opt,name=rx_bytes,json=rxBytes,proto3" json:"rx_bytes,omitempty"`
-	TxBytes           uint64                 `protobuf:"varint,4,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
-	ActiveConnections uint64                 `protobuf:"varint,5,opt,name=active_connections,json=activeConnections,proto3" json:"active_connections,omitempty"`
-	RxBytesPerSecond  uint64                 `protobuf:"varint,6,opt,name=rx_bytes_per_second,json=rxBytesPerSecond,proto3" json:"rx_bytes_per_second,omitempty"`
-	TxBytesPerSecond  uint64                 `protobuf:"varint,7,opt,name=tx_bytes_per_second,json=txBytesPerSecond,proto3" json:"tx_bytes_per_second,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
-}
-
-func (x *RuntimeUsage) Reset() {
-	*x = RuntimeUsage{}
-	mi := &file_rayip_control_v1_control_proto_msgTypes[14]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *RuntimeUsage) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RuntimeUsage) ProtoMessage() {}
-
-func (x *RuntimeUsage) ProtoReflect() protoreflect.Message {
-	mi := &file_rayip_control_v1_control_proto_msgTypes[14]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RuntimeUsage.ProtoReflect.Descriptor instead.
-func (*RuntimeUsage) Descriptor() ([]byte, []int) {
-	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{14}
-}
-
-func (x *RuntimeUsage) GetProxyAccountId() string {
-	if x != nil {
-		return x.ProxyAccountId
-	}
-	return ""
-}
-
-func (x *RuntimeUsage) GetRuntimeEmail() string {
-	if x != nil {
-		return x.RuntimeEmail
-	}
-	return ""
-}
-
-func (x *RuntimeUsage) GetRxBytes() uint64 {
-	if x != nil {
-		return x.RxBytes
-	}
-	return 0
-}
-
-func (x *RuntimeUsage) GetTxBytes() uint64 {
-	if x != nil {
-		return x.TxBytes
-	}
-	return 0
-}
-
-func (x *RuntimeUsage) GetActiveConnections() uint64 {
-	if x != nil {
-		return x.ActiveConnections
-	}
-	return 0
-}
-
-func (x *RuntimeUsage) GetRxBytesPerSecond() uint64 {
-	if x != nil {
-		return x.RxBytesPerSecond
-	}
-	return 0
-}
-
-func (x *RuntimeUsage) GetTxBytesPerSecond() uint64 {
-	if x != nil {
-		return x.TxBytesPerSecond
-	}
-	return 0
-}
-
 type RuntimeDigest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountCount  uint64                 `protobuf:"varint,1,opt,name=account_count,json=accountCount,proto3" json:"account_count,omitempty"`
@@ -1712,7 +1324,7 @@ type RuntimeDigest struct {
 
 func (x *RuntimeDigest) Reset() {
 	*x = RuntimeDigest{}
-	mi := &file_rayip_control_v1_control_proto_msgTypes[15]
+	mi := &file_rayip_control_v1_control_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1724,7 +1336,7 @@ func (x *RuntimeDigest) String() string {
 func (*RuntimeDigest) ProtoMessage() {}
 
 func (x *RuntimeDigest) ProtoReflect() protoreflect.Message {
-	mi := &file_rayip_control_v1_control_proto_msgTypes[15]
+	mi := &file_rayip_control_v1_control_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1737,7 +1349,7 @@ func (x *RuntimeDigest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuntimeDigest.ProtoReflect.Descriptor instead.
 func (*RuntimeDigest) Descriptor() ([]byte, []int) {
-	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{15}
+	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *RuntimeDigest) GetAccountCount() uint64 {
@@ -1775,11 +1387,459 @@ func (x *RuntimeDigest) GetHash() string {
 	return ""
 }
 
+type RuntimeApply struct {
+	state                protoimpl.MessageState `protogen:"open.v1"`
+	ApplyId              string                 `protobuf:"bytes,1,opt,name=apply_id,json=applyId,proto3" json:"apply_id,omitempty"`
+	NodeId               string                 `protobuf:"bytes,2,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	Mode                 RuntimeApplyMode       `protobuf:"varint,3,opt,name=mode,proto3,enum=rayip.control.v1.RuntimeApplyMode" json:"mode,omitempty"`
+	VersionInfo          string                 `protobuf:"bytes,4,opt,name=version_info,json=versionInfo,proto3" json:"version_info,omitempty"`
+	Nonce                string                 `protobuf:"bytes,5,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	BaseRevision         uint64                 `protobuf:"varint,6,opt,name=base_revision,json=baseRevision,proto3" json:"base_revision,omitempty"`
+	TargetRevision       uint64                 `protobuf:"varint,7,opt,name=target_revision,json=targetRevision,proto3" json:"target_revision,omitempty"`
+	DeadlineUnixMs       int64                  `protobuf:"varint,8,opt,name=deadline_unix_ms,json=deadlineUnixMs,proto3" json:"deadline_unix_ms,omitempty"`
+	Resources            []*RuntimeResource     `protobuf:"bytes,9,rep,name=resources,proto3" json:"resources,omitempty"`
+	RemovedResourceNames []string               `protobuf:"bytes,10,rep,name=removed_resource_names,json=removedResourceNames,proto3" json:"removed_resource_names,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *RuntimeApply) Reset() {
+	*x = RuntimeApply{}
+	mi := &file_rayip_control_v1_control_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RuntimeApply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RuntimeApply) ProtoMessage() {}
+
+func (x *RuntimeApply) ProtoReflect() protoreflect.Message {
+	mi := &file_rayip_control_v1_control_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RuntimeApply.ProtoReflect.Descriptor instead.
+func (*RuntimeApply) Descriptor() ([]byte, []int) {
+	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *RuntimeApply) GetApplyId() string {
+	if x != nil {
+		return x.ApplyId
+	}
+	return ""
+}
+
+func (x *RuntimeApply) GetNodeId() string {
+	if x != nil {
+		return x.NodeId
+	}
+	return ""
+}
+
+func (x *RuntimeApply) GetMode() RuntimeApplyMode {
+	if x != nil {
+		return x.Mode
+	}
+	return RuntimeApplyMode_RUNTIME_APPLY_MODE_UNSPECIFIED
+}
+
+func (x *RuntimeApply) GetVersionInfo() string {
+	if x != nil {
+		return x.VersionInfo
+	}
+	return ""
+}
+
+func (x *RuntimeApply) GetNonce() string {
+	if x != nil {
+		return x.Nonce
+	}
+	return ""
+}
+
+func (x *RuntimeApply) GetBaseRevision() uint64 {
+	if x != nil {
+		return x.BaseRevision
+	}
+	return 0
+}
+
+func (x *RuntimeApply) GetTargetRevision() uint64 {
+	if x != nil {
+		return x.TargetRevision
+	}
+	return 0
+}
+
+func (x *RuntimeApply) GetDeadlineUnixMs() int64 {
+	if x != nil {
+		return x.DeadlineUnixMs
+	}
+	return 0
+}
+
+func (x *RuntimeApply) GetResources() []*RuntimeResource {
+	if x != nil {
+		return x.Resources
+	}
+	return nil
+}
+
+func (x *RuntimeApply) GetRemovedResourceNames() []string {
+	if x != nil {
+		return x.RemovedResourceNames
+	}
+	return nil
+}
+
+type RuntimeResource struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Name              string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Kind              RuntimeResourceKind    `protobuf:"varint,2,opt,name=kind,proto3,enum=rayip.control.v1.RuntimeResourceKind" json:"kind,omitempty"`
+	ResourceVersion   uint64                 `protobuf:"varint,3,opt,name=resource_version,json=resourceVersion,proto3" json:"resource_version,omitempty"`
+	RuntimeEmail      string                 `protobuf:"bytes,4,opt,name=runtime_email,json=runtimeEmail,proto3" json:"runtime_email,omitempty"`
+	Protocol          RuntimeProtocol        `protobuf:"varint,5,opt,name=protocol,proto3,enum=rayip.control.v1.RuntimeProtocol" json:"protocol,omitempty"`
+	ListenIp          string                 `protobuf:"bytes,6,opt,name=listen_ip,json=listenIp,proto3" json:"listen_ip,omitempty"`
+	Port              uint32                 `protobuf:"varint,7,opt,name=port,proto3" json:"port,omitempty"`
+	Username          string                 `protobuf:"bytes,8,opt,name=username,proto3" json:"username,omitempty"`
+	Password          string                 `protobuf:"bytes,9,opt,name=password,proto3" json:"password,omitempty"`
+	EgressLimitBps    uint64                 `protobuf:"varint,10,opt,name=egress_limit_bps,json=egressLimitBps,proto3" json:"egress_limit_bps,omitempty"`
+	IngressLimitBps   uint64                 `protobuf:"varint,11,opt,name=ingress_limit_bps,json=ingressLimitBps,proto3" json:"ingress_limit_bps,omitempty"`
+	MaxConnections    uint32                 `protobuf:"varint,12,opt,name=max_connections,json=maxConnections,proto3" json:"max_connections,omitempty"`
+	Priority          uint32                 `protobuf:"varint,13,opt,name=priority,proto3" json:"priority,omitempty"`
+	AbuseReportPolicy string                 `protobuf:"bytes,14,opt,name=abuse_report_policy,json=abuseReportPolicy,proto3" json:"abuse_report_policy,omitempty"`
+	ExpiresAtUnixMs   int64                  `protobuf:"varint,15,opt,name=expires_at_unix_ms,json=expiresAtUnixMs,proto3" json:"expires_at_unix_ms,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *RuntimeResource) Reset() {
+	*x = RuntimeResource{}
+	mi := &file_rayip_control_v1_control_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RuntimeResource) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RuntimeResource) ProtoMessage() {}
+
+func (x *RuntimeResource) ProtoReflect() protoreflect.Message {
+	mi := &file_rayip_control_v1_control_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RuntimeResource.ProtoReflect.Descriptor instead.
+func (*RuntimeResource) Descriptor() ([]byte, []int) {
+	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *RuntimeResource) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *RuntimeResource) GetKind() RuntimeResourceKind {
+	if x != nil {
+		return x.Kind
+	}
+	return RuntimeResourceKind_RUNTIME_RESOURCE_KIND_UNSPECIFIED
+}
+
+func (x *RuntimeResource) GetResourceVersion() uint64 {
+	if x != nil {
+		return x.ResourceVersion
+	}
+	return 0
+}
+
+func (x *RuntimeResource) GetRuntimeEmail() string {
+	if x != nil {
+		return x.RuntimeEmail
+	}
+	return ""
+}
+
+func (x *RuntimeResource) GetProtocol() RuntimeProtocol {
+	if x != nil {
+		return x.Protocol
+	}
+	return RuntimeProtocol_RUNTIME_PROTOCOL_UNSPECIFIED
+}
+
+func (x *RuntimeResource) GetListenIp() string {
+	if x != nil {
+		return x.ListenIp
+	}
+	return ""
+}
+
+func (x *RuntimeResource) GetPort() uint32 {
+	if x != nil {
+		return x.Port
+	}
+	return 0
+}
+
+func (x *RuntimeResource) GetUsername() string {
+	if x != nil {
+		return x.Username
+	}
+	return ""
+}
+
+func (x *RuntimeResource) GetPassword() string {
+	if x != nil {
+		return x.Password
+	}
+	return ""
+}
+
+func (x *RuntimeResource) GetEgressLimitBps() uint64 {
+	if x != nil {
+		return x.EgressLimitBps
+	}
+	return 0
+}
+
+func (x *RuntimeResource) GetIngressLimitBps() uint64 {
+	if x != nil {
+		return x.IngressLimitBps
+	}
+	return 0
+}
+
+func (x *RuntimeResource) GetMaxConnections() uint32 {
+	if x != nil {
+		return x.MaxConnections
+	}
+	return 0
+}
+
+func (x *RuntimeResource) GetPriority() uint32 {
+	if x != nil {
+		return x.Priority
+	}
+	return 0
+}
+
+func (x *RuntimeResource) GetAbuseReportPolicy() string {
+	if x != nil {
+		return x.AbuseReportPolicy
+	}
+	return ""
+}
+
+func (x *RuntimeResource) GetExpiresAtUnixMs() int64 {
+	if x != nil {
+		return x.ExpiresAtUnixMs
+	}
+	return 0
+}
+
+type RuntimeApplyAck struct {
+	state            protoimpl.MessageState   `protogen:"open.v1"`
+	ApplyId          string                   `protobuf:"bytes,1,opt,name=apply_id,json=applyId,proto3" json:"apply_id,omitempty"`
+	NodeId           string                   `protobuf:"bytes,2,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	VersionInfo      string                   `protobuf:"bytes,3,opt,name=version_info,json=versionInfo,proto3" json:"version_info,omitempty"`
+	Nonce            string                   `protobuf:"bytes,4,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	Status           RuntimeApplyStatus       `protobuf:"varint,5,opt,name=status,proto3,enum=rayip.control.v1.RuntimeApplyStatus" json:"status,omitempty"`
+	AppliedRevision  uint64                   `protobuf:"varint,6,opt,name=applied_revision,json=appliedRevision,proto3" json:"applied_revision,omitempty"`
+	LastGoodRevision uint64                   `protobuf:"varint,7,opt,name=last_good_revision,json=lastGoodRevision,proto3" json:"last_good_revision,omitempty"`
+	ResourceResults  []*RuntimeResourceResult `protobuf:"bytes,8,rep,name=resource_results,json=resourceResults,proto3" json:"resource_results,omitempty"`
+	Digest           *RuntimeDigest           `protobuf:"bytes,9,opt,name=digest,proto3" json:"digest,omitempty"`
+	ErrorDetail      string                   `protobuf:"bytes,10,opt,name=error_detail,json=errorDetail,proto3" json:"error_detail,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *RuntimeApplyAck) Reset() {
+	*x = RuntimeApplyAck{}
+	mi := &file_rayip_control_v1_control_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RuntimeApplyAck) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RuntimeApplyAck) ProtoMessage() {}
+
+func (x *RuntimeApplyAck) ProtoReflect() protoreflect.Message {
+	mi := &file_rayip_control_v1_control_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RuntimeApplyAck.ProtoReflect.Descriptor instead.
+func (*RuntimeApplyAck) Descriptor() ([]byte, []int) {
+	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *RuntimeApplyAck) GetApplyId() string {
+	if x != nil {
+		return x.ApplyId
+	}
+	return ""
+}
+
+func (x *RuntimeApplyAck) GetNodeId() string {
+	if x != nil {
+		return x.NodeId
+	}
+	return ""
+}
+
+func (x *RuntimeApplyAck) GetVersionInfo() string {
+	if x != nil {
+		return x.VersionInfo
+	}
+	return ""
+}
+
+func (x *RuntimeApplyAck) GetNonce() string {
+	if x != nil {
+		return x.Nonce
+	}
+	return ""
+}
+
+func (x *RuntimeApplyAck) GetStatus() RuntimeApplyStatus {
+	if x != nil {
+		return x.Status
+	}
+	return RuntimeApplyStatus_RUNTIME_APPLY_STATUS_UNSPECIFIED
+}
+
+func (x *RuntimeApplyAck) GetAppliedRevision() uint64 {
+	if x != nil {
+		return x.AppliedRevision
+	}
+	return 0
+}
+
+func (x *RuntimeApplyAck) GetLastGoodRevision() uint64 {
+	if x != nil {
+		return x.LastGoodRevision
+	}
+	return 0
+}
+
+func (x *RuntimeApplyAck) GetResourceResults() []*RuntimeResourceResult {
+	if x != nil {
+		return x.ResourceResults
+	}
+	return nil
+}
+
+func (x *RuntimeApplyAck) GetDigest() *RuntimeDigest {
+	if x != nil {
+		return x.Digest
+	}
+	return nil
+}
+
+func (x *RuntimeApplyAck) GetErrorDetail() string {
+	if x != nil {
+		return x.ErrorDetail
+	}
+	return ""
+}
+
+type RuntimeResourceResult struct {
+	state         protoimpl.MessageState     `protogen:"open.v1"`
+	Name          string                     `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Status        RuntimeResourceApplyStatus `protobuf:"varint,2,opt,name=status,proto3,enum=rayip.control.v1.RuntimeResourceApplyStatus" json:"status,omitempty"`
+	ErrorDetail   string                     `protobuf:"bytes,3,opt,name=error_detail,json=errorDetail,proto3" json:"error_detail,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RuntimeResourceResult) Reset() {
+	*x = RuntimeResourceResult{}
+	mi := &file_rayip_control_v1_control_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RuntimeResourceResult) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RuntimeResourceResult) ProtoMessage() {}
+
+func (x *RuntimeResourceResult) ProtoReflect() protoreflect.Message {
+	mi := &file_rayip_control_v1_control_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RuntimeResourceResult.ProtoReflect.Descriptor instead.
+func (*RuntimeResourceResult) Descriptor() ([]byte, []int) {
+	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *RuntimeResourceResult) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *RuntimeResourceResult) GetStatus() RuntimeResourceApplyStatus {
+	if x != nil {
+		return x.Status
+	}
+	return RuntimeResourceApplyStatus_RUNTIME_RESOURCE_APPLY_STATUS_UNSPECIFIED
+}
+
+func (x *RuntimeResourceResult) GetErrorDetail() string {
+	if x != nil {
+		return x.ErrorDetail
+	}
+	return ""
+}
+
 var File_rayip_control_v1_control_proto protoreflect.FileDescriptor
 
 const file_rayip_control_v1_control_proto_rawDesc = "" +
 	"\n" +
-	"\x1erayip/control/v1/control.proto\x12\x10rayip.control.v1\"\xf9\x02\n" +
+	"\x1erayip/control/v1/control.proto\x12\x10rayip.control.v1\"\x80\x03\n" +
 	"\rAgentEnvelope\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x124\n" +
@@ -1787,17 +1847,17 @@ const file_rayip_control_v1_control_proto_rawDesc = "" +
 	" \x01(\v2\x1c.rayip.control.v1.AgentHelloH\x00R\x05hello\x126\n" +
 	"\x05lease\x18\v \x01(\v2\x1e.rayip.control.v1.LeaseRenewalH\x00R\x05lease\x12<\n" +
 	"\ametrics\x18\f \x01(\v2 .rayip.control.v1.MetricSnapshotH\x00R\ametrics\x12H\n" +
-	"\x0eterminal_frame\x18\r \x01(\v2\x1f.rayip.control.v1.TerminalFrameH\x00R\rterminalFrame\x12H\n" +
-	"\x0eruntime_result\x18\x0e \x01(\v2\x1f.rayip.control.v1.RuntimeResultH\x00R\rruntimeResultB\t\n" +
-	"\apayload\"\xab\x02\n" +
+	"\x0eterminal_frame\x18\r \x01(\v2\x1f.rayip.control.v1.TerminalFrameH\x00R\rterminalFrame\x12O\n" +
+	"\x11runtime_apply_ack\x18\x0e \x01(\v2!.rayip.control.v1.RuntimeApplyAckH\x00R\x0fruntimeApplyAckB\t\n" +
+	"\apayload\"\xa5\x02\n" +
 	"\x0fControlEnvelope\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x12:\n" +
 	"\awelcome\x18\n" +
 	" \x01(\v2\x1e.rayip.control.v1.AgentWelcomeH\x00R\awelcome\x120\n" +
 	"\x03ack\x18\v \x01(\v2\x1c.rayip.control.v1.ControlAckH\x00R\x03ack\x123\n" +
-	"\x04ping\x18\f \x01(\v2\x1d.rayip.control.v1.ControlPingH\x00R\x04ping\x12K\n" +
-	"\x0fruntime_command\x18\r \x01(\v2 .rayip.control.v1.RuntimeCommandH\x00R\x0eruntimeCommandB\t\n" +
+	"\x04ping\x18\f \x01(\v2\x1d.rayip.control.v1.ControlPingH\x00R\x04ping\x12E\n" +
+	"\rruntime_apply\x18\r \x01(\v2\x1e.rayip.control.v1.RuntimeApplyH\x00R\fruntimeApplyB\t\n" +
 	"\apayload\"\xef\x02\n" +
 	"\n" +
 	"AgentHello\x12\x1b\n" +
@@ -1850,7 +1910,7 @@ const file_rayip_control_v1_control_proto_rawDesc = "" +
 	"\amessage\x18\x02 \x01(\tR\amessage\",\n" +
 	"\vControlPing\x12\x1d\n" +
 	"\n" +
-	"unix_milli\x18\x01 \x01(\x03R\tunixMilli\"\xf3\x02\n" +
+	"unix_milli\x18\x01 \x01(\x03R\tunixMilli\"\xef\x02\n" +
 	"\x12RuntimeObservation\x12#\n" +
 	"\ragent_version\x18\x01 \x01(\tR\fagentVersion\x12!\n" +
 	"\fxray_version\x18\x02 \x01(\tR\vxrayVersion\x12%\n" +
@@ -1859,94 +1919,94 @@ const file_rayip_control_v1_control_proto_rawDesc = "" +
 	"\fcapabilities\x18\x05 \x03(\tR\fcapabilities\x12#\n" +
 	"\rbinary_sha256\x18\x06 \x01(\tR\fbinarySha256\x12'\n" +
 	"\x0fmanifest_sha256\x18\a \x01(\tR\x0emanifestSha256\x12%\n" +
-	"\x0eruntime_digest\x18\b \x01(\tR\rruntimeDigest\x120\n" +
-	"\x14last_good_generation\x18\t \x01(\x04R\x12lastGoodGeneration\"\xf6\x01\n" +
+	"\x0eruntime_digest\x18\b \x01(\tR\rruntimeDigest\x12,\n" +
+	"\x12last_good_revision\x18\t \x01(\x04R\x10lastGoodRevision\"\xf6\x01\n" +
 	"\x0eRuntimeVerdict\x12>\n" +
 	"\x06status\x18\x01 \x01(\x0e2&.rayip.control.v1.RuntimeVerdictStatusR\x06status\x12\x1f\n" +
 	"\vreason_code\x18\x02 \x01(\tR\n" +
 	"reasonCode\x12\x18\n" +
 	"\amessage\x18\x03 \x01(\tR\amessage\x123\n" +
 	"\x15required_capabilities\x18\x04 \x03(\tR\x14requiredCapabilities\x124\n" +
-	"\x16required_extension_abi\x18\x05 \x01(\tR\x14requiredExtensionAbi\"\x9f\x02\n" +
-	"\x0eRuntimeCommand\x12\x1d\n" +
-	"\n" +
-	"command_id\x18\x01 \x01(\tR\tcommandId\x12\x17\n" +
-	"\anode_id\x18\x02 \x01(\tR\x06nodeId\x12@\n" +
-	"\toperation\x18\x03 \x01(\x0e2\".rayip.control.v1.RuntimeOperationR\toperation\x12:\n" +
-	"\aaccount\x18\x04 \x01(\v2 .rayip.control.v1.RuntimeAccountR\aaccount\x12-\n" +
-	"\x12desired_generation\x18\x05 \x01(\x04R\x11desiredGeneration\x12(\n" +
-	"\x10deadline_unix_ms\x18\x06 \x01(\x03R\x0edeadlineUnixMs\"\xc9\x04\n" +
-	"\x0eRuntimeAccount\x12(\n" +
-	"\x10proxy_account_id\x18\x01 \x01(\tR\x0eproxyAccountId\x12#\n" +
-	"\rruntime_email\x18\x02 \x01(\tR\fruntimeEmail\x12=\n" +
-	"\bprotocol\x18\x03 \x01(\x0e2!.rayip.control.v1.RuntimeProtocolR\bprotocol\x12\x1b\n" +
-	"\tlisten_ip\x18\x04 \x01(\tR\blistenIp\x12\x12\n" +
-	"\x04port\x18\x05 \x01(\rR\x04port\x12\x1a\n" +
-	"\busername\x18\x06 \x01(\tR\busername\x12\x1a\n" +
-	"\bpassword\x18\a \x01(\tR\bpassword\x12+\n" +
-	"\x12expires_at_unix_ms\x18\b \x01(\x03R\x0fexpiresAtUnixMs\x12(\n" +
-	"\x10egress_limit_bps\x18\t \x01(\x04R\x0eegressLimitBps\x12*\n" +
-	"\x11ingress_limit_bps\x18\n" +
-	" \x01(\x04R\x0fingressLimitBps\x12'\n" +
-	"\x0fmax_connections\x18\v \x01(\rR\x0emaxConnections\x12>\n" +
-	"\x06status\x18\f \x01(\x0e2&.rayip.control.v1.RuntimeAccountStatusR\x06status\x12%\n" +
-	"\x0epolicy_version\x18\r \x01(\x04R\rpolicyVersion\x12-\n" +
-	"\x12desired_generation\x18\x0e \x01(\x04R\x11desiredGeneration\"\xcf\x02\n" +
-	"\rRuntimeResult\x12\x1d\n" +
-	"\n" +
-	"command_id\x18\x01 \x01(\tR\tcommandId\x12=\n" +
-	"\x06status\x18\x02 \x01(\x0e2%.rayip.control.v1.RuntimeResultStatusR\x06status\x12\x1d\n" +
-	"\n" +
-	"error_code\x18\x03 \x01(\tR\terrorCode\x12#\n" +
-	"\rerror_message\x18\x04 \x01(\tR\ferrorMessage\x12-\n" +
-	"\x12applied_generation\x18\x05 \x01(\x04R\x11appliedGeneration\x124\n" +
-	"\x05usage\x18\x06 \x01(\v2\x1e.rayip.control.v1.RuntimeUsageR\x05usage\x127\n" +
-	"\x06digest\x18\a \x01(\v2\x1f.rayip.control.v1.RuntimeDigestR\x06digest\"\xa0\x02\n" +
-	"\fRuntimeUsage\x12(\n" +
-	"\x10proxy_account_id\x18\x01 \x01(\tR\x0eproxyAccountId\x12#\n" +
-	"\rruntime_email\x18\x02 \x01(\tR\fruntimeEmail\x12\x19\n" +
-	"\brx_bytes\x18\x03 \x01(\x04R\arxBytes\x12\x19\n" +
-	"\btx_bytes\x18\x04 \x01(\x04R\atxBytes\x12-\n" +
-	"\x12active_connections\x18\x05 \x01(\x04R\x11activeConnections\x12-\n" +
-	"\x13rx_bytes_per_second\x18\x06 \x01(\x04R\x10rxBytesPerSecond\x12-\n" +
-	"\x13tx_bytes_per_second\x18\a \x01(\x04R\x10txBytesPerSecond\"\xbb\x01\n" +
+	"\x16required_extension_abi\x18\x05 \x01(\tR\x14requiredExtensionAbi\"\xbb\x01\n" +
 	"\rRuntimeDigest\x12#\n" +
 	"\raccount_count\x18\x01 \x01(\x04R\faccountCount\x12#\n" +
 	"\renabled_count\x18\x02 \x01(\x04R\fenabledCount\x12%\n" +
 	"\x0edisabled_count\x18\x03 \x01(\x04R\rdisabledCount\x12%\n" +
 	"\x0emax_generation\x18\x04 \x01(\x04R\rmaxGeneration\x12\x12\n" +
-	"\x04hash\x18\x05 \x01(\tR\x04hash*\x94\x02\n" +
+	"\x04hash\x18\x05 \x01(\tR\x04hash\"\xa2\x03\n" +
+	"\fRuntimeApply\x12\x19\n" +
+	"\bapply_id\x18\x01 \x01(\tR\aapplyId\x12\x17\n" +
+	"\anode_id\x18\x02 \x01(\tR\x06nodeId\x126\n" +
+	"\x04mode\x18\x03 \x01(\x0e2\".rayip.control.v1.RuntimeApplyModeR\x04mode\x12!\n" +
+	"\fversion_info\x18\x04 \x01(\tR\vversionInfo\x12\x14\n" +
+	"\x05nonce\x18\x05 \x01(\tR\x05nonce\x12#\n" +
+	"\rbase_revision\x18\x06 \x01(\x04R\fbaseRevision\x12'\n" +
+	"\x0ftarget_revision\x18\a \x01(\x04R\x0etargetRevision\x12(\n" +
+	"\x10deadline_unix_ms\x18\b \x01(\x03R\x0edeadlineUnixMs\x12?\n" +
+	"\tresources\x18\t \x03(\v2!.rayip.control.v1.RuntimeResourceR\tresources\x124\n" +
+	"\x16removed_resource_names\x18\n" +
+	" \x03(\tR\x14removedResourceNames\"\xd0\x04\n" +
+	"\x0fRuntimeResource\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x129\n" +
+	"\x04kind\x18\x02 \x01(\x0e2%.rayip.control.v1.RuntimeResourceKindR\x04kind\x12)\n" +
+	"\x10resource_version\x18\x03 \x01(\x04R\x0fresourceVersion\x12#\n" +
+	"\rruntime_email\x18\x04 \x01(\tR\fruntimeEmail\x12=\n" +
+	"\bprotocol\x18\x05 \x01(\x0e2!.rayip.control.v1.RuntimeProtocolR\bprotocol\x12\x1b\n" +
+	"\tlisten_ip\x18\x06 \x01(\tR\blistenIp\x12\x12\n" +
+	"\x04port\x18\a \x01(\rR\x04port\x12\x1a\n" +
+	"\busername\x18\b \x01(\tR\busername\x12\x1a\n" +
+	"\bpassword\x18\t \x01(\tR\bpassword\x12(\n" +
+	"\x10egress_limit_bps\x18\n" +
+	" \x01(\x04R\x0eegressLimitBps\x12*\n" +
+	"\x11ingress_limit_bps\x18\v \x01(\x04R\x0fingressLimitBps\x12'\n" +
+	"\x0fmax_connections\x18\f \x01(\rR\x0emaxConnections\x12\x1a\n" +
+	"\bpriority\x18\r \x01(\rR\bpriority\x12.\n" +
+	"\x13abuse_report_policy\x18\x0e \x01(\tR\x11abuseReportPolicy\x12+\n" +
+	"\x12expires_at_unix_ms\x18\x0f \x01(\x03R\x0fexpiresAtUnixMs\"\xc5\x03\n" +
+	"\x0fRuntimeApplyAck\x12\x19\n" +
+	"\bapply_id\x18\x01 \x01(\tR\aapplyId\x12\x17\n" +
+	"\anode_id\x18\x02 \x01(\tR\x06nodeId\x12!\n" +
+	"\fversion_info\x18\x03 \x01(\tR\vversionInfo\x12\x14\n" +
+	"\x05nonce\x18\x04 \x01(\tR\x05nonce\x12<\n" +
+	"\x06status\x18\x05 \x01(\x0e2$.rayip.control.v1.RuntimeApplyStatusR\x06status\x12)\n" +
+	"\x10applied_revision\x18\x06 \x01(\x04R\x0fappliedRevision\x12,\n" +
+	"\x12last_good_revision\x18\a \x01(\x04R\x10lastGoodRevision\x12R\n" +
+	"\x10resource_results\x18\b \x03(\v2'.rayip.control.v1.RuntimeResourceResultR\x0fresourceResults\x127\n" +
+	"\x06digest\x18\t \x01(\v2\x1f.rayip.control.v1.RuntimeDigestR\x06digest\x12!\n" +
+	"\ferror_detail\x18\n" +
+	" \x01(\tR\verrorDetail\"\x94\x01\n" +
+	"\x15RuntimeResourceResult\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12D\n" +
+	"\x06status\x18\x02 \x01(\x0e2,.rayip.control.v1.RuntimeResourceApplyStatusR\x06status\x12!\n" +
+	"\ferror_detail\x18\x03 \x01(\tR\verrorDetail*\x94\x02\n" +
 	"\x14RuntimeVerdictStatus\x12&\n" +
 	"\"RUNTIME_VERDICT_STATUS_UNSPECIFIED\x10\x00\x12#\n" +
 	"\x1fRUNTIME_VERDICT_STATUS_ACCEPTED\x10\x01\x12(\n" +
 	"$RUNTIME_VERDICT_STATUS_NEEDS_UPGRADE\x10\x02\x12&\n" +
 	"\"RUNTIME_VERDICT_STATUS_QUARANTINED\x10\x03\x121\n" +
 	"-RUNTIME_VERDICT_STATUS_UNSUPPORTED_CAPABILITY\x10\x04\x12*\n" +
-	"&RUNTIME_VERDICT_STATUS_DIGEST_MISMATCH\x10\x05*\x95\x02\n" +
-	"\x10RuntimeOperation\x12!\n" +
-	"\x1dRUNTIME_OPERATION_UNSPECIFIED\x10\x00\x12\x1c\n" +
-	"\x18RUNTIME_OPERATION_UPSERT\x10\x01\x12\x1c\n" +
-	"\x18RUNTIME_OPERATION_DELETE\x10\x02\x12\x1d\n" +
-	"\x19RUNTIME_OPERATION_DISABLE\x10\x03\x12#\n" +
-	"\x1fRUNTIME_OPERATION_UPDATE_POLICY\x10\x04\x12\x1f\n" +
-	"\x1bRUNTIME_OPERATION_GET_USAGE\x10\x05\x12 \n" +
-	"\x1cRUNTIME_OPERATION_GET_DIGEST\x10\x06\x12\x1b\n" +
-	"\x17RUNTIME_OPERATION_PROBE\x10\a*k\n" +
+	"&RUNTIME_VERDICT_STATUS_DIGEST_MISMATCH\x10\x05*k\n" +
 	"\x0fRuntimeProtocol\x12 \n" +
 	"\x1cRUNTIME_PROTOCOL_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17RUNTIME_PROTOCOL_SOCKS5\x10\x01\x12\x19\n" +
-	"\x15RUNTIME_PROTOCOL_HTTP\x10\x02*\xab\x01\n" +
-	"\x14RuntimeAccountStatus\x12&\n" +
-	"\"RUNTIME_ACCOUNT_STATUS_UNSPECIFIED\x10\x00\x12\"\n" +
-	"\x1eRUNTIME_ACCOUNT_STATUS_ENABLED\x10\x01\x12#\n" +
-	"\x1fRUNTIME_ACCOUNT_STATUS_DISABLED\x10\x02\x12\"\n" +
-	"\x1eRUNTIME_ACCOUNT_STATUS_DELETED\x10\x03*\xc9\x01\n" +
-	"\x13RuntimeResultStatus\x12%\n" +
-	"!RUNTIME_RESULT_STATUS_UNSPECIFIED\x10\x00\x12!\n" +
-	"\x1dRUNTIME_RESULT_STATUS_SUCCESS\x10\x01\x12 \n" +
-	"\x1cRUNTIME_RESULT_STATUS_FAILED\x10\x02\x12!\n" +
-	"\x1dRUNTIME_RESULT_STATUS_SKIPPED\x10\x03\x12#\n" +
-	"\x1fRUNTIME_RESULT_STATUS_DUPLICATE\x10\x042g\n" +
+	"\x15RUNTIME_PROTOCOL_HTTP\x10\x02*u\n" +
+	"\x10RuntimeApplyMode\x12\"\n" +
+	"\x1eRUNTIME_APPLY_MODE_UNSPECIFIED\x10\x00\x12\x1c\n" +
+	"\x18RUNTIME_APPLY_MODE_DELTA\x10\x01\x12\x1f\n" +
+	"\x1bRUNTIME_APPLY_MODE_SNAPSHOT\x10\x02*e\n" +
+	"\x13RuntimeResourceKind\x12%\n" +
+	"!RUNTIME_RESOURCE_KIND_UNSPECIFIED\x10\x00\x12'\n" +
+	"#RUNTIME_RESOURCE_KIND_PROXY_ACCOUNT\x10\x01*\x99\x01\n" +
+	"\x12RuntimeApplyStatus\x12$\n" +
+	" RUNTIME_APPLY_STATUS_UNSPECIFIED\x10\x00\x12\x1c\n" +
+	"\x18RUNTIME_APPLY_STATUS_ACK\x10\x01\x12\x1d\n" +
+	"\x19RUNTIME_APPLY_STATUS_NACK\x10\x02\x12 \n" +
+	"\x1cRUNTIME_APPLY_STATUS_PARTIAL\x10\x03*\xcb\x01\n" +
+	"\x1aRuntimeResourceApplyStatus\x12-\n" +
+	")RUNTIME_RESOURCE_APPLY_STATUS_UNSPECIFIED\x10\x00\x12)\n" +
+	"%RUNTIME_RESOURCE_APPLY_STATUS_APPLIED\x10\x01\x12)\n" +
+	"%RUNTIME_RESOURCE_APPLY_STATUS_REMOVED\x10\x02\x12(\n" +
+	"$RUNTIME_RESOURCE_APPLY_STATUS_FAILED\x10\x032g\n" +
 	"\x12NodeControlService\x12Q\n" +
 	"\aConnect\x12\x1f.rayip.control.v1.AgentEnvelope\x1a!.rayip.control.v1.ControlEnvelope(\x010\x01BIZGgithub.com/rayip/rayip/packages/proto/gen/go/rayip/control/v1;controlv1b\x06proto3"
 
@@ -1962,59 +2022,61 @@ func file_rayip_control_v1_control_proto_rawDescGZIP() []byte {
 	return file_rayip_control_v1_control_proto_rawDescData
 }
 
-var file_rayip_control_v1_control_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_rayip_control_v1_control_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
 var file_rayip_control_v1_control_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_rayip_control_v1_control_proto_goTypes = []any{
-	(RuntimeVerdictStatus)(0),  // 0: rayip.control.v1.RuntimeVerdictStatus
-	(RuntimeOperation)(0),      // 1: rayip.control.v1.RuntimeOperation
-	(RuntimeProtocol)(0),       // 2: rayip.control.v1.RuntimeProtocol
-	(RuntimeAccountStatus)(0),  // 3: rayip.control.v1.RuntimeAccountStatus
-	(RuntimeResultStatus)(0),   // 4: rayip.control.v1.RuntimeResultStatus
-	(*AgentEnvelope)(nil),      // 5: rayip.control.v1.AgentEnvelope
-	(*ControlEnvelope)(nil),    // 6: rayip.control.v1.ControlEnvelope
-	(*AgentHello)(nil),         // 7: rayip.control.v1.AgentHello
-	(*LeaseRenewal)(nil),       // 8: rayip.control.v1.LeaseRenewal
-	(*MetricSnapshot)(nil),     // 9: rayip.control.v1.MetricSnapshot
-	(*TerminalFrame)(nil),      // 10: rayip.control.v1.TerminalFrame
-	(*AgentWelcome)(nil),       // 11: rayip.control.v1.AgentWelcome
-	(*ControlAck)(nil),         // 12: rayip.control.v1.ControlAck
-	(*ControlPing)(nil),        // 13: rayip.control.v1.ControlPing
-	(*RuntimeObservation)(nil), // 14: rayip.control.v1.RuntimeObservation
-	(*RuntimeVerdict)(nil),     // 15: rayip.control.v1.RuntimeVerdict
-	(*RuntimeCommand)(nil),     // 16: rayip.control.v1.RuntimeCommand
-	(*RuntimeAccount)(nil),     // 17: rayip.control.v1.RuntimeAccount
-	(*RuntimeResult)(nil),      // 18: rayip.control.v1.RuntimeResult
-	(*RuntimeUsage)(nil),       // 19: rayip.control.v1.RuntimeUsage
-	(*RuntimeDigest)(nil),      // 20: rayip.control.v1.RuntimeDigest
+	(RuntimeVerdictStatus)(0),       // 0: rayip.control.v1.RuntimeVerdictStatus
+	(RuntimeProtocol)(0),            // 1: rayip.control.v1.RuntimeProtocol
+	(RuntimeApplyMode)(0),           // 2: rayip.control.v1.RuntimeApplyMode
+	(RuntimeResourceKind)(0),        // 3: rayip.control.v1.RuntimeResourceKind
+	(RuntimeApplyStatus)(0),         // 4: rayip.control.v1.RuntimeApplyStatus
+	(RuntimeResourceApplyStatus)(0), // 5: rayip.control.v1.RuntimeResourceApplyStatus
+	(*AgentEnvelope)(nil),           // 6: rayip.control.v1.AgentEnvelope
+	(*ControlEnvelope)(nil),         // 7: rayip.control.v1.ControlEnvelope
+	(*AgentHello)(nil),              // 8: rayip.control.v1.AgentHello
+	(*LeaseRenewal)(nil),            // 9: rayip.control.v1.LeaseRenewal
+	(*MetricSnapshot)(nil),          // 10: rayip.control.v1.MetricSnapshot
+	(*TerminalFrame)(nil),           // 11: rayip.control.v1.TerminalFrame
+	(*AgentWelcome)(nil),            // 12: rayip.control.v1.AgentWelcome
+	(*ControlAck)(nil),              // 13: rayip.control.v1.ControlAck
+	(*ControlPing)(nil),             // 14: rayip.control.v1.ControlPing
+	(*RuntimeObservation)(nil),      // 15: rayip.control.v1.RuntimeObservation
+	(*RuntimeVerdict)(nil),          // 16: rayip.control.v1.RuntimeVerdict
+	(*RuntimeDigest)(nil),           // 17: rayip.control.v1.RuntimeDigest
+	(*RuntimeApply)(nil),            // 18: rayip.control.v1.RuntimeApply
+	(*RuntimeResource)(nil),         // 19: rayip.control.v1.RuntimeResource
+	(*RuntimeApplyAck)(nil),         // 20: rayip.control.v1.RuntimeApplyAck
+	(*RuntimeResourceResult)(nil),   // 21: rayip.control.v1.RuntimeResourceResult
 }
 var file_rayip_control_v1_control_proto_depIdxs = []int32{
-	7,  // 0: rayip.control.v1.AgentEnvelope.hello:type_name -> rayip.control.v1.AgentHello
-	8,  // 1: rayip.control.v1.AgentEnvelope.lease:type_name -> rayip.control.v1.LeaseRenewal
-	9,  // 2: rayip.control.v1.AgentEnvelope.metrics:type_name -> rayip.control.v1.MetricSnapshot
-	10, // 3: rayip.control.v1.AgentEnvelope.terminal_frame:type_name -> rayip.control.v1.TerminalFrame
-	18, // 4: rayip.control.v1.AgentEnvelope.runtime_result:type_name -> rayip.control.v1.RuntimeResult
-	11, // 5: rayip.control.v1.ControlEnvelope.welcome:type_name -> rayip.control.v1.AgentWelcome
-	12, // 6: rayip.control.v1.ControlEnvelope.ack:type_name -> rayip.control.v1.ControlAck
-	13, // 7: rayip.control.v1.ControlEnvelope.ping:type_name -> rayip.control.v1.ControlPing
-	16, // 8: rayip.control.v1.ControlEnvelope.runtime_command:type_name -> rayip.control.v1.RuntimeCommand
-	14, // 9: rayip.control.v1.AgentHello.runtime:type_name -> rayip.control.v1.RuntimeObservation
-	14, // 10: rayip.control.v1.LeaseRenewal.runtime:type_name -> rayip.control.v1.RuntimeObservation
-	15, // 11: rayip.control.v1.AgentWelcome.runtime_verdict:type_name -> rayip.control.v1.RuntimeVerdict
+	8,  // 0: rayip.control.v1.AgentEnvelope.hello:type_name -> rayip.control.v1.AgentHello
+	9,  // 1: rayip.control.v1.AgentEnvelope.lease:type_name -> rayip.control.v1.LeaseRenewal
+	10, // 2: rayip.control.v1.AgentEnvelope.metrics:type_name -> rayip.control.v1.MetricSnapshot
+	11, // 3: rayip.control.v1.AgentEnvelope.terminal_frame:type_name -> rayip.control.v1.TerminalFrame
+	20, // 4: rayip.control.v1.AgentEnvelope.runtime_apply_ack:type_name -> rayip.control.v1.RuntimeApplyAck
+	12, // 5: rayip.control.v1.ControlEnvelope.welcome:type_name -> rayip.control.v1.AgentWelcome
+	13, // 6: rayip.control.v1.ControlEnvelope.ack:type_name -> rayip.control.v1.ControlAck
+	14, // 7: rayip.control.v1.ControlEnvelope.ping:type_name -> rayip.control.v1.ControlPing
+	18, // 8: rayip.control.v1.ControlEnvelope.runtime_apply:type_name -> rayip.control.v1.RuntimeApply
+	15, // 9: rayip.control.v1.AgentHello.runtime:type_name -> rayip.control.v1.RuntimeObservation
+	15, // 10: rayip.control.v1.LeaseRenewal.runtime:type_name -> rayip.control.v1.RuntimeObservation
+	16, // 11: rayip.control.v1.AgentWelcome.runtime_verdict:type_name -> rayip.control.v1.RuntimeVerdict
 	0,  // 12: rayip.control.v1.RuntimeVerdict.status:type_name -> rayip.control.v1.RuntimeVerdictStatus
-	1,  // 13: rayip.control.v1.RuntimeCommand.operation:type_name -> rayip.control.v1.RuntimeOperation
-	17, // 14: rayip.control.v1.RuntimeCommand.account:type_name -> rayip.control.v1.RuntimeAccount
-	2,  // 15: rayip.control.v1.RuntimeAccount.protocol:type_name -> rayip.control.v1.RuntimeProtocol
-	3,  // 16: rayip.control.v1.RuntimeAccount.status:type_name -> rayip.control.v1.RuntimeAccountStatus
-	4,  // 17: rayip.control.v1.RuntimeResult.status:type_name -> rayip.control.v1.RuntimeResultStatus
-	19, // 18: rayip.control.v1.RuntimeResult.usage:type_name -> rayip.control.v1.RuntimeUsage
-	20, // 19: rayip.control.v1.RuntimeResult.digest:type_name -> rayip.control.v1.RuntimeDigest
-	5,  // 20: rayip.control.v1.NodeControlService.Connect:input_type -> rayip.control.v1.AgentEnvelope
-	6,  // 21: rayip.control.v1.NodeControlService.Connect:output_type -> rayip.control.v1.ControlEnvelope
-	21, // [21:22] is the sub-list for method output_type
-	20, // [20:21] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	2,  // 13: rayip.control.v1.RuntimeApply.mode:type_name -> rayip.control.v1.RuntimeApplyMode
+	19, // 14: rayip.control.v1.RuntimeApply.resources:type_name -> rayip.control.v1.RuntimeResource
+	3,  // 15: rayip.control.v1.RuntimeResource.kind:type_name -> rayip.control.v1.RuntimeResourceKind
+	1,  // 16: rayip.control.v1.RuntimeResource.protocol:type_name -> rayip.control.v1.RuntimeProtocol
+	4,  // 17: rayip.control.v1.RuntimeApplyAck.status:type_name -> rayip.control.v1.RuntimeApplyStatus
+	21, // 18: rayip.control.v1.RuntimeApplyAck.resource_results:type_name -> rayip.control.v1.RuntimeResourceResult
+	17, // 19: rayip.control.v1.RuntimeApplyAck.digest:type_name -> rayip.control.v1.RuntimeDigest
+	5,  // 20: rayip.control.v1.RuntimeResourceResult.status:type_name -> rayip.control.v1.RuntimeResourceApplyStatus
+	6,  // 21: rayip.control.v1.NodeControlService.Connect:input_type -> rayip.control.v1.AgentEnvelope
+	7,  // 22: rayip.control.v1.NodeControlService.Connect:output_type -> rayip.control.v1.ControlEnvelope
+	22, // [22:23] is the sub-list for method output_type
+	21, // [21:22] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_rayip_control_v1_control_proto_init() }
@@ -2027,20 +2089,20 @@ func file_rayip_control_v1_control_proto_init() {
 		(*AgentEnvelope_Lease)(nil),
 		(*AgentEnvelope_Metrics)(nil),
 		(*AgentEnvelope_TerminalFrame)(nil),
-		(*AgentEnvelope_RuntimeResult)(nil),
+		(*AgentEnvelope_RuntimeApplyAck)(nil),
 	}
 	file_rayip_control_v1_control_proto_msgTypes[1].OneofWrappers = []any{
 		(*ControlEnvelope_Welcome)(nil),
 		(*ControlEnvelope_Ack)(nil),
 		(*ControlEnvelope_Ping)(nil),
-		(*ControlEnvelope_RuntimeCommand)(nil),
+		(*ControlEnvelope_RuntimeApply)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_rayip_control_v1_control_proto_rawDesc), len(file_rayip_control_v1_control_proto_rawDesc)),
-			NumEnums:      5,
+			NumEnums:      6,
 			NumMessages:   16,
 			NumExtensions: 0,
 			NumServices:   1,

@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 
 type NodeStatus = "ONLINE" | "OFFLINE";
 type Protocol = "SOCKS5" | "HTTP";
-type ApplyStatus = "SUCCESS" | "FAILED" | "SKIPPED" | "DUPLICATE";
+type ApplyStatus = "ACK" | "NACK" | "PARTIAL" | "FAILED" | "DUPLICATE" | "SUCCESS" | "SKIPPED";
 
 type NodeSummary = {
   id: string;
@@ -83,14 +83,14 @@ type RuntimeDigest = {
 };
 
 type RuntimeResult = {
-  command_id: string;
+  apply_id: string;
   proxy_account_id?: string;
   node_id?: string;
   operation?: string;
   status: ApplyStatus;
-  error_code?: string;
-  error_message?: string;
-  applied_generation: number;
+  error_detail?: string;
+  applied_revision: number;
+  last_good_revision: number;
   usage?: RuntimeUsage;
   digest?: RuntimeDigest;
   created_at?: string;
@@ -109,6 +109,74 @@ type ResultListResponse = {
 type RuntimeActionResponse = {
   account?: RuntimeAccount;
   result: RuntimeResult;
+};
+
+type RuntimeOutboxEvent = {
+  id: string;
+  topic: string;
+  aggregate_id: string;
+  aggregate_key: string;
+  payload: Record<string, unknown>;
+  published_at?: string;
+  created_at: string;
+};
+
+type RuntimeChange = {
+  id: string;
+  node_id: string;
+  seq: number;
+  resource_name: string;
+  action: "UPSERT" | "REMOVE";
+  revision: number;
+  created_at: string;
+};
+
+type RuntimeJobResult = {
+  job_id: string;
+  node_id: string;
+  status: "PENDING" | "SUCCEEDED" | "FAILED" | "RETRYABLE";
+  base_revision: number;
+  target_revision: number;
+  accepted_revision: number;
+  last_good_revision: number;
+  apply_id: string;
+  error_detail?: string;
+};
+
+type NodeRuntimeStatus = {
+  node_id: string;
+  lease_online: boolean;
+  runtime_verdict: string;
+  expected_revision: number;
+  current_revision: number;
+  last_good_revision: number;
+  expected_digest_hash: string;
+  runtime_digest_hash: string;
+  account_count: number;
+  capabilities: string[] | null;
+  manifest_hash: string;
+  binary_hash: string;
+  extension_abi: string;
+  bundle_channel: string;
+  manual_hold: boolean;
+  compliance_hold: boolean;
+  sellable: boolean;
+  unsellable_reasons: string[] | null;
+  updated_at: string;
+};
+
+type ListResponse<T> = {
+  items: T[];
+  total: number;
+};
+
+type RuntimeStatusResponse = {
+  status: NodeRuntimeStatus;
+};
+
+type RuntimeJobResponse = {
+  result: RuntimeJobResult;
+  error?: string;
 };
 
 const nav = [
@@ -153,6 +221,24 @@ function fetchResults(accountID: string): Promise<ResultListResponse> {
   return apiJSON<ResultListResponse>(`/api/admin/runtime-lab/accounts/${accountID}/results`);
 }
 
+function fetchOutbox(): Promise<ListResponse<RuntimeOutboxEvent>> {
+  return apiJSON<ListResponse<RuntimeOutboxEvent>>("/api/admin/runtime-control/outbox?limit=20");
+}
+
+function fetchChanges(nodeID: string): Promise<ListResponse<RuntimeChange>> {
+  if (!nodeID) return Promise.resolve({ items: [], total: 0 });
+  return apiJSON<ListResponse<RuntimeChange>>(`/api/admin/runtime-control/nodes/${nodeID}/changes?limit=20`);
+}
+
+async function fetchRuntimeStatus(nodeID: string): Promise<RuntimeStatusResponse | null> {
+  if (!nodeID) return null;
+  try {
+    return await apiJSON<RuntimeStatusResponse>(`/api/admin/nodes/${nodeID}/runtime-status`);
+  } catch {
+    return null;
+  }
+}
+
 export function App() {
   const queryClient = useQueryClient();
   const [selectedAccountID, setSelectedAccountID] = useState("");
@@ -179,14 +265,31 @@ export function App() {
     queryFn: fetchAccounts,
     refetchInterval: 5000,
   });
+  const onlineNodes = nodes.data?.items.filter((node) => node.status === "ONLINE") ?? [];
+  const selectedNodeID = form.node_id || onlineNodes[0]?.id || "";
   const results = useQuery({
     queryKey: ["runtime-lab-results", selectedAccountID],
     queryFn: () => fetchResults(selectedAccountID),
     enabled: Boolean(selectedAccountID),
   });
+  const outbox = useQuery({
+    queryKey: ["runtime-control-outbox"],
+    queryFn: fetchOutbox,
+    refetchInterval: 5000,
+  });
+  const changes = useQuery({
+    queryKey: ["runtime-control-changes", selectedNodeID],
+    queryFn: () => fetchChanges(selectedNodeID),
+    enabled: Boolean(selectedNodeID),
+    refetchInterval: 5000,
+  });
+  const runtimeStatus = useQuery({
+    queryKey: ["node-runtime-status", selectedNodeID],
+    queryFn: () => fetchRuntimeStatus(selectedNodeID),
+    enabled: Boolean(selectedNodeID),
+    refetchInterval: 5000,
+  });
 
-  const onlineNodes = nodes.data?.items.filter((node) => node.status === "ONLINE") ?? [];
-  const selectedNodeID = form.node_id || onlineNodes[0]?.id || "";
   const selectedAccount = accounts.data?.items.find((account) => account.proxy_account_id === selectedAccountID);
   const digest = lastResult?.digest;
 
@@ -245,10 +348,17 @@ export function App() {
     mutationFn: (nodeID: string) => apiJSON<RuntimeActionResponse>(`/api/admin/runtime-lab/nodes/${nodeID}/digest`),
     onSuccess: (data) => setLastResult(data.result),
   });
+  const processChanges = useMutation({
+    mutationFn: (nodeID: string) => apiJSON<RuntimeJobResponse>(`/api/admin/runtime-control/nodes/${nodeID}/process`, { method: "POST" }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["runtime-control-changes"] });
+      void queryClient.invalidateQueries({ queryKey: ["node-runtime-status"] });
+    },
+  });
 
-  const busy = createAccount.isPending || updatePolicy.isPending || runAction.isPending || getDigest.isPending;
+  const busy = createAccount.isPending || updatePolicy.isPending || runAction.isPending || getDigest.isPending || processChanges.isPending;
   const visibleResults = useMemo(() => {
-    if (lastResult) return [lastResult, ...(results.data?.items ?? []).filter((item) => item.command_id !== lastResult.command_id)];
+    if (lastResult) return [lastResult, ...(results.data?.items ?? []).filter((item) => item.apply_id !== lastResult.apply_id)];
     return results.data?.items ?? [];
   }, [lastResult, results.data?.items]);
 
@@ -309,7 +419,7 @@ export function App() {
             <Stat title="在线节点" value={`${onlineNodes.length}`} hint={`总计 ${nodes.data?.total ?? 0} 台`} />
             <Stat title="Lab 账号" value={`${accounts.data?.total ?? 0}`} hint="仅管理端实验账号" />
             <Stat title="Digest 账号" value={`${digest?.account_count ?? "-"}`} hint={`水位 ${digest?.max_generation ?? "-"}`} />
-            <Stat title="最近结果" value={lastResult?.status ?? "-"} hint={lastResult?.error_message || lastResult?.operation || "等待操作"} />
+            <Stat title="可售状态" value={runtimeStatus.data?.status.sellable ? "SELLABLE" : "BLOCKED"} hint={runtimeStatus.data?.status.unsellable_reasons?.join(", ") || "等待节点上报"} />
           </section>
 
           <section className="mt-4 grid gap-4 xl:grid-cols-[380px_1fr]">
@@ -377,7 +487,7 @@ export function App() {
                       <th className="px-4 py-3 font-medium">连接</th>
                       <th className="px-4 py-3 font-medium">策略</th>
                       <th className="px-4 py-3 font-medium">状态</th>
-                      <th className="px-4 py-3 font-medium">Generation</th>
+                      <th className="px-4 py-3 font-medium">Revision</th>
                       <th className="px-4 py-3 font-medium">操作</th>
                     </tr>
                   </thead>
@@ -422,7 +532,7 @@ export function App() {
                   </thead>
                   <tbody className="divide-y divide-[#edf0f4]">
                     {visibleResults.length ? (
-                      visibleResults.slice(0, 8).map((result) => <ResultRow key={result.command_id} result={result} />)
+                      visibleResults.slice(0, 8).map((result) => <ResultRow key={result.apply_id} result={result} />)
                     ) : (
                       <EmptyRow colSpan={5} text="暂无 apply 结果。" />
                     )}
@@ -432,23 +542,105 @@ export function App() {
             </section>
 
             <section className="rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
-              <PanelHead title="Digest" hint="账号数、generation 水位、hash" />
+              <PanelHead title="节点 Runtime 状态" hint="可售闸门、revision 和 digest 对账" />
               <div className="space-y-3 p-5 text-sm">
-                <KV label="账号数" value={`${digest?.account_count ?? "-"}`} />
-                <KV label="启用 / 禁用" value={`${digest?.enabled_count ?? "-"} / ${digest?.disabled_count ?? "-"}`} />
-                <KV label="最大 generation" value={`${digest?.max_generation ?? "-"}`} />
+                <KV label="可售" value={runtimeStatus.data?.status.sellable ? "是" : "否"} />
+                <KV label="Runtime" value={runtimeStatus.data?.status.runtime_verdict ?? "-"} />
+                <KV label="Revision" value={`${runtimeStatus.data?.status.current_revision ?? "-"}/${runtimeStatus.data?.status.expected_revision ?? "-"}`} />
+                <KV label="账号数" value={`${runtimeStatus.data?.status.account_count ?? digest?.account_count ?? "-"}`} />
                 <div>
-                  <div className="mb-1 text-xs text-[#6b7280]">Hash</div>
-                  <div className="break-all rounded-md bg-[#f8fafc] px-3 py-2 font-mono text-xs text-[#4b5565]">{digest?.hash || "-"}</div>
+                  <div className="mb-1 text-xs text-[#6b7280]">不可售原因</div>
+                  <div className="min-h-9 rounded-md bg-[#f8fafc] px-3 py-2 text-xs text-[#4b5565]">
+                    {runtimeStatus.data?.status.unsellable_reasons?.length ? runtimeStatus.data.status.unsellable_reasons.join(", ") : "-"}
+                  </div>
+                </div>
+                <div>
+                  <div className="mb-1 text-xs text-[#6b7280]">Digest</div>
+                  <div className="break-all rounded-md bg-[#f8fafc] px-3 py-2 font-mono text-xs text-[#4b5565]">{runtimeStatus.data?.status.runtime_digest_hash || digest?.hash || "-"}</div>
                 </div>
               </div>
             </section>
           </section>
 
-          {(nodes.isError || accounts.isError || createAccount.isError || updatePolicy.isError || runAction.isError || getDigest.isError) && (
+          <section className="mt-4 grid gap-4 xl:grid-cols-2">
+            <section className="rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+              <PanelHead
+                title="任务控制台"
+                hint="Postgres desired state -> outbox -> Worker -> NodeAgent"
+                action={
+                  <Button variant="outline" onClick={() => selectedNodeID && processChanges.mutate(selectedNodeID)} disabled={!selectedNodeID || busy}>
+                    <ListChecks className="size-4" />
+                    Process
+                  </Button>
+                }
+              />
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-[#f8fafc] text-xs text-[#6b7280]">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Seq</th>
+                      <th className="px-4 py-3 font-medium">资源</th>
+                      <th className="px-4 py-3 font-medium">动作</th>
+                      <th className="px-4 py-3 font-medium">Revision</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#edf0f4]">
+                    {changes.data?.items.length ? (
+                      changes.data.items.map((change) => (
+                        <tr key={change.id}>
+                          <td className="px-4 py-4 text-[#4b5565]">{change.seq}</td>
+                          <td className="px-4 py-4 font-mono text-xs text-[#4b5565]">{change.resource_name}</td>
+                          <td className="px-4 py-4"><ApplyBadge status={change.action === "REMOVE" ? "NACK" : "ACK"} /></td>
+                          <td className="px-4 py-4 text-[#4b5565]">{change.revision}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <EmptyRow colSpan={4} text="暂无 runtime change log。" />
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {processChanges.data && (
+                <div className="border-t border-[#edf0f4] px-5 py-3 text-sm text-[#4b5565]">
+                  Job {processChanges.data.result.status}: {processChanges.data.result.accepted_revision}/{processChanges.data.result.target_revision}
+                  {processChanges.data.error ? ` · ${processChanges.data.error}` : ""}
+                </div>
+              )}
+            </section>
+
+            <section className="rounded-lg bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+              <PanelHead title="Outbox" hint="NATS 只承载索引，Worker 回读 Postgres" />
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                  <thead className="bg-[#f8fafc] text-xs text-[#6b7280]">
+                    <tr>
+                      <th className="px-4 py-3 font-medium">Topic</th>
+                      <th className="px-4 py-3 font-medium">Node</th>
+                      <th className="px-4 py-3 font-medium">Payload</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#edf0f4]">
+                    {outbox.data?.items.length ? (
+                      outbox.data.items.map((event) => (
+                        <tr key={event.id}>
+                          <td className="px-4 py-4 text-xs text-[#4b5565]">{event.topic}</td>
+                          <td className="px-4 py-4 text-xs text-[#4b5565]">{event.aggregate_key}</td>
+                          <td className="max-w-[360px] truncate px-4 py-4 font-mono text-xs text-[#4b5565]">{JSON.stringify(event.payload)}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <EmptyRow colSpan={3} text="暂无待发布 outbox。" />
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </section>
+
+          {(nodes.isError || accounts.isError || createAccount.isError || updatePolicy.isError || runAction.isError || getDigest.isError || processChanges.isError) && (
             <div className="mt-4 flex items-center gap-3 rounded-lg border border-[#fed7aa] bg-[#fff7ed] px-4 py-3 text-sm text-[#b45309]">
               <AlertTriangle className="size-5" />
-              {errorText(nodes.error || accounts.error || createAccount.error || updatePolicy.error || runAction.error || getDigest.error)}
+              {errorText(nodes.error || accounts.error || createAccount.error || updatePolicy.error || runAction.error || getDigest.error || processChanges.error)}
             </div>
           )}
         </main>
@@ -492,13 +684,14 @@ function Stat({ title, value, hint }: { title: string; value: string; hint: stri
   );
 }
 
-function PanelHead({ title, hint }: { title: string; hint: string }) {
+function PanelHead({ title, hint, action }: { title: string; hint: string; action?: ReactNode }) {
   return (
     <div className="flex min-h-[64px] items-center justify-between border-b border-[#e5e7eb] px-5 py-4">
       <div>
         <h2 className="font-semibold">{title}</h2>
         <p className="mt-1 text-sm text-[#6b7280]">{hint}</p>
       </div>
+      {action}
     </div>
   );
 }
@@ -583,13 +776,13 @@ function ResultRow({ result }: { result: RuntimeResult }) {
         <ApplyBadge status={result.status} />
       </td>
       <td className="px-4 py-4 text-[#4b5565]">{result.operation || "-"}</td>
-      <td className="px-4 py-4 text-[#4b5565]">{result.applied_generation}</td>
+      <td className="px-4 py-4 text-[#4b5565]">{result.applied_revision}/{result.last_good_revision}</td>
       <td className="px-4 py-4 text-xs text-[#4b5565]">
         <div>RX {formatBytes(result.usage?.rx_bytes ?? 0)}</div>
         <div>TX {formatBytes(result.usage?.tx_bytes ?? 0)}</div>
         <div>连接 {result.usage?.active_connections ?? 0}</div>
       </td>
-      <td className="max-w-[320px] px-4 py-4 text-xs text-[#b45309]">{result.error_message || result.error_code || "-"}</td>
+      <td className="max-w-[320px] px-4 py-4 text-xs text-[#b45309]">{result.error_detail || "-"}</td>
     </tr>
   );
 }
@@ -609,7 +802,7 @@ function StatusBadge({ status }: { status: RuntimeAccount["status"] }) {
 }
 
 function ApplyBadge({ status }: { status: ApplyStatus }) {
-  const style = status === "FAILED" ? "bg-[#fff7ed] text-[#b45309]" : status === "DUPLICATE" ? "bg-[#eef2ff] text-[#2563eb]" : "bg-[#e8f7ee] text-[#15803d]";
+  const style = status === "FAILED" || status === "NACK" || status === "PARTIAL" ? "bg-[#fff7ed] text-[#b45309]" : status === "DUPLICATE" ? "bg-[#eef2ff] text-[#2563eb]" : "bg-[#e8f7ee] text-[#15803d]";
   return <span className={`inline-flex rounded-md px-2 py-1 text-xs font-medium ${style}`}>{status}</span>;
 }
 

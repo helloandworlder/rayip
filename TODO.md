@@ -126,6 +126,13 @@ Task 完成定义：
 
 - 证明任务可以从 Postgres 期望状态可靠送到 NodeAgent/XrayCore，重复投递、断线、重试都不会破坏 Runtime。
 
+当前进展：
+
+- 已落地 Runtime desired state 的 Ent 基座：`runtime_account_states`、`runtime_change_log`、`outbox_events`。
+- 已新增 `runtimecontrol` 领域服务，支持正式代理资源 upsert/remove 时同步写当前期望状态、节点单调 seq 变更日志和 outbox 索引事件。
+- 已新增 outbox publisher、NATS JetStream `RAYIP_RUNTIME` / `rayip.runtime.apply.v1`、durable worker、job/attempt 记录和手动 process 管理入口。
+- Worker 已按节点回读 Postgres desired state/change log 组装 `RuntimeApply`，ACK 推进 accepted revision，NACK/调度失败保留 last good revision 并记录错误。
+
 交付范围：
 
 - API：Runtime 期望状态、change seq、outbox 事件、手动测试代理任务。
@@ -154,6 +161,12 @@ Task 完成定义：
 价值：
 
 - 证明“可售”不是后台手填数量，而是由节点健康、Bundle 能力、Runtime digest 和恢复能力共同决定。
+
+当前进展：
+
+- 已新增 `node_runtime_status` Ent 模型和 `noderuntime` 服务，统一计算 `SELLABLE` 与不可售 reason code。
+- Control gRPC 已把 RuntimeObservation / RuntimeApplyAck 写入节点 runtime 状态，管理端可查看可售状态、revision 水位、digest 和不可售原因。
+- 已新增 snapshot/reconcile planner，支持按 desired state 分页构建 `SNAPSHOT` apply，默认每页最多 500 个 resource。
 
 交付范围：
 

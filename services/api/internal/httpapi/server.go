@@ -9,6 +9,8 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/rayip/rayip/services/api/internal/config"
 	"github.com/rayip/rayip/services/api/internal/node"
+	"github.com/rayip/rayip/services/api/internal/noderuntime"
+	"github.com/rayip/rayip/services/api/internal/runtimecontrol"
 	"github.com/rayip/rayip/services/api/internal/runtimelab"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/fx"
@@ -18,12 +20,16 @@ import (
 type ServerParams struct {
 	fx.In
 
-	Config config.Config
-	SQLDB  *sql.DB
-	Redis  *redis.Client
-	NATS   *nats.Conn
-	Nodes  *node.Service
-	Lab    *runtimelab.Service
+	Config           config.Config
+	SQLDB            *sql.DB
+	Redis            *redis.Client
+	NATS             *nats.Conn
+	Nodes            *node.Service
+	RuntimeControl   *runtimecontrol.Service
+	RuntimeWorker    *runtimecontrol.Worker
+	ReconcilePlanner *runtimecontrol.ReconcilePlanner
+	NodeRuntime      *noderuntime.Service
+	Lab              *runtimelab.Service
 }
 
 func NewServer(p ServerParams) *fiber.App {
@@ -35,6 +41,7 @@ func NewServer(p ServerParams) *fiber.App {
 		ReadyCheck:  readyCheck(p.SQLDB, p.Redis, p.NATS),
 	})
 	RegisterNodeRoutes(app, p.Nodes)
+	RegisterRuntimeControlRoutes(app, p.RuntimeControl, p.RuntimeWorker, p.ReconcilePlanner, p.NodeRuntime)
 	RegisterRuntimeLabRoutes(app, p.Lab)
 	return app
 }

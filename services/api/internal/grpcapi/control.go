@@ -10,6 +10,7 @@ import (
 	controlv1 "github.com/rayip/rayip/packages/proto/gen/go/rayip/control/v1"
 	"github.com/rayip/rayip/services/api/internal/config"
 	"github.com/rayip/rayip/services/api/internal/node"
+	"github.com/rayip/rayip/services/api/internal/noderuntime"
 	"github.com/rayip/rayip/services/api/internal/runtimelab"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
@@ -19,14 +20,15 @@ import (
 type ControlServer struct {
 	controlv1.UnimplementedNodeControlServiceServer
 
-	cfg     config.Config
-	nodes   *node.Service
-	runtime *RuntimeDispatcher
-	log     *zap.Logger
+	cfg         config.Config
+	nodes       *node.Service
+	nodeRuntime *noderuntime.Service
+	runtime     *RuntimeDispatcher
+	log         *zap.Logger
 }
 
-func NewControlServer(cfg config.Config, nodes *node.Service, runtime *RuntimeDispatcher, log *zap.Logger) *ControlServer {
-	return &ControlServer{cfg: cfg, nodes: nodes, runtime: runtime, log: log}
+func NewControlServer(cfg config.Config, nodes *node.Service, nodeRuntime *noderuntime.Service, runtime *RuntimeDispatcher, log *zap.Logger) *ControlServer {
+	return &ControlServer{cfg: cfg, nodes: nodes, nodeRuntime: nodeRuntime, runtime: runtime, log: log}
 }
 
 func (s *ControlServer) Connect(stream grpc.BidiStreamingServer[controlv1.AgentEnvelope, controlv1.ControlEnvelope]) error {
@@ -73,6 +75,22 @@ func (s *ControlServer) Connect(stream grpc.BidiStreamingServer[controlv1.AgentE
 	if err != nil {
 		return err
 	}
+	_, _ = s.nodeRuntime.UpsertStatus(ctx, noderuntime.StatusInput{
+		NodeID:               summary.ID,
+		LeaseOnline:          true,
+		RuntimeVerdict:       verdictFromProto(verdict),
+		ExpectedRevision:     observation.GetLastGoodRevision(),
+		CurrentRevision:      observation.GetLastGoodRevision(),
+		LastGoodRevision:     observation.GetLastGoodRevision(),
+		ExpectedDigestHash:   observation.GetRuntimeDigest(),
+		RuntimeDigestHash:    observation.GetRuntimeDigest(),
+		Capabilities:         observation.GetCapabilities(),
+		RequiredCapabilities: verdict.GetRequiredCapabilities(),
+		ManifestHash:         observation.GetManifestSha256(),
+		BinaryHash:           observation.GetBinarySha256(),
+		ExtensionABI:         observation.GetExtensionAbi(),
+		BundleChannel:        observation.GetBundleVersion(),
+	})
 	unregister := s.runtime.Register(summary.ID, stream)
 	defer unregister()
 
@@ -123,6 +141,23 @@ func (s *ControlServer) Connect(stream grpc.BidiStreamingServer[controlv1.AgentE
 			if err != nil {
 				return err
 			}
+			verdict := negotiateRuntime(defaultRuntimeNegotiationPolicy(), observation)
+			_, _ = s.nodeRuntime.UpsertStatus(ctx, noderuntime.StatusInput{
+				NodeID:               lease.GetNodeId(),
+				LeaseOnline:          true,
+				RuntimeVerdict:       verdictFromProto(verdict),
+				ExpectedRevision:     observation.GetLastGoodRevision(),
+				CurrentRevision:      observation.GetLastGoodRevision(),
+				LastGoodRevision:     observation.GetLastGoodRevision(),
+				ExpectedDigestHash:   observation.GetRuntimeDigest(),
+				RuntimeDigestHash:    observation.GetRuntimeDigest(),
+				Capabilities:         observation.GetCapabilities(),
+				RequiredCapabilities: verdict.GetRequiredCapabilities(),
+				ManifestHash:         observation.GetManifestSha256(),
+				BinaryHash:           observation.GetBinarySha256(),
+				ExtensionABI:         observation.GetExtensionAbi(),
+				BundleChannel:        observation.GetBundleVersion(),
+			})
 			if err := stream.Send(&controlv1.ControlEnvelope{
 				RequestId: envelope.GetRequestId(),
 				Payload: &controlv1.ControlEnvelope_Ack{Ack: &controlv1.ControlAck{
@@ -134,9 +169,36 @@ func (s *ControlServer) Connect(stream grpc.BidiStreamingServer[controlv1.AgentE
 			}
 			continue
 		}
-		if result := envelope.GetRuntimeResult(); result != nil {
-			s.runtime.HandleResult(runtimelab.ResultFromProto(result))
+		if ack := envelope.GetRuntimeApplyAck(); ack != nil {
+			result := runtimelab.ResultFromProto(ack)
+			s.runtime.HandleResult(result)
+			_, _ = s.nodeRuntime.RecordRuntimeAck(ctx, noderuntime.RuntimeAckInput{
+				NodeID:           result.NodeID,
+				Status:           string(result.Status),
+				AppliedRevision:  result.AppliedRevision,
+				LastGoodRevision: result.LastGoodRevision,
+				DigestHash:       result.Digest.Hash,
+				AccountCount:     result.Digest.AccountCount,
+			})
 		}
+	}
+}
+
+func verdictFromProto(verdict *controlv1.RuntimeVerdict) noderuntime.RuntimeVerdict {
+	if verdict == nil {
+		return noderuntime.RuntimeVerdictDegraded
+	}
+	switch verdict.GetStatus() {
+	case controlv1.RuntimeVerdictStatus_RUNTIME_VERDICT_STATUS_ACCEPTED:
+		return noderuntime.RuntimeVerdictAccepted
+	case controlv1.RuntimeVerdictStatus_RUNTIME_VERDICT_STATUS_NEEDS_UPGRADE:
+		return noderuntime.RuntimeVerdictNeedsUpgrade
+	case controlv1.RuntimeVerdictStatus_RUNTIME_VERDICT_STATUS_QUARANTINED:
+		return noderuntime.RuntimeVerdictQuarantined
+	case controlv1.RuntimeVerdictStatus_RUNTIME_VERDICT_STATUS_UNSUPPORTED_CAPABILITY:
+		return noderuntime.RuntimeVerdictDegraded
+	default:
+		return noderuntime.RuntimeVerdictDegraded
 	}
 }
 

@@ -22,7 +22,6 @@ type Operation string
 const (
 	OperationUpsert       Operation = "UPSERT"
 	OperationDelete       Operation = "DELETE"
-	OperationDisable      Operation = "DISABLE"
 	OperationUpdatePolicy Operation = "UPDATE_POLICY"
 	OperationGetUsage     Operation = "GET_USAGE"
 	OperationGetDigest    Operation = "GET_DIGEST"
@@ -32,10 +31,24 @@ const (
 type ApplyStatus string
 
 const (
-	ApplyStatusSuccess   ApplyStatus = "SUCCESS"
+	ApplyStatusACK       ApplyStatus = "ACK"
+	ApplyStatusNACK      ApplyStatus = "NACK"
+	ApplyStatusPartial   ApplyStatus = "PARTIAL"
 	ApplyStatusFailed    ApplyStatus = "FAILED"
-	ApplyStatusSkipped   ApplyStatus = "SKIPPED"
 	ApplyStatusDuplicate ApplyStatus = "DUPLICATE"
+)
+
+type ApplyMode string
+
+const (
+	ApplyModeDelta    ApplyMode = "DELTA"
+	ApplyModeSnapshot ApplyMode = "SNAPSHOT"
+)
+
+type ResourceKind string
+
+const (
+	ResourceKindProxyAccount ResourceKind = "PROXY_ACCOUNT"
 )
 
 type Account struct {
@@ -80,27 +93,51 @@ type PolicyInput struct {
 	DesiredGeneration uint64 `json:"desired_generation"`
 }
 
-type RuntimeCommand struct {
-	CommandID         string    `json:"command_id"`
-	NodeID            string    `json:"node_id"`
-	Operation         Operation `json:"operation"`
-	Account           Account   `json:"account"`
-	DesiredGeneration uint64    `json:"desired_generation"`
-	DeadlineUnixMS    int64     `json:"deadline_unix_ms"`
+type RuntimeApply struct {
+	ApplyID              string            `json:"apply_id"`
+	NodeID               string            `json:"node_id"`
+	Mode                 ApplyMode         `json:"mode"`
+	VersionInfo          string            `json:"version_info"`
+	Nonce                string            `json:"nonce"`
+	BaseRevision         uint64            `json:"base_revision"`
+	TargetRevision       uint64            `json:"target_revision"`
+	DeadlineUnixMS       int64             `json:"deadline_unix_ms"`
+	Resources            []RuntimeResource `json:"resources"`
+	RemovedResourceNames []string          `json:"removed_resource_names"`
+}
+
+type RuntimeResource struct {
+	Name              string       `json:"name"`
+	Kind              ResourceKind `json:"kind"`
+	ResourceVersion   uint64       `json:"resource_version"`
+	RuntimeEmail      string       `json:"runtime_email"`
+	Protocol          Protocol     `json:"protocol"`
+	ListenIP          string       `json:"listen_ip"`
+	Port              uint32       `json:"port"`
+	Username          string       `json:"username"`
+	Password          string       `json:"password"`
+	EgressLimitBPS    uint64       `json:"egress_limit_bps"`
+	IngressLimitBPS   uint64       `json:"ingress_limit_bps"`
+	MaxConnections    uint32       `json:"max_connections"`
+	Priority          uint32       `json:"priority"`
+	AbuseReportPolicy string       `json:"abuse_report_policy"`
+	ExpiresAtUnixMS   int64        `json:"expires_at_unix_ms"`
 }
 
 type ApplyResult struct {
-	CommandID         string      `json:"command_id"`
-	ProxyAccountID    string      `json:"proxy_account_id,omitempty"`
-	NodeID            string      `json:"node_id,omitempty"`
-	Operation         Operation   `json:"operation,omitempty"`
-	Status            ApplyStatus `json:"status"`
-	ErrorCode         string      `json:"error_code,omitempty"`
-	ErrorMessage      string      `json:"error_message,omitempty"`
-	AppliedGeneration uint64      `json:"applied_generation"`
-	Usage             Usage       `json:"usage,omitempty"`
-	Digest            Digest      `json:"digest,omitempty"`
-	CreatedAt         time.Time   `json:"created_at,omitempty"`
+	ApplyID          string      `json:"apply_id"`
+	ProxyAccountID   string      `json:"proxy_account_id,omitempty"`
+	NodeID           string      `json:"node_id,omitempty"`
+	Operation        Operation   `json:"operation,omitempty"`
+	Status           ApplyStatus `json:"status"`
+	VersionInfo      string      `json:"version_info,omitempty"`
+	Nonce            string      `json:"nonce,omitempty"`
+	AppliedRevision  uint64      `json:"applied_revision"`
+	LastGoodRevision uint64      `json:"last_good_revision"`
+	ErrorDetail      string      `json:"error_detail,omitempty"`
+	Usage            Usage       `json:"usage,omitempty"`
+	Digest           Digest      `json:"digest,omitempty"`
+	CreatedAt        time.Time   `json:"created_at,omitempty"`
 }
 
 type Usage struct {

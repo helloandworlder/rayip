@@ -7,140 +7,151 @@ import (
 	"github.com/rayip/rayip/services/node-agent/internal/runtime"
 )
 
-func TestManagerReturnsDuplicateForSameGeneration(t *testing.T) {
+func testResource(name string, revision uint64) runtime.Resource {
+	return runtime.Resource{
+		Name:              name,
+		Kind:              runtime.ResourceKindProxyAccount,
+		ResourceVersion:   revision,
+		RuntimeEmail:      name[len("proxy/"):],
+		Protocol:          runtime.ProtocolSOCKS5,
+		ListenIP:          "127.0.0.1",
+		Port:              18080,
+		Username:          "u1",
+		Password:          "p1",
+		EgressLimitBPS:    1024,
+		IngressLimitBPS:   2048,
+		MaxConnections:    2,
+		Priority:          1,
+		AbuseReportPolicy: "REPORT_ONLY",
+	}
+}
+
+func TestManagerAppliesDeltaAndTracksRevisionNonce(t *testing.T) {
+	core := runtime.NewMemoryCore()
+	manager := runtime.NewManager(core)
+
+	ack, err := manager.Apply(context.Background(), runtime.Apply{
+		ApplyID:        "apply-1",
+		Mode:           runtime.ApplyModeDelta,
+		VersionInfo:    "rv-1",
+		Nonce:          "nonce-1",
+		BaseRevision:   0,
+		TargetRevision: 1,
+		Resources:      []runtime.Resource{testResource("proxy/acct-1", 1)},
+	})
+	if err != nil {
+		t.Fatalf("Apply() error = %v", err)
+	}
+	if ack.Status != runtime.AckStatusACK || ack.AppliedRevision != 1 || ack.LastGoodRevision != 1 {
+		t.Fatalf("ack = %#v", ack)
+	}
+	if ack.VersionInfo != "rv-1" || ack.Nonce != "nonce-1" {
+		t.Fatalf("version/nonce not echoed: %#v", ack)
+	}
+	if _, ok := core.Account("proxy/acct-1"); !ok {
+		t.Fatal("resource was not upserted into core")
+	}
+}
+
+func TestManagerDeltaBaseRevisionMismatchReturnsNACK(t *testing.T) {
 	manager := runtime.NewManager(runtime.NewMemoryCore())
-	account := runtime.Account{
-		ProxyAccountID:    "acct-1",
-		RuntimeEmail:      "acct-1",
-		Protocol:          runtime.ProtocolSOCKS5,
-		ListenIP:          "127.0.0.1",
-		Port:              18080,
-		Username:          "u1",
-		Password:          "p1",
-		EgressLimitBPS:    1024,
-		IngressLimitBPS:   2048,
-		MaxConnections:    2,
-		DesiredGeneration: 3,
-		Status:            runtime.AccountStatusEnabled,
-	}
 
-	first, err := manager.Apply(context.Background(), runtime.Command{
-		CommandID:         "cmd-1",
-		Operation:         runtime.OperationUpsert,
-		Account:           account,
-		DesiredGeneration: 3,
+	ack, err := manager.Apply(context.Background(), runtime.Apply{
+		ApplyID:        "apply-2",
+		Mode:           runtime.ApplyModeDelta,
+		VersionInfo:    "rv-2",
+		Nonce:          "nonce-2",
+		BaseRevision:   7,
+		TargetRevision: 8,
+		Resources:      []runtime.Resource{testResource("proxy/acct-1", 8)},
 	})
-	if err != nil {
-		t.Fatalf("Apply() first error = %v", err)
+	if err == nil {
+		t.Fatal("Apply() error = nil, want base revision mismatch")
 	}
-	if first.Status != runtime.ResultSuccess {
-		t.Fatalf("first status = %s, want SUCCESS", first.Status)
-	}
-
-	second, err := manager.Apply(context.Background(), runtime.Command{
-		CommandID:         "cmd-2",
-		Operation:         runtime.OperationUpsert,
-		Account:           account,
-		DesiredGeneration: 3,
-	})
-	if err != nil {
-		t.Fatalf("Apply() second error = %v", err)
-	}
-	if second.Status != runtime.ResultDuplicate || second.AppliedGeneration != 3 {
-		t.Fatalf("duplicate result = %#v", second)
+	if ack.Status != runtime.AckStatusNACK || ack.AppliedRevision != 0 || ack.LastGoodRevision != 0 {
+		t.Fatalf("ack = %#v", ack)
 	}
 }
 
-func TestManagerUpdatesPolicyForNewGenerationAndDigest(t *testing.T) {
+func TestManagerDuplicateVersionNonceIsIdempotent(t *testing.T) {
+	manager := runtime.NewManager(runtime.NewMemoryCore())
+	apply := runtime.Apply{
+		ApplyID:        "apply-1",
+		Mode:           runtime.ApplyModeDelta,
+		VersionInfo:    "rv-1",
+		Nonce:          "nonce-1",
+		BaseRevision:   0,
+		TargetRevision: 1,
+		Resources:      []runtime.Resource{testResource("proxy/acct-1", 1)},
+	}
+	if _, err := manager.Apply(context.Background(), apply); err != nil {
+		t.Fatalf("first Apply() error = %v", err)
+	}
+
+	ack, err := manager.Apply(context.Background(), apply)
+	if err != nil {
+		t.Fatalf("duplicate Apply() error = %v", err)
+	}
+	if ack.Status != runtime.AckStatusACK || ack.AppliedRevision != 1 || ack.LastGoodRevision != 1 {
+		t.Fatalf("duplicate ack = %#v", ack)
+	}
+}
+
+func TestManagerRemovedResourceDeletesAccount(t *testing.T) {
 	core := runtime.NewMemoryCore()
 	manager := runtime.NewManager(core)
-	account := runtime.Account{
-		ProxyAccountID:    "acct-1",
-		RuntimeEmail:      "acct-1",
-		Protocol:          runtime.ProtocolHTTP,
-		ListenIP:          "127.0.0.1",
-		Port:              18081,
-		Username:          "u1",
-		Password:          "p1",
-		EgressLimitBPS:    1024,
-		IngressLimitBPS:   2048,
-		MaxConnections:    2,
-		DesiredGeneration: 1,
-		Status:            runtime.AccountStatusEnabled,
-	}
-	if _, err := manager.Apply(context.Background(), runtime.Command{
-		CommandID:         "cmd-1",
-		Operation:         runtime.OperationUpsert,
-		Account:           account,
-		DesiredGeneration: 1,
+	if _, err := manager.Apply(context.Background(), runtime.Apply{
+		ApplyID:        "apply-1",
+		Mode:           runtime.ApplyModeDelta,
+		VersionInfo:    "rv-1",
+		Nonce:          "nonce-1",
+		BaseRevision:   0,
+		TargetRevision: 1,
+		Resources:      []runtime.Resource{testResource("proxy/acct-1", 1)},
 	}); err != nil {
-		t.Fatalf("Apply() generation 1 error = %v", err)
-	}
-
-	account.EgressLimitBPS = 4096
-	account.MaxConnections = 4
-	account.DesiredGeneration = 2
-	result, err := manager.Apply(context.Background(), runtime.Command{
-		CommandID:         "cmd-2",
-		Operation:         runtime.OperationUpdatePolicy,
-		Account:           account,
-		DesiredGeneration: 2,
-	})
-	if err != nil {
-		t.Fatalf("Apply() generation 2 error = %v", err)
-	}
-	if result.Status != runtime.ResultSuccess || result.AppliedGeneration != 2 {
-		t.Fatalf("update result = %#v", result)
-	}
-	if result.Digest.AccountCount != 1 || result.Digest.MaxGeneration != 2 || result.Digest.Hash == "" {
-		t.Fatalf("digest not updated: %#v", result.Digest)
-	}
-
-	stored, ok := core.Account("acct-1")
-	if !ok {
-		t.Fatal("account missing from core")
-	}
-	if stored.EgressLimitBPS != 4096 || stored.MaxConnections != 4 {
-		t.Fatalf("policy not updated: %#v", stored)
-	}
-}
-
-func TestManagerDisableAndDelete(t *testing.T) {
-	core := runtime.NewMemoryCore()
-	manager := runtime.NewManager(core)
-	account := runtime.Account{
-		ProxyAccountID:    "acct-1",
-		RuntimeEmail:      "acct-1",
-		Protocol:          runtime.ProtocolSOCKS5,
-		ListenIP:          "127.0.0.1",
-		Port:              18080,
-		Username:          "u1",
-		Password:          "p1",
-		DesiredGeneration: 1,
-		Status:            runtime.AccountStatusEnabled,
-	}
-	if _, err := manager.Apply(context.Background(), runtime.Command{CommandID: "cmd-1", Operation: runtime.OperationUpsert, Account: account, DesiredGeneration: 1}); err != nil {
 		t.Fatalf("upsert error = %v", err)
 	}
 
-	account.DesiredGeneration = 2
-	disabled, err := manager.Apply(context.Background(), runtime.Command{CommandID: "cmd-2", Operation: runtime.OperationDisable, Account: account, DesiredGeneration: 2})
+	ack, err := manager.Apply(context.Background(), runtime.Apply{
+		ApplyID:              "apply-2",
+		Mode:                 runtime.ApplyModeDelta,
+		VersionInfo:          "rv-2",
+		Nonce:                "nonce-2",
+		BaseRevision:         1,
+		TargetRevision:       2,
+		RemovedResourceNames: []string{"proxy/acct-1"},
+	})
 	if err != nil {
-		t.Fatalf("disable error = %v", err)
+		t.Fatalf("remove error = %v", err)
 	}
-	if disabled.Status != runtime.ResultSuccess {
-		t.Fatalf("disable status = %s", disabled.Status)
+	if ack.Status != runtime.AckStatusACK || ack.AppliedRevision != 2 {
+		t.Fatalf("remove ack = %#v", ack)
 	}
-	stored, _ := core.Account("acct-1")
-	if stored.Status != runtime.AccountStatusDisabled {
-		t.Fatalf("stored status = %s, want DISABLED", stored.Status)
+	if _, ok := core.Account("proxy/acct-1"); ok {
+		t.Fatal("removed resource still exists")
 	}
+}
 
-	deleted, err := manager.Apply(context.Background(), runtime.Command{CommandID: "cmd-3", Operation: runtime.OperationDelete, Account: account, DesiredGeneration: 3})
+func TestManagerSnapshotIsAcceptedWithoutPriorRevision(t *testing.T) {
+	core := runtime.NewMemoryCore()
+	manager := runtime.NewManager(core)
+
+	ack, err := manager.Apply(context.Background(), runtime.Apply{
+		ApplyID:        "snapshot-1",
+		Mode:           runtime.ApplyModeSnapshot,
+		VersionInfo:    "rv-10",
+		Nonce:          "nonce-10",
+		BaseRevision:   0,
+		TargetRevision: 10,
+		Resources: []runtime.Resource{
+			testResource("proxy/acct-1", 10),
+			testResource("proxy/acct-2", 10),
+		},
+	})
 	if err != nil {
-		t.Fatalf("delete error = %v", err)
+		t.Fatalf("snapshot error = %v", err)
 	}
-	if deleted.Digest.AccountCount != 0 {
-		t.Fatalf("account count after delete = %d, want 0", deleted.Digest.AccountCount)
+	if ack.Status != runtime.AckStatusACK || ack.AppliedRevision != 10 || ack.Digest.AccountCount != 2 {
+		t.Fatalf("snapshot ack = %#v", ack)
 	}
 }

@@ -112,24 +112,6 @@ func (c *XrayCore) UpsertAccount(ctx context.Context, account Account) error {
 	return err
 }
 
-func (c *XrayCore) DisableAccount(ctx context.Context, proxyAccountID string, generation uint64) error {
-	policy := c.runtimePolicy(proxyAccountID)
-	policy.Disabled = true
-	policy.Generation = generation
-	if tag := c.runtimeInboundTag(proxyAccountID); tag != "" {
-		if err := c.removeInboundUser(ctx, tag, policy.GetEmail()); err != nil {
-			return err
-		}
-	}
-	_, err := c.client.UpsertAccountPolicy(ctx, &runtimev1.UpsertAccountPolicyRequest{
-		Policy: policy,
-	})
-	if err == nil {
-		c.rememberPolicy(proxyAccountID, policy.GetEmail(), policy)
-	}
-	return err
-}
-
 func (c *XrayCore) DeleteAccount(ctx context.Context, proxyAccountID string) error {
 	email := c.runtimeEmail(proxyAccountID)
 	if tag := c.runtimeInboundTag(proxyAccountID); tag != "" {
@@ -308,21 +290,6 @@ func ipOrDomain(value string) *xnet.IPOrDomain {
 		return &xnet.IPOrDomain{Address: &xnet.IPOrDomain_Ip{Ip: ip}}
 	}
 	return &xnet.IPOrDomain{Address: &xnet.IPOrDomain_Domain{Domain: value}}
-}
-
-func (c *XrayCore) runtimePolicy(proxyAccountID string) *runtimev1.AccountPolicy {
-	c.mu.RLock()
-	if policy := c.policies[proxyAccountID]; policy != nil {
-		copied := *policy
-		c.mu.RUnlock()
-		return &copied
-	}
-	email := c.emails[proxyAccountID]
-	c.mu.RUnlock()
-	if email == "" {
-		email = proxyAccountID
-	}
-	return &runtimev1.AccountPolicy{Email: email}
 }
 
 func (c *XrayCore) Probe(ctx context.Context, proxyAccountID string) (Usage, error) {

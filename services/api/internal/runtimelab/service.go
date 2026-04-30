@@ -18,7 +18,7 @@ type Repository interface {
 }
 
 type Dispatcher interface {
-	DispatchRuntimeCommand(ctx context.Context, cmd RuntimeCommand) (ApplyResult, error)
+	DispatchRuntimeApply(ctx context.Context, apply RuntimeApply) (ApplyResult, error)
 }
 
 type Service struct {
@@ -79,11 +79,11 @@ func (s *Service) CreateAccount(ctx context.Context, input CreateAccountInput) (
 	if err != nil {
 		return Account{}, ApplyResult{}, err
 	}
-	result, err := s.dispatch(ctx, OperationUpsert, account, input.DesiredGeneration)
+	result, err := s.dispatchResource(ctx, OperationUpsert, account, input.DesiredGeneration)
 	if err != nil {
 		return account, result, err
 	}
-	account.AppliedGeneration = result.AppliedGeneration
+	account.AppliedGeneration = result.AppliedRevision
 	account, _ = s.repo.UpsertAccount(ctx, account)
 	return account, result, nil
 }
@@ -101,13 +101,14 @@ func (s *Service) UpsertAccountPolicy(ctx context.Context, proxyAccountID string
 	}
 	if input.DesiredGeneration <= account.AppliedGeneration {
 		result := ApplyResult{
-			CommandID:         uuid.NewString(),
-			ProxyAccountID:    account.ProxyAccountID,
-			NodeID:            account.NodeID,
-			Operation:         OperationUpdatePolicy,
-			Status:            ApplyStatusDuplicate,
-			AppliedGeneration: account.AppliedGeneration,
-			CreatedAt:         s.now().UTC(),
+			ApplyID:          uuid.NewString(),
+			ProxyAccountID:   account.ProxyAccountID,
+			NodeID:           account.NodeID,
+			Operation:        OperationUpdatePolicy,
+			Status:           ApplyStatusDuplicate,
+			AppliedRevision:  account.AppliedGeneration,
+			LastGoodRevision: account.AppliedGeneration,
+			CreatedAt:        s.now().UTC(),
 		}
 		_ = s.repo.SaveApplyResult(ctx, result)
 		return account, result, nil
@@ -123,11 +124,11 @@ func (s *Service) UpsertAccountPolicy(ctx context.Context, proxyAccountID string
 	if err != nil {
 		return Account{}, ApplyResult{}, err
 	}
-	result, err := s.dispatch(ctx, OperationUpdatePolicy, account, input.DesiredGeneration)
+	result, err := s.dispatchResource(ctx, OperationUpdatePolicy, account, input.DesiredGeneration)
 	if err != nil {
 		return account, result, err
 	}
-	account.AppliedGeneration = result.AppliedGeneration
+	account.AppliedGeneration = result.AppliedRevision
 	account, _ = s.repo.UpsertAccount(ctx, account)
 	return account, result, nil
 }
@@ -147,9 +148,9 @@ func (s *Service) DisableAccount(ctx context.Context, proxyAccountID string) (Ac
 	if err != nil {
 		return Account{}, ApplyResult{}, err
 	}
-	result, err := s.dispatch(ctx, OperationDisable, account, account.DesiredGeneration)
+	result, err := s.dispatchRemove(ctx, OperationDelete, account, account.DesiredGeneration)
 	if err == nil {
-		account.AppliedGeneration = result.AppliedGeneration
+		account.AppliedGeneration = result.AppliedRevision
 		account, _ = s.repo.UpsertAccount(ctx, account)
 	}
 	return account, result, err
@@ -170,7 +171,7 @@ func (s *Service) DeleteAccount(ctx context.Context, proxyAccountID string) (App
 	if err != nil {
 		return ApplyResult{}, err
 	}
-	return s.dispatch(ctx, OperationDelete, account, account.DesiredGeneration)
+	return s.dispatchRemove(ctx, OperationDelete, account, account.DesiredGeneration)
 }
 
 func (s *Service) GetUsage(ctx context.Context, proxyAccountID string) (ApplyResult, error) {
@@ -181,7 +182,7 @@ func (s *Service) GetUsage(ctx context.Context, proxyAccountID string) (ApplyRes
 	if !ok {
 		return ApplyResult{}, fmt.Errorf("account %s not found", proxyAccountID)
 	}
-	return s.dispatch(ctx, OperationGetUsage, account, account.DesiredGeneration)
+	return s.localUnsupportedResult(ctx, OperationGetUsage, account, "usage is reported asynchronously outside runtime apply")
 }
 
 func (s *Service) ProbeAccount(ctx context.Context, proxyAccountID string) (ApplyResult, error) {
@@ -192,14 +193,14 @@ func (s *Service) ProbeAccount(ctx context.Context, proxyAccountID string) (Appl
 	if !ok {
 		return ApplyResult{}, fmt.Errorf("account %s not found", proxyAccountID)
 	}
-	return s.dispatch(ctx, OperationProbe, account, account.DesiredGeneration)
+	return s.localUnsupportedResult(ctx, OperationProbe, account, "probe is not a runtime apply operation")
 }
 
 func (s *Service) GetDigest(ctx context.Context, nodeID string) (ApplyResult, error) {
 	if nodeID == "" {
 		return ApplyResult{}, errors.New("node_id is required")
 	}
-	return s.dispatch(ctx, OperationGetDigest, Account{NodeID: nodeID}, 0)
+	return s.localUnsupportedResult(ctx, OperationGetDigest, Account{NodeID: nodeID}, "digest is reported by lease/runtime apply ack")
 }
 
 func (s *Service) ListAccounts(ctx context.Context) ([]Account, error) {
@@ -213,18 +214,36 @@ func (s *Service) ListApplyResults(ctx context.Context, proxyAccountID string, l
 	return s.repo.ListApplyResults(ctx, proxyAccountID, limit)
 }
 
-func (s *Service) dispatch(ctx context.Context, operation Operation, account Account, generation uint64) (ApplyResult, error) {
-	command := RuntimeCommand{
-		CommandID:         uuid.NewString(),
-		NodeID:            account.NodeID,
-		Operation:         operation,
-		Account:           account,
-		DesiredGeneration: generation,
-		DeadlineUnixMS:    s.now().Add(8 * time.Second).UnixMilli(),
+func (s *Service) dispatchResource(ctx context.Context, operation Operation, account Account, revision uint64) (ApplyResult, error) {
+	apply := s.newDeltaApply(account.NodeID, account.AppliedGeneration, revision)
+	apply.Resources = []RuntimeResource{resourceFromAccount(account, revision)}
+	return s.dispatch(ctx, operation, account, apply)
+}
+
+func (s *Service) dispatchRemove(ctx context.Context, operation Operation, account Account, revision uint64) (ApplyResult, error) {
+	apply := s.newDeltaApply(account.NodeID, account.AppliedGeneration, revision)
+	apply.RemovedResourceNames = []string{resourceName(account)}
+	return s.dispatch(ctx, operation, account, apply)
+}
+
+func (s *Service) newDeltaApply(nodeID string, baseRevision uint64, targetRevision uint64) RuntimeApply {
+	applyID := uuid.NewString()
+	return RuntimeApply{
+		ApplyID:        applyID,
+		NodeID:         nodeID,
+		Mode:           ApplyModeDelta,
+		VersionInfo:    fmt.Sprintf("revision/%d", targetRevision),
+		Nonce:          uuid.NewString(),
+		BaseRevision:   baseRevision,
+		TargetRevision: targetRevision,
+		DeadlineUnixMS: s.now().Add(8 * time.Second).UnixMilli(),
 	}
-	result, err := s.dispatcher.DispatchRuntimeCommand(ctx, command)
-	if result.CommandID == "" {
-		result.CommandID = command.CommandID
+}
+
+func (s *Service) dispatch(ctx context.Context, operation Operation, account Account, apply RuntimeApply) (ApplyResult, error) {
+	result, err := s.dispatcher.DispatchRuntimeApply(ctx, apply)
+	if result.ApplyID == "" {
+		result.ApplyID = apply.ApplyID
 	}
 	result.ProxyAccountID = account.ProxyAccountID
 	result.NodeID = account.NodeID
@@ -232,11 +251,57 @@ func (s *Service) dispatch(ctx context.Context, operation Operation, account Acc
 	result.CreatedAt = s.now().UTC()
 	if err != nil {
 		result.Status = ApplyStatusFailed
-		result.ErrorCode = "DISPATCH_FAILED"
-		result.ErrorMessage = err.Error()
+		result.ErrorDetail = err.Error()
 	}
 	if saveErr := s.repo.SaveApplyResult(ctx, result); saveErr != nil && err == nil {
 		err = saveErr
 	}
 	return result, err
+}
+
+func (s *Service) localUnsupportedResult(ctx context.Context, operation Operation, account Account, detail string) (ApplyResult, error) {
+	result := ApplyResult{
+		ApplyID:          uuid.NewString(),
+		ProxyAccountID:   account.ProxyAccountID,
+		NodeID:           account.NodeID,
+		Operation:        operation,
+		Status:           ApplyStatusFailed,
+		ErrorDetail:      detail,
+		AppliedRevision:  account.AppliedGeneration,
+		LastGoodRevision: account.AppliedGeneration,
+		CreatedAt:        s.now().UTC(),
+	}
+	_ = s.repo.SaveApplyResult(ctx, result)
+	return result, errors.New(detail)
+}
+
+func resourceFromAccount(account Account, revision uint64) RuntimeResource {
+	expiresAt := int64(0)
+	if !account.ExpiresAt.IsZero() {
+		expiresAt = account.ExpiresAt.UnixMilli()
+	}
+	return RuntimeResource{
+		Name:              resourceName(account),
+		Kind:              ResourceKindProxyAccount,
+		ResourceVersion:   revision,
+		RuntimeEmail:      account.RuntimeEmail,
+		Protocol:          account.Protocol,
+		ListenIP:          account.ListenIP,
+		Port:              account.Port,
+		Username:          account.Username,
+		Password:          account.Password,
+		EgressLimitBPS:    account.EgressLimitBPS,
+		IngressLimitBPS:   account.IngressLimitBPS,
+		MaxConnections:    account.MaxConnections,
+		Priority:          1,
+		AbuseReportPolicy: "REPORT_ONLY",
+		ExpiresAtUnixMS:   expiresAt,
+	}
+}
+
+func resourceName(account Account) string {
+	if account.RuntimeEmail != "" {
+		return "proxy/" + account.RuntimeEmail
+	}
+	return "proxy/" + account.ProxyAccountID
 }

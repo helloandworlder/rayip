@@ -4,96 +4,107 @@ import controlv1 "github.com/rayip/rayip/packages/proto/gen/go/rayip/control/v1"
 
 func ObservationToProto(info DiscoveryInfo) *controlv1.RuntimeObservation {
 	return &controlv1.RuntimeObservation{
-		AgentVersion:       info.AgentVersion,
-		XrayVersion:        info.XrayVersion,
-		BundleVersion:      info.BundleVersion,
-		ExtensionAbi:       info.ExtensionABI,
-		Capabilities:       append([]string(nil), info.Capabilities...),
-		BinarySha256:       info.BinarySHA256,
-		ManifestSha256:     info.ManifestSHA256,
-		RuntimeDigest:      info.RuntimeDigest,
-		LastGoodGeneration: info.LastGoodGeneration,
+		AgentVersion:     info.AgentVersion,
+		XrayVersion:      info.XrayVersion,
+		BundleVersion:    info.BundleVersion,
+		ExtensionAbi:     info.ExtensionABI,
+		Capabilities:     append([]string(nil), info.Capabilities...),
+		BinarySha256:     info.BinarySHA256,
+		ManifestSha256:   info.ManifestSHA256,
+		RuntimeDigest:    info.RuntimeDigest,
+		LastGoodRevision: info.LastGoodGeneration,
 	}
 }
 
-func CommandFromProto(cmd *controlv1.RuntimeCommand) Command {
-	if cmd == nil {
-		return Command{}
+func ApplyFromProto(apply *controlv1.RuntimeApply) Apply {
+	if apply == nil {
+		return Apply{}
 	}
-	return Command{
-		CommandID:         cmd.GetCommandId(),
-		NodeID:            cmd.GetNodeId(),
-		Operation:         operationFromProto(cmd.GetOperation()),
-		Account:           accountFromProto(cmd.GetAccount()),
-		DesiredGeneration: cmd.GetDesiredGeneration(),
-		DeadlineUnixMS:    cmd.GetDeadlineUnixMs(),
+	resources := make([]Resource, 0, len(apply.GetResources()))
+	for _, resource := range apply.GetResources() {
+		resources = append(resources, resourceFromProto(resource))
+	}
+	return Apply{
+		ApplyID:              apply.GetApplyId(),
+		NodeID:               apply.GetNodeId(),
+		Mode:                 applyModeFromProto(apply.GetMode()),
+		VersionInfo:          apply.GetVersionInfo(),
+		Nonce:                apply.GetNonce(),
+		BaseRevision:         apply.GetBaseRevision(),
+		TargetRevision:       apply.GetTargetRevision(),
+		DeadlineUnixMS:       apply.GetDeadlineUnixMs(),
+		Resources:            resources,
+		RemovedResourceNames: append([]string(nil), apply.GetRemovedResourceNames()...),
 	}
 }
 
-func ResultToProto(result Result) *controlv1.RuntimeResult {
-	return &controlv1.RuntimeResult{
-		CommandId:         result.CommandID,
-		Status:            resultStatusToProto(result.Status),
-		ErrorCode:         result.ErrorCode,
-		ErrorMessage:      result.ErrorMessage,
-		AppliedGeneration: result.AppliedGeneration,
-		Usage: &controlv1.RuntimeUsage{
-			ProxyAccountId:    result.Usage.ProxyAccountID,
-			RuntimeEmail:      result.Usage.RuntimeEmail,
-			RxBytes:           result.Usage.RxBytes,
-			TxBytes:           result.Usage.TxBytes,
-			ActiveConnections: result.Usage.ActiveConnections,
-			RxBytesPerSecond:  result.Usage.RxBytesPerSecond,
-			TxBytesPerSecond:  result.Usage.TxBytesPerSecond,
-		},
+func AckToProto(ack ApplyAck) *controlv1.RuntimeApplyAck {
+	results := make([]*controlv1.RuntimeResourceResult, 0, len(ack.ResourceResults))
+	for _, result := range ack.ResourceResults {
+		results = append(results, &controlv1.RuntimeResourceResult{
+			Name:        result.Name,
+			Status:      resourceResultStatusToProto(result.Status),
+			ErrorDetail: result.ErrorDetail,
+		})
+	}
+	return &controlv1.RuntimeApplyAck{
+		ApplyId:          ack.ApplyID,
+		NodeId:           ack.NodeID,
+		VersionInfo:      ack.VersionInfo,
+		Nonce:            ack.Nonce,
+		Status:           ackStatusToProto(ack.Status),
+		AppliedRevision:  ack.AppliedRevision,
+		LastGoodRevision: ack.LastGoodRevision,
+		ResourceResults:  results,
 		Digest: &controlv1.RuntimeDigest{
-			AccountCount:  result.Digest.AccountCount,
-			EnabledCount:  result.Digest.EnabledCount,
-			DisabledCount: result.Digest.DisabledCount,
-			MaxGeneration: result.Digest.MaxGeneration,
-			Hash:          result.Digest.Hash,
+			AccountCount:  ack.Digest.AccountCount,
+			EnabledCount:  ack.Digest.EnabledCount,
+			DisabledCount: ack.Digest.DisabledCount,
+			MaxGeneration: ack.Digest.MaxGeneration,
+			Hash:          ack.Digest.Hash,
 		},
+		ErrorDetail: ack.ErrorDetail,
 	}
 }
 
-func accountFromProto(account *controlv1.RuntimeAccount) Account {
-	if account == nil {
-		return Account{}
+func resourceFromProto(resource *controlv1.RuntimeResource) Resource {
+	if resource == nil {
+		return Resource{}
 	}
-	return Account{
-		ProxyAccountID:    account.GetProxyAccountId(),
-		RuntimeEmail:      account.GetRuntimeEmail(),
-		Protocol:          protocolFromProto(account.GetProtocol()),
-		ListenIP:          account.GetListenIp(),
-		Port:              account.GetPort(),
-		Username:          account.GetUsername(),
-		Password:          account.GetPassword(),
-		ExpiresAtUnixMS:   account.GetExpiresAtUnixMs(),
-		EgressLimitBPS:    account.GetEgressLimitBps(),
-		IngressLimitBPS:   account.GetIngressLimitBps(),
-		MaxConnections:    account.GetMaxConnections(),
-		Status:            accountStatusFromProto(account.GetStatus()),
-		PolicyVersion:     account.GetPolicyVersion(),
-		DesiredGeneration: account.GetDesiredGeneration(),
+	return Resource{
+		Name:              resource.GetName(),
+		Kind:              resourceKindFromProto(resource.GetKind()),
+		ResourceVersion:   resource.GetResourceVersion(),
+		RuntimeEmail:      resource.GetRuntimeEmail(),
+		Protocol:          protocolFromProto(resource.GetProtocol()),
+		ListenIP:          resource.GetListenIp(),
+		Port:              resource.GetPort(),
+		Username:          resource.GetUsername(),
+		Password:          resource.GetPassword(),
+		EgressLimitBPS:    resource.GetEgressLimitBps(),
+		IngressLimitBPS:   resource.GetIngressLimitBps(),
+		MaxConnections:    resource.GetMaxConnections(),
+		Priority:          resource.GetPriority(),
+		AbuseReportPolicy: resource.GetAbuseReportPolicy(),
+		ExpiresAtUnixMS:   resource.GetExpiresAtUnixMs(),
 	}
 }
 
-func operationFromProto(operation controlv1.RuntimeOperation) Operation {
-	switch operation {
-	case controlv1.RuntimeOperation_RUNTIME_OPERATION_UPSERT:
-		return OperationUpsert
-	case controlv1.RuntimeOperation_RUNTIME_OPERATION_DELETE:
-		return OperationDelete
-	case controlv1.RuntimeOperation_RUNTIME_OPERATION_DISABLE:
-		return OperationDisable
-	case controlv1.RuntimeOperation_RUNTIME_OPERATION_UPDATE_POLICY:
-		return OperationUpdatePolicy
-	case controlv1.RuntimeOperation_RUNTIME_OPERATION_GET_USAGE:
-		return OperationGetUsage
-	case controlv1.RuntimeOperation_RUNTIME_OPERATION_GET_DIGEST:
-		return OperationGetDigest
-	case controlv1.RuntimeOperation_RUNTIME_OPERATION_PROBE:
-		return OperationProbe
+func applyModeFromProto(mode controlv1.RuntimeApplyMode) ApplyMode {
+	switch mode {
+	case controlv1.RuntimeApplyMode_RUNTIME_APPLY_MODE_SNAPSHOT:
+		return ApplyModeSnapshot
+	case controlv1.RuntimeApplyMode_RUNTIME_APPLY_MODE_DELTA:
+		return ApplyModeDelta
+	default:
+		return ""
+	}
+}
+
+func resourceKindFromProto(kind controlv1.RuntimeResourceKind) ResourceKind {
+	switch kind {
+	case controlv1.RuntimeResourceKind_RUNTIME_RESOURCE_KIND_PROXY_ACCOUNT:
+		return ResourceKindProxyAccount
 	default:
 		return ""
 	}
@@ -110,30 +121,28 @@ func protocolFromProto(protocol controlv1.RuntimeProtocol) Protocol {
 	}
 }
 
-func accountStatusFromProto(status controlv1.RuntimeAccountStatus) AccountStatus {
+func ackStatusToProto(status AckStatus) controlv1.RuntimeApplyStatus {
 	switch status {
-	case controlv1.RuntimeAccountStatus_RUNTIME_ACCOUNT_STATUS_ENABLED:
-		return AccountStatusEnabled
-	case controlv1.RuntimeAccountStatus_RUNTIME_ACCOUNT_STATUS_DISABLED:
-		return AccountStatusDisabled
-	case controlv1.RuntimeAccountStatus_RUNTIME_ACCOUNT_STATUS_DELETED:
-		return AccountStatusDeleted
+	case AckStatusACK:
+		return controlv1.RuntimeApplyStatus_RUNTIME_APPLY_STATUS_ACK
+	case AckStatusNACK:
+		return controlv1.RuntimeApplyStatus_RUNTIME_APPLY_STATUS_NACK
+	case AckStatusPartial:
+		return controlv1.RuntimeApplyStatus_RUNTIME_APPLY_STATUS_PARTIAL
 	default:
-		return ""
+		return controlv1.RuntimeApplyStatus_RUNTIME_APPLY_STATUS_UNSPECIFIED
 	}
 }
 
-func resultStatusToProto(status ResultStatus) controlv1.RuntimeResultStatus {
+func resourceResultStatusToProto(status ResourceResultStatus) controlv1.RuntimeResourceApplyStatus {
 	switch status {
-	case ResultSuccess:
-		return controlv1.RuntimeResultStatus_RUNTIME_RESULT_STATUS_SUCCESS
-	case ResultFailed:
-		return controlv1.RuntimeResultStatus_RUNTIME_RESULT_STATUS_FAILED
-	case ResultSkipped:
-		return controlv1.RuntimeResultStatus_RUNTIME_RESULT_STATUS_SKIPPED
-	case ResultDuplicate:
-		return controlv1.RuntimeResultStatus_RUNTIME_RESULT_STATUS_DUPLICATE
+	case ResourceResultApplied:
+		return controlv1.RuntimeResourceApplyStatus_RUNTIME_RESOURCE_APPLY_STATUS_APPLIED
+	case ResourceResultRemoved:
+		return controlv1.RuntimeResourceApplyStatus_RUNTIME_RESOURCE_APPLY_STATUS_REMOVED
+	case ResourceResultFailed:
+		return controlv1.RuntimeResourceApplyStatus_RUNTIME_RESOURCE_APPLY_STATUS_FAILED
 	default:
-		return controlv1.RuntimeResultStatus_RUNTIME_RESULT_STATUS_UNSPECIFIED
+		return controlv1.RuntimeResourceApplyStatus_RUNTIME_RESOURCE_APPLY_STATUS_UNSPECIFIED
 	}
 }

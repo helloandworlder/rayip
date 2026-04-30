@@ -3,53 +3,47 @@ package db
 import (
 	"context"
 	"database/sql"
-	"embed"
 	"time"
 
-	"github.com/pressly/goose/v3"
+	"entgo.io/ent/dialect"
+	entsql "entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/schema"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	apiEnt "github.com/rayip/rayip/services/api/ent"
 	"github.com/rayip/rayip/services/api/internal/config"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
-//go:embed migrations/*.sql
-var migrationsFS embed.FS
+func NewSQLDB(cfg config.Config) (*sql.DB, error) {
+	return sql.Open("pgx", cfg.Postgres.DSN)
+}
 
-func NewGorm(cfg config.Config) (*gorm.DB, error) {
-	gormLog := logger.Default.LogMode(logger.Silent)
-	if cfg.Service.Env == "prod" {
-		gormLog = logger.Default.LogMode(logger.Warn)
+func NewEntClient(sqlDB *sql.DB, cfg config.Config) *apiEnt.Client {
+	driver := entsql.OpenDB(dialect.Postgres, sqlDB)
+	options := []apiEnt.Option{apiEnt.Driver(driver)}
+	if cfg.Service.Env != "prod" {
+		options = append(options, apiEnt.Debug())
 	}
-	return gorm.Open(postgres.Open(cfg.Postgres.DSN), &gorm.Config{Logger: gormLog})
+	return apiEnt.NewClient(options...)
 }
 
-func SQLDB(gdb *gorm.DB) (*sql.DB, error) {
-	return gdb.DB()
-}
-
-func RegisterLifecycle(lc fx.Lifecycle, cfg config.Config, sqlDB *sql.DB, log *zap.Logger) {
+func RegisterLifecycle(lc fx.Lifecycle, cfg config.Config, sqlDB *sql.DB, client *apiEnt.Client, log *zap.Logger) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
 			sqlDB.SetMaxOpenConns(30)
 			sqlDB.SetMaxIdleConns(10)
 			sqlDB.SetConnMaxLifetime(30 * time.Minute)
 			if cfg.Postgres.RunMigrations {
-				goose.SetBaseFS(migrationsFS)
-				if err := goose.SetDialect("postgres"); err != nil {
+				if err := client.Schema.Create(ctx, schema.WithForeignKeys(false)); err != nil {
 					return err
 				}
-				if err := goose.UpContext(ctx, sqlDB, "migrations"); err != nil {
-					return err
-				}
-				log.Info("database migrations applied")
+				log.Info("ent schema migration applied")
 			}
 			return nil
 		},
 		OnStop: func(ctx context.Context) error {
-			return sqlDB.Close()
+			return client.Close()
 		},
 	})
 }

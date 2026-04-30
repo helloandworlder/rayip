@@ -153,16 +153,16 @@ func (c *Client) receiveControl(ctx context.Context, stream grpc.BidiStreamingCl
 			recvErr <- err
 			return
 		}
-		if cmd := envelope.GetRuntimeCommand(); cmd != nil {
-			result, applyErr := c.runtime.Apply(ctx, runtime.CommandFromProto(cmd))
+		if apply := envelope.GetRuntimeApply(); apply != nil {
+			ack, applyErr := c.runtime.Apply(ctx, runtime.ApplyFromProto(apply))
 			if applyErr != nil {
-				c.log.Warn("runtime command failed", zap.String("command_id", cmd.GetCommandId()), zap.Error(applyErr))
+				c.log.Warn("runtime apply failed", zap.String("apply_id", apply.GetApplyId()), zap.Error(applyErr))
 			}
 			sendMu.Lock()
 			err := stream.Send(&controlv1.AgentEnvelope{
 				RequestId: envelope.GetRequestId(),
-				Payload: &controlv1.AgentEnvelope_RuntimeResult{
-					RuntimeResult: runtime.ResultToProto(result),
+				Payload: &controlv1.AgentEnvelope_RuntimeApplyAck{
+					RuntimeApplyAck: runtime.AckToProto(ack),
 				},
 			})
 			sendMu.Unlock()

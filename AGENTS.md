@@ -31,8 +31,8 @@ V1 不做：
 - NodeAgent：Go
 - HTTP：GoFiber / Fiber v3
 - 依赖注入：Uber Fx
-- ORM：GORM
-- 迁移：Goose
+- ORM / Schema：Ent
+- 迁移：Ent schema migration，生产 DDL 用 Atlas migration directory 固化
 - 配置：Viper 加载后转 typed config
 - 日志：Zap
 - 数据库：Postgres
@@ -125,7 +125,7 @@ Redis 和 NATS 都可以持久化，但不能替代 Postgres 的根源事实。
 - 遵循现有目录和文档中的架构，不擅自引入新服务拆分。
 - 业务正确性优先于局部性能微优化。
 - 钱包、库存、订单、Runtime 状态机必须使用 Postgres 事务、行锁、唯一约束、条件更新和幂等键。
-- 生产环境禁用 GORM AutoMigrate，使用 Goose 管理迁移。
+- 生产环境不使用临时 SQL 迁移；Ent schema 是源头，发布前用 Atlas 固化版本化 DDL。
 - NATS 消息只带最小索引，Worker 必须回 Postgres 读取当前期望状态。
 - NodeAgent 不导入 API 的用户、订单、钱包、产品包；共享契约只放在 `packages/proto`。
 - Web SSH 经由浏览器 WebSocket -> API -> NodeAgent gRPC -> 本地 PTY，不引入独立 ops-gateway。
