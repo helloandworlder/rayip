@@ -21,6 +21,9 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.API.GRPCAddr != "127.0.0.1:9090" {
 		t.Fatalf("API gRPC addr = %q, want 127.0.0.1:9090", cfg.API.GRPCAddr)
 	}
+	if cfg.API.UseTLS {
+		t.Fatal("API TLS should default to false")
+	}
 	if cfg.Runtime.BundleDir == "" {
 		t.Fatal("runtime bundle dir should have a default")
 	}
@@ -38,6 +41,22 @@ func TestLoadDefaults(t *testing.T) {
 	}
 	if cfg.Probe.PublicIPURL == "" || cfg.Probe.Port != 18080 || len(cfg.Probe.Protocols) == 0 {
 		t.Fatalf("probe defaults = %#v", cfg.Probe)
+	}
+}
+
+func TestLoadGRPCSTargetEnablesTLS(t *testing.T) {
+	t.Setenv("RAYIP_AGENT_API_GRPC_ADDR", "grpcs://api-production-c00f.up.railway.app:443")
+
+	cfg, err := config.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if cfg.API.GRPCAddr != "api-production-c00f.up.railway.app:443" {
+		t.Fatalf("API gRPC addr = %q, want host:443", cfg.API.GRPCAddr)
+	}
+	if !cfg.API.UseTLS {
+		t.Fatal("API TLS should be enabled for grpcs target")
 	}
 }
 

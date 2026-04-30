@@ -27,8 +27,8 @@ curl_json() {
   curl -fsS -H 'content-type: application/json' "$@"
 }
 
-curl -fsS "$API_URL/health" >/dev/null
-curl -fsS "$API_URL/ready" >/dev/null
+curl -fsS "$API_URL/healthz" >/dev/null
+curl -fsS "$API_URL/readyz" >/dev/null
 
 nodes_json="$(curl -fsS "$API_URL/api/admin/nodes")"
 if [[ -z "$NODE_ID" ]]; then

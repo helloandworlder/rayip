@@ -24,6 +24,7 @@ type NodeConfig struct {
 
 type APIConfig struct {
 	GRPCAddr string
+	UseTLS   bool
 }
 
 type RuntimeConfig struct {
@@ -65,6 +66,7 @@ func Load() (Config, error) {
 	v.SetDefault("node.code", hostname)
 	v.SetDefault("node.enrollment_token", "dev-enrollment-token")
 	v.SetDefault("api.grpc_addr", "127.0.0.1:9090")
+	v.SetDefault("api.tls", false)
 	v.SetDefault("runtime.agent_version", "dev-agent")
 	v.SetDefault("runtime.bundle_dir", "/opt/rayip/runtime")
 	v.SetDefault("runtime.core_mode", "xray")
@@ -84,12 +86,21 @@ func Load() (Config, error) {
 	if configPath == "" {
 		configPath = filepath.Join(bundleDir, "xray-runtime.json")
 	}
+	grpcAddr := v.GetString("api.grpc_addr")
+	useTLS := v.GetBool("api.tls")
+	if strings.HasPrefix(grpcAddr, "grpcs://") {
+		useTLS = true
+		grpcAddr = strings.TrimPrefix(grpcAddr, "grpcs://")
+	} else if strings.HasPrefix(grpcAddr, "grpc://") {
+		grpcAddr = strings.TrimPrefix(grpcAddr, "grpc://")
+	}
+
 	return Config{
 		Node: NodeConfig{
 			Code:            v.GetString("node.code"),
 			EnrollmentToken: v.GetString("node.enrollment_token"),
 		},
-		API: APIConfig{GRPCAddr: v.GetString("api.grpc_addr")},
+		API: APIConfig{GRPCAddr: grpcAddr, UseTLS: useTLS},
 		Runtime: RuntimeConfig{
 			AgentVersion:   v.GetString("runtime.agent_version"),
 			BundleDir:      bundleDir,

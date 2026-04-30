@@ -48,7 +48,7 @@ fi
 
 if [[ -z "$grpc_url" ]]; then
   host="$(printf '%s' "$api_url" | sed -E 's#^https?://##; s#/.*$##')"
-  grpc_url="${host}:443"
+  grpc_url="grpcs://${host}:443"
 fi
 
 if [[ "$version" == "latest" ]]; then

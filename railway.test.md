@@ -42,8 +42,8 @@ The API image uses `services/api/Dockerfile` and exposes HTTP `8080` plus gRPC `
 ## Health Gates
 
 ```bash
-curl -fsS "$RAYIP_API_URL/health"
-curl -fsS "$RAYIP_API_URL/ready"
+curl -fsS "$RAYIP_API_URL/healthz"
+curl -fsS "$RAYIP_API_URL/readyz"
 ```
 
 After the first NodeAgent connects, verify:

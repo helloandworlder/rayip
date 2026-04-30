@@ -25,6 +25,7 @@ bash <(curl -fLSs https://github.com/<owner>/<repo>/releases/latest/download/ray
 Optional flags:
 
 - `--grpc-url <host:port>` overrides the gRPC endpoint derived from `-u`.
+- Use `grpcs://<host>:443` for Railway public domains.
 - `--node-code <code>` defaults to `hostname`.
 - `--version <tag>` installs a fixed release instead of latest.
 - `--port <port>` sets the probe port, default `18080`.

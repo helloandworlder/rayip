@@ -11,6 +11,7 @@ import (
 	"github.com/rayip/rayip/services/node-agent/internal/runtime"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
@@ -54,7 +55,11 @@ func (c *Client) Run(ctx context.Context) error {
 }
 
 func (c *Client) connectOnce(ctx context.Context) error {
-	conn, err := grpc.NewClient(c.cfg.API.GRPCAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	creds := grpc.WithTransportCredentials(insecure.NewCredentials())
+	if c.cfg.API.UseTLS {
+		creds = grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(nil, ""))
+	}
+	conn, err := grpc.NewClient(c.cfg.API.GRPCAddr, creds)
 	if err != nil {
 		return err
 	}
