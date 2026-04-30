@@ -105,6 +105,8 @@ type RuntimeApply struct {
 	DeadlineUnixMS       int64             `json:"deadline_unix_ms"`
 	Resources            []RuntimeResource `json:"resources"`
 	RemovedResourceNames []string          `json:"removed_resource_names"`
+	QueryOperation       Operation         `json:"query_operation,omitempty"`
+	QueryResourceName    string            `json:"query_resource_name,omitempty"`
 }
 
 type RuntimeResource struct {

@@ -1502,6 +1502,8 @@ type RuntimeApply struct {
 	DeadlineUnixMs       int64                  `protobuf:"varint,8,opt,name=deadline_unix_ms,json=deadlineUnixMs,proto3" json:"deadline_unix_ms,omitempty"`
 	Resources            []*RuntimeResource     `protobuf:"bytes,9,rep,name=resources,proto3" json:"resources,omitempty"`
 	RemovedResourceNames []string               `protobuf:"bytes,10,rep,name=removed_resource_names,json=removedResourceNames,proto3" json:"removed_resource_names,omitempty"`
+	QueryOperation       string                 `protobuf:"bytes,11,opt,name=query_operation,json=queryOperation,proto3" json:"query_operation,omitempty"`
+	QueryResourceName    string                 `protobuf:"bytes,12,opt,name=query_resource_name,json=queryResourceName,proto3" json:"query_resource_name,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -1604,6 +1606,20 @@ func (x *RuntimeApply) GetRemovedResourceNames() []string {
 		return x.RemovedResourceNames
 	}
 	return nil
+}
+
+func (x *RuntimeApply) GetQueryOperation() string {
+	if x != nil {
+		return x.QueryOperation
+	}
+	return ""
+}
+
+func (x *RuntimeApply) GetQueryResourceName() string {
+	if x != nil {
+		return x.QueryResourceName
+	}
+	return ""
 }
 
 type RuntimeResource struct {
@@ -1774,6 +1790,7 @@ type RuntimeApplyAck struct {
 	ResourceResults  []*RuntimeResourceResult `protobuf:"bytes,8,rep,name=resource_results,json=resourceResults,proto3" json:"resource_results,omitempty"`
 	Digest           *RuntimeDigest           `protobuf:"bytes,9,opt,name=digest,proto3" json:"digest,omitempty"`
 	ErrorDetail      string                   `protobuf:"bytes,10,opt,name=error_detail,json=errorDetail,proto3" json:"error_detail,omitempty"`
+	Usage            *RuntimeUsage            `protobuf:"bytes,11,opt,name=usage,proto3" json:"usage,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -1878,6 +1895,105 @@ func (x *RuntimeApplyAck) GetErrorDetail() string {
 	return ""
 }
 
+func (x *RuntimeApplyAck) GetUsage() *RuntimeUsage {
+	if x != nil {
+		return x.Usage
+	}
+	return nil
+}
+
+type RuntimeUsage struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	ProxyAccountId    string                 `protobuf:"bytes,1,opt,name=proxy_account_id,json=proxyAccountId,proto3" json:"proxy_account_id,omitempty"`
+	RuntimeEmail      string                 `protobuf:"bytes,2,opt,name=runtime_email,json=runtimeEmail,proto3" json:"runtime_email,omitempty"`
+	RxBytes           uint64                 `protobuf:"varint,3,opt,name=rx_bytes,json=rxBytes,proto3" json:"rx_bytes,omitempty"`
+	TxBytes           uint64                 `protobuf:"varint,4,opt,name=tx_bytes,json=txBytes,proto3" json:"tx_bytes,omitempty"`
+	ActiveConnections uint64                 `protobuf:"varint,5,opt,name=active_connections,json=activeConnections,proto3" json:"active_connections,omitempty"`
+	RxBytesPerSecond  uint64                 `protobuf:"varint,6,opt,name=rx_bytes_per_second,json=rxBytesPerSecond,proto3" json:"rx_bytes_per_second,omitempty"`
+	TxBytesPerSecond  uint64                 `protobuf:"varint,7,opt,name=tx_bytes_per_second,json=txBytesPerSecond,proto3" json:"tx_bytes_per_second,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *RuntimeUsage) Reset() {
+	*x = RuntimeUsage{}
+	mi := &file_rayip_control_v1_control_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RuntimeUsage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RuntimeUsage) ProtoMessage() {}
+
+func (x *RuntimeUsage) ProtoReflect() protoreflect.Message {
+	mi := &file_rayip_control_v1_control_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RuntimeUsage.ProtoReflect.Descriptor instead.
+func (*RuntimeUsage) Descriptor() ([]byte, []int) {
+	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *RuntimeUsage) GetProxyAccountId() string {
+	if x != nil {
+		return x.ProxyAccountId
+	}
+	return ""
+}
+
+func (x *RuntimeUsage) GetRuntimeEmail() string {
+	if x != nil {
+		return x.RuntimeEmail
+	}
+	return ""
+}
+
+func (x *RuntimeUsage) GetRxBytes() uint64 {
+	if x != nil {
+		return x.RxBytes
+	}
+	return 0
+}
+
+func (x *RuntimeUsage) GetTxBytes() uint64 {
+	if x != nil {
+		return x.TxBytes
+	}
+	return 0
+}
+
+func (x *RuntimeUsage) GetActiveConnections() uint64 {
+	if x != nil {
+		return x.ActiveConnections
+	}
+	return 0
+}
+
+func (x *RuntimeUsage) GetRxBytesPerSecond() uint64 {
+	if x != nil {
+		return x.RxBytesPerSecond
+	}
+	return 0
+}
+
+func (x *RuntimeUsage) GetTxBytesPerSecond() uint64 {
+	if x != nil {
+		return x.TxBytesPerSecond
+	}
+	return 0
+}
+
 type RuntimeResourceResult struct {
 	state         protoimpl.MessageState     `protogen:"open.v1"`
 	Name          string                     `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -1889,7 +2005,7 @@ type RuntimeResourceResult struct {
 
 func (x *RuntimeResourceResult) Reset() {
 	*x = RuntimeResourceResult{}
-	mi := &file_rayip_control_v1_control_proto_msgTypes[16]
+	mi := &file_rayip_control_v1_control_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1901,7 +2017,7 @@ func (x *RuntimeResourceResult) String() string {
 func (*RuntimeResourceResult) ProtoMessage() {}
 
 func (x *RuntimeResourceResult) ProtoReflect() protoreflect.Message {
-	mi := &file_rayip_control_v1_control_proto_msgTypes[16]
+	mi := &file_rayip_control_v1_control_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1914,7 +2030,7 @@ func (x *RuntimeResourceResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RuntimeResourceResult.ProtoReflect.Descriptor instead.
 func (*RuntimeResourceResult) Descriptor() ([]byte, []int) {
-	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{16}
+	return file_rayip_control_v1_control_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *RuntimeResourceResult) GetName() string {
@@ -2047,7 +2163,7 @@ const file_rayip_control_v1_control_proto_rawDesc = "" +
 	"\renabled_count\x18\x02 \x01(\x04R\fenabledCount\x12%\n" +
 	"\x0edisabled_count\x18\x03 \x01(\x04R\rdisabledCount\x12%\n" +
 	"\x0emax_generation\x18\x04 \x01(\x04R\rmaxGeneration\x12\x12\n" +
-	"\x04hash\x18\x05 \x01(\tR\x04hash\"\xa2\x03\n" +
+	"\x04hash\x18\x05 \x01(\tR\x04hash\"\xfb\x03\n" +
 	"\fRuntimeApply\x12\x19\n" +
 	"\bapply_id\x18\x01 \x01(\tR\aapplyId\x12\x17\n" +
 	"\anode_id\x18\x02 \x01(\tR\x06nodeId\x126\n" +
@@ -2059,7 +2175,9 @@ const file_rayip_control_v1_control_proto_rawDesc = "" +
 	"\x10deadline_unix_ms\x18\b \x01(\x03R\x0edeadlineUnixMs\x12?\n" +
 	"\tresources\x18\t \x03(\v2!.rayip.control.v1.RuntimeResourceR\tresources\x124\n" +
 	"\x16removed_resource_names\x18\n" +
-	" \x03(\tR\x14removedResourceNames\"\xd0\x04\n" +
+	" \x03(\tR\x14removedResourceNames\x12'\n" +
+	"\x0fquery_operation\x18\v \x01(\tR\x0equeryOperation\x12.\n" +
+	"\x13query_resource_name\x18\f \x01(\tR\x11queryResourceName\"\xd0\x04\n" +
 	"\x0fRuntimeResource\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x129\n" +
 	"\x04kind\x18\x02 \x01(\x0e2%.rayip.control.v1.RuntimeResourceKindR\x04kind\x12)\n" +
@@ -2076,7 +2194,7 @@ const file_rayip_control_v1_control_proto_rawDesc = "" +
 	"\x0fmax_connections\x18\f \x01(\rR\x0emaxConnections\x12\x1a\n" +
 	"\bpriority\x18\r \x01(\rR\bpriority\x12.\n" +
 	"\x13abuse_report_policy\x18\x0e \x01(\tR\x11abuseReportPolicy\x12+\n" +
-	"\x12expires_at_unix_ms\x18\x0f \x01(\x03R\x0fexpiresAtUnixMs\"\xc5\x03\n" +
+	"\x12expires_at_unix_ms\x18\x0f \x01(\x03R\x0fexpiresAtUnixMs\"\xfb\x03\n" +
 	"\x0fRuntimeApplyAck\x12\x19\n" +
 	"\bapply_id\x18\x01 \x01(\tR\aapplyId\x12\x17\n" +
 	"\anode_id\x18\x02 \x01(\tR\x06nodeId\x12!\n" +
@@ -2088,7 +2206,16 @@ const file_rayip_control_v1_control_proto_rawDesc = "" +
 	"\x10resource_results\x18\b \x03(\v2'.rayip.control.v1.RuntimeResourceResultR\x0fresourceResults\x127\n" +
 	"\x06digest\x18\t \x01(\v2\x1f.rayip.control.v1.RuntimeDigestR\x06digest\x12!\n" +
 	"\ferror_detail\x18\n" +
-	" \x01(\tR\verrorDetail\"\x94\x01\n" +
+	" \x01(\tR\verrorDetail\x124\n" +
+	"\x05usage\x18\v \x01(\v2\x1e.rayip.control.v1.RuntimeUsageR\x05usage\"\xa0\x02\n" +
+	"\fRuntimeUsage\x12(\n" +
+	"\x10proxy_account_id\x18\x01 \x01(\tR\x0eproxyAccountId\x12#\n" +
+	"\rruntime_email\x18\x02 \x01(\tR\fruntimeEmail\x12\x19\n" +
+	"\brx_bytes\x18\x03 \x01(\x04R\arxBytes\x12\x19\n" +
+	"\btx_bytes\x18\x04 \x01(\x04R\atxBytes\x12-\n" +
+	"\x12active_connections\x18\x05 \x01(\x04R\x11activeConnections\x12-\n" +
+	"\x13rx_bytes_per_second\x18\x06 \x01(\x04R\x10rxBytesPerSecond\x12-\n" +
+	"\x13tx_bytes_per_second\x18\a \x01(\x04R\x10txBytesPerSecond\"\x94\x01\n" +
 	"\x15RuntimeResourceResult\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12D\n" +
 	"\x06status\x18\x02 \x01(\x0e2,.rayip.control.v1.RuntimeResourceApplyStatusR\x06status\x12!\n" +
@@ -2138,7 +2265,7 @@ func file_rayip_control_v1_control_proto_rawDescGZIP() []byte {
 }
 
 var file_rayip_control_v1_control_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_rayip_control_v1_control_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_rayip_control_v1_control_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_rayip_control_v1_control_proto_goTypes = []any{
 	(RuntimeVerdictStatus)(0),       // 0: rayip.control.v1.RuntimeVerdictStatus
 	(RuntimeProtocol)(0),            // 1: rayip.control.v1.RuntimeProtocol
@@ -2162,7 +2289,8 @@ var file_rayip_control_v1_control_proto_goTypes = []any{
 	(*RuntimeApply)(nil),            // 19: rayip.control.v1.RuntimeApply
 	(*RuntimeResource)(nil),         // 20: rayip.control.v1.RuntimeResource
 	(*RuntimeApplyAck)(nil),         // 21: rayip.control.v1.RuntimeApplyAck
-	(*RuntimeResourceResult)(nil),   // 22: rayip.control.v1.RuntimeResourceResult
+	(*RuntimeUsage)(nil),            // 22: rayip.control.v1.RuntimeUsage
+	(*RuntimeResourceResult)(nil),   // 23: rayip.control.v1.RuntimeResourceResult
 }
 var file_rayip_control_v1_control_proto_depIdxs = []int32{
 	8,  // 0: rayip.control.v1.AgentEnvelope.hello:type_name -> rayip.control.v1.AgentHello
@@ -2185,16 +2313,17 @@ var file_rayip_control_v1_control_proto_depIdxs = []int32{
 	3,  // 17: rayip.control.v1.RuntimeResource.kind:type_name -> rayip.control.v1.RuntimeResourceKind
 	1,  // 18: rayip.control.v1.RuntimeResource.protocol:type_name -> rayip.control.v1.RuntimeProtocol
 	4,  // 19: rayip.control.v1.RuntimeApplyAck.status:type_name -> rayip.control.v1.RuntimeApplyStatus
-	22, // 20: rayip.control.v1.RuntimeApplyAck.resource_results:type_name -> rayip.control.v1.RuntimeResourceResult
+	23, // 20: rayip.control.v1.RuntimeApplyAck.resource_results:type_name -> rayip.control.v1.RuntimeResourceResult
 	18, // 21: rayip.control.v1.RuntimeApplyAck.digest:type_name -> rayip.control.v1.RuntimeDigest
-	5,  // 22: rayip.control.v1.RuntimeResourceResult.status:type_name -> rayip.control.v1.RuntimeResourceApplyStatus
-	6,  // 23: rayip.control.v1.NodeControlService.Connect:input_type -> rayip.control.v1.AgentEnvelope
-	7,  // 24: rayip.control.v1.NodeControlService.Connect:output_type -> rayip.control.v1.ControlEnvelope
-	24, // [24:25] is the sub-list for method output_type
-	23, // [23:24] is the sub-list for method input_type
-	23, // [23:23] is the sub-list for extension type_name
-	23, // [23:23] is the sub-list for extension extendee
-	0,  // [0:23] is the sub-list for field type_name
+	22, // 22: rayip.control.v1.RuntimeApplyAck.usage:type_name -> rayip.control.v1.RuntimeUsage
+	5,  // 23: rayip.control.v1.RuntimeResourceResult.status:type_name -> rayip.control.v1.RuntimeResourceApplyStatus
+	6,  // 24: rayip.control.v1.NodeControlService.Connect:input_type -> rayip.control.v1.AgentEnvelope
+	7,  // 25: rayip.control.v1.NodeControlService.Connect:output_type -> rayip.control.v1.ControlEnvelope
+	25, // [25:26] is the sub-list for method output_type
+	24, // [24:25] is the sub-list for method input_type
+	24, // [24:24] is the sub-list for extension type_name
+	24, // [24:24] is the sub-list for extension extendee
+	0,  // [0:24] is the sub-list for field type_name
 }
 
 func init() { file_rayip_control_v1_control_proto_init() }
@@ -2221,7 +2350,7 @@ func file_rayip_control_v1_control_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_rayip_control_v1_control_proto_rawDesc), len(file_rayip_control_v1_control_proto_rawDesc)),
 			NumEnums:      6,
-			NumMessages:   17,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

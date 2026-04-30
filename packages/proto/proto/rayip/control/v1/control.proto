@@ -154,6 +154,8 @@ message RuntimeApply {
   int64 deadline_unix_ms = 8;
   repeated RuntimeResource resources = 9;
   repeated string removed_resource_names = 10;
+  string query_operation = 11;
+  string query_resource_name = 12;
 }
 
 enum RuntimeApplyMode {
@@ -196,6 +198,17 @@ message RuntimeApplyAck {
   repeated RuntimeResourceResult resource_results = 8;
   RuntimeDigest digest = 9;
   string error_detail = 10;
+  RuntimeUsage usage = 11;
+}
+
+message RuntimeUsage {
+  string proxy_account_id = 1;
+  string runtime_email = 2;
+  uint64 rx_bytes = 3;
+  uint64 tx_bytes = 4;
+  uint64 active_connections = 5;
+  uint64 rx_bytes_per_second = 6;
+  uint64 tx_bytes_per_second = 7;
 }
 
 enum RuntimeApplyStatus {

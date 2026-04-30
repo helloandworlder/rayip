@@ -110,6 +110,8 @@ type Apply struct {
 	DeadlineUnixMS       int64      `json:"deadline_unix_ms"`
 	Resources            []Resource `json:"resources"`
 	RemovedResourceNames []string   `json:"removed_resource_names"`
+	QueryOperation       string     `json:"query_operation,omitempty"`
+	QueryResourceName    string     `json:"query_resource_name,omitempty"`
 }
 
 type Resource struct {
@@ -140,6 +142,7 @@ type ApplyAck struct {
 	LastGoodRevision uint64           `json:"last_good_revision"`
 	ResourceResults  []ResourceResult `json:"resource_results,omitempty"`
 	Digest           Digest           `json:"digest,omitempty"`
+	Usage            Usage            `json:"usage,omitempty"`
 	ErrorDetail      string           `json:"error_detail,omitempty"`
 }
 

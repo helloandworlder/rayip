@@ -35,6 +35,8 @@ func ApplyFromProto(apply *controlv1.RuntimeApply) Apply {
 		DeadlineUnixMS:       apply.GetDeadlineUnixMs(),
 		Resources:            resources,
 		RemovedResourceNames: append([]string(nil), apply.GetRemovedResourceNames()...),
+		QueryOperation:       apply.GetQueryOperation(),
+		QueryResourceName:    apply.GetQueryResourceName(),
 	}
 }
 
@@ -62,6 +64,15 @@ func AckToProto(ack ApplyAck) *controlv1.RuntimeApplyAck {
 			DisabledCount: ack.Digest.DisabledCount,
 			MaxGeneration: ack.Digest.MaxGeneration,
 			Hash:          ack.Digest.Hash,
+		},
+		Usage: &controlv1.RuntimeUsage{
+			ProxyAccountId:    ack.Usage.ProxyAccountID,
+			RuntimeEmail:      ack.Usage.RuntimeEmail,
+			RxBytes:           ack.Usage.RxBytes,
+			TxBytes:           ack.Usage.TxBytes,
+			ActiveConnections: ack.Usage.ActiveConnections,
+			RxBytesPerSecond:  ack.Usage.RxBytesPerSecond,
+			TxBytesPerSecond:  ack.Usage.TxBytesPerSecond,
 		},
 		ErrorDetail: ack.ErrorDetail,
 	}

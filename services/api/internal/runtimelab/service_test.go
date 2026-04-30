@@ -358,9 +358,19 @@ func TestCreateAccountSkipsDuplicateRevisionWithoutDispatch(t *testing.T) {
 	}
 }
 
-func TestGetUsageReturnsLatestRecordedUsage(t *testing.T) {
+func TestGetUsageDispatchesRuntimeQueryAndStoresUsage(t *testing.T) {
 	repo := runtimelab.NewMemoryRepository()
-	dispatcher := &recordingDispatcher{ack: runtimelab.ApplyResult{Status: runtimelab.ApplyStatusACK, AppliedRevision: 1, LastGoodRevision: 1}}
+	dispatcher := &recordingDispatcher{ack: runtimelab.ApplyResult{
+		Status:           runtimelab.ApplyStatusACK,
+		AppliedRevision:  1,
+		LastGoodRevision: 1,
+		Usage: runtimelab.Usage{
+			RuntimeEmail:      "email-1",
+			RxBytes:           120,
+			TxBytes:           340,
+			ActiveConnections: 2,
+		},
+	}}
 	svc := runtimelab.NewService(repo, dispatcher, time.Now)
 	account, _, err := svc.CreateAccount(context.Background(), runtimelab.CreateAccountInput{
 		NodeID:   "node-1",
@@ -373,22 +383,6 @@ func TestGetUsageReturnsLatestRecordedUsage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("CreateAccount() error = %v", err)
 	}
-	if err := svc.SaveApplyResult(context.Background(), runtimelab.ApplyResult{
-		ApplyID:        "usage-1",
-		ProxyAccountID: account.ProxyAccountID,
-		NodeID:         "node-1",
-		Operation:      runtimelab.OperationGetUsage,
-		Status:         runtimelab.ApplyStatusACK,
-		Usage: runtimelab.Usage{
-			ProxyAccountID:    account.ProxyAccountID,
-			RuntimeEmail:      account.RuntimeEmail,
-			RxBytes:           120,
-			TxBytes:           340,
-			ActiveConnections: 2,
-		},
-	}); err != nil {
-		t.Fatalf("SaveApplyResult() error = %v", err)
-	}
 
 	result, err := svc.GetUsage(context.Background(), account.ProxyAccountID)
 	if err != nil {
@@ -396,6 +390,13 @@ func TestGetUsageReturnsLatestRecordedUsage(t *testing.T) {
 	}
 	if result.Status != runtimelab.ApplyStatusACK || result.Usage.TxBytes != 340 || result.Usage.ActiveConnections != 2 {
 		t.Fatalf("usage result = %#v", result)
+	}
+	if result.Usage.ProxyAccountID != account.ProxyAccountID {
+		t.Fatalf("usage proxy account = %q, want %q", result.Usage.ProxyAccountID, account.ProxyAccountID)
+	}
+	query := dispatcher.applies[len(dispatcher.applies)-1]
+	if query.QueryOperation != runtimelab.OperationGetUsage || query.QueryResourceName != "proxy/"+account.RuntimeEmail {
+		t.Fatalf("query apply = %#v, want GET_USAGE for resource", query)
 	}
 }
 

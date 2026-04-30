@@ -29,6 +29,10 @@ func (m *Manager) Apply(ctx context.Context, apply Apply) (ApplyAck, error) {
 		return previous, nil
 	}
 	lastGood := m.lastGoodRevision
+	if apply.QueryOperation != "" {
+		m.mu.Unlock()
+		return m.applyQuery(ctx, apply, lastGood)
+	}
 	if apply.Mode == ApplyModeDelta && apply.BaseRevision != lastGood {
 		ack := m.baseAckLocked(apply)
 		ack.Status = AckStatusNACK
@@ -64,7 +68,7 @@ func (m *Manager) Apply(ctx context.Context, apply Apply) (ApplyAck, error) {
 		ack.ResourceResults = append(ack.ResourceResults, ResourceResult{Name: resource.Name, Status: ResourceResultApplied})
 	}
 	for _, name := range apply.RemovedResourceNames {
-		if err := m.core.DeleteAccount(ctx, name); err != nil {
+		if err := m.core.DeleteAccount(ctx, proxyAccountIDFromResourceName(name)); err != nil {
 			ack.Status = AckStatusPartial
 			ack.ResourceResults = append(ack.ResourceResults, ResourceResult{Name: name, Status: ResourceResultFailed, ErrorDetail: err.Error()})
 			continue
@@ -95,6 +99,37 @@ func (m *Manager) Apply(ctx context.Context, apply Apply) (ApplyAck, error) {
 	return ack, nil
 }
 
+func (m *Manager) applyQuery(ctx context.Context, apply Apply, lastGood uint64) (ApplyAck, error) {
+	ack := ApplyAck{
+		ApplyID:          apply.ApplyID,
+		NodeID:           apply.NodeID,
+		VersionInfo:      apply.VersionInfo,
+		Nonce:            apply.Nonce,
+		Status:           AckStatusACK,
+		AppliedRevision:  lastGood,
+		LastGoodRevision: lastGood,
+	}
+	switch apply.QueryOperation {
+	case "GET_USAGE":
+		proxyAccountID := proxyAccountIDFromResourceName(apply.QueryResourceName)
+		usage, err := m.core.Usage(ctx, proxyAccountID)
+		if err != nil {
+			ack.Status = AckStatusNACK
+			ack.ErrorDetail = err.Error()
+			return ack, err
+		}
+		ack.Usage = usage
+	default:
+		ack.Status = AckStatusNACK
+		ack.ErrorDetail = "unsupported query operation"
+		return ack, errors.New(ack.ErrorDetail)
+	}
+	if digest, err := m.core.Digest(ctx); err == nil {
+		ack.Digest = digest
+	}
+	return ack, nil
+}
+
 func (m *Manager) baseAckLocked(apply Apply) ApplyAck {
 	return ApplyAck{
 		ApplyID:          apply.ApplyID,
@@ -115,7 +150,7 @@ func accountFromResource(resource Resource) Account {
 		priority = 1
 	}
 	return Account{
-		ProxyAccountID:    resource.Name,
+		ProxyAccountID:    proxyAccountIDFromResourceName(resource.Name),
 		RuntimeEmail:      email,
 		Protocol:          resource.Protocol,
 		ListenIP:          resource.ListenIP,
@@ -131,4 +166,12 @@ func accountFromResource(resource Resource) Account {
 		AbuseAction:       AbuseActionReportOnly,
 		DesiredGeneration: resource.ResourceVersion,
 	}
+}
+
+func proxyAccountIDFromResourceName(name string) string {
+	const prefix = "proxy/"
+	if len(name) > len(prefix) && name[:len(prefix)] == prefix {
+		return name[len(prefix):]
+	}
+	return name
 }

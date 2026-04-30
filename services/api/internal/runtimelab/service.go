@@ -196,26 +196,41 @@ func (s *Service) GetUsage(ctx context.Context, proxyAccountID string) (ApplyRes
 	if !ok {
 		return ApplyResult{}, fmt.Errorf("account %s not found", proxyAccountID)
 	}
-	usage, ok, err := s.repo.LatestUsage(ctx, proxyAccountID)
-	if err != nil {
-		return ApplyResult{}, err
+	apply := s.newDeltaApply(account.NodeID, account.AppliedGeneration, account.AppliedGeneration)
+	apply.QueryOperation = OperationGetUsage
+	apply.QueryResourceName = resourceName(account)
+	result, err := s.dispatch(ctx, OperationGetUsage, account, apply)
+	if err == nil {
+		if result.Usage.ProxyAccountID == "" {
+			result.Usage.ProxyAccountID = account.ProxyAccountID
+		}
+		if result.Usage.RuntimeEmail == "" {
+			result.Usage.RuntimeEmail = account.RuntimeEmail
+		}
+		_ = s.repo.SaveApplyResult(ctx, result)
+		return result, nil
+	}
+	usage, ok, latestErr := s.repo.LatestUsage(ctx, proxyAccountID)
+	if latestErr != nil {
+		return ApplyResult{}, latestErr
 	}
 	if !ok {
 		usage = Usage{ProxyAccountID: account.ProxyAccountID, RuntimeEmail: account.RuntimeEmail}
 	}
-	result := ApplyResult{
+	fallback := ApplyResult{
 		ApplyID:          uuid.NewString(),
 		ProxyAccountID:   account.ProxyAccountID,
 		NodeID:           account.NodeID,
 		Operation:        OperationGetUsage,
-		Status:           ApplyStatusACK,
+		Status:           ApplyStatusFailed,
 		AppliedRevision:  account.AppliedGeneration,
 		LastGoodRevision: account.AppliedGeneration,
+		ErrorDetail:      err.Error(),
 		Usage:            usage,
 		CreatedAt:        s.now().UTC(),
 	}
-	_ = s.repo.SaveApplyResult(ctx, result)
-	return result, nil
+	_ = s.repo.SaveApplyResult(ctx, fallback)
+	return fallback, err
 }
 
 func (s *Service) ProbeAccount(ctx context.Context, proxyAccountID string) (ApplyResult, error) {

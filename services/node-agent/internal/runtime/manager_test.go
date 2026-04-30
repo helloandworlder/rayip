@@ -48,7 +48,7 @@ func TestManagerAppliesDeltaAndTracksRevisionNonce(t *testing.T) {
 	if ack.VersionInfo != "rv-1" || ack.Nonce != "nonce-1" {
 		t.Fatalf("version/nonce not echoed: %#v", ack)
 	}
-	if _, ok := core.Account("proxy/acct-1"); !ok {
+	if _, ok := core.Account("acct-1"); !ok {
 		t.Fatal("resource was not upserted into core")
 	}
 }
@@ -97,6 +97,38 @@ func TestManagerDuplicateVersionNonceIsIdempotent(t *testing.T) {
 	}
 }
 
+func TestManagerGetUsageQueryDoesNotAdvanceRevision(t *testing.T) {
+	core := runtime.NewMemoryCore()
+	manager := runtime.NewManager(core)
+	if _, err := manager.Apply(context.Background(), runtime.Apply{
+		ApplyID:        "apply-1",
+		Mode:           runtime.ApplyModeDelta,
+		VersionInfo:    "rv-1",
+		Nonce:          "nonce-1",
+		BaseRevision:   0,
+		TargetRevision: 1,
+		Resources:      []runtime.Resource{testResource("proxy/acct-1", 1)},
+	}); err != nil {
+		t.Fatalf("upsert Apply() error = %v", err)
+	}
+
+	ack, err := manager.Apply(context.Background(), runtime.Apply{
+		ApplyID:           "query-1",
+		NodeID:            "node-1",
+		QueryOperation:    "GET_USAGE",
+		QueryResourceName: "proxy/acct-1",
+	})
+	if err != nil {
+		t.Fatalf("query Apply() error = %v", err)
+	}
+	if ack.Status != runtime.AckStatusACK || ack.AppliedRevision != 1 || ack.LastGoodRevision != 1 {
+		t.Fatalf("query ack revisions = %#v, want revision unchanged at 1", ack)
+	}
+	if ack.Usage.ProxyAccountID != "acct-1" || ack.Usage.RuntimeEmail == "" {
+		t.Fatalf("query usage = %#v, want account usage", ack.Usage)
+	}
+}
+
 func TestManagerRemovedResourceDeletesAccount(t *testing.T) {
 	core := runtime.NewMemoryCore()
 	manager := runtime.NewManager(core)
@@ -127,7 +159,7 @@ func TestManagerRemovedResourceDeletesAccount(t *testing.T) {
 	if ack.Status != runtime.AckStatusACK || ack.AppliedRevision != 2 {
 		t.Fatalf("remove ack = %#v", ack)
 	}
-	if _, ok := core.Account("proxy/acct-1"); ok {
+	if _, ok := core.Account("acct-1"); ok {
 		t.Fatal("removed resource still exists")
 	}
 }
