@@ -10,6 +10,7 @@ import (
 	handlercmd "github.com/xtls/xray-core/app/proxyman/command"
 	"github.com/xtls/xray-core/common/protocol"
 	"github.com/xtls/xray-core/core"
+	"github.com/xtls/xray-core/proxy/socks"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
@@ -73,6 +74,48 @@ func TestXrayCoreMapsAccountPolicyAndDigest(t *testing.T) {
 	}
 	if handler.users["email-1"] != nil {
 		t.Fatalf("handler user after delete = %#v, want removed", handler.users["email-1"])
+	}
+}
+
+func TestXrayCoreMixedUsesSingleSocksInboundForHttpAndSocks(t *testing.T) {
+	fake := &fakeRuntimeServer{policies: map[string]*runtimev1.AccountPolicy{}}
+	handler := &fakeHandlerServer{inbounds: map[string]*core.InboundHandlerConfig{}, users: map[string]*protocol.User{}}
+	client, handlerClient, cleanup := runtimeClient(t, fake, handler)
+	defer cleanup()
+
+	core := runtime.NewXrayCoreWithClients(client, handlerClient)
+	if err := core.UpsertAccount(context.Background(), runtime.Account{
+		ProxyAccountID: "acct-mixed",
+		RuntimeEmail:   "mixed-email",
+		Protocol:       runtime.ProtocolMixed,
+		ListenIP:       "0.0.0.0",
+		Port:           18080,
+		Username:       "customer",
+		Password:       "secret",
+	}); err != nil {
+		t.Fatalf("UpsertAccount() error = %v", err)
+	}
+	inbound := handler.inbounds["rayip-mixed-0_0_0_0-18080"]
+	if inbound == nil {
+		t.Fatalf("mixed inbound not created: %#v", handler.inbounds)
+	}
+	settings, err := inbound.GetProxySettings().GetInstance()
+	if err != nil {
+		t.Fatalf("decode proxy settings: %v", err)
+	}
+	if _, ok := settings.(*socks.ServerConfig); !ok {
+		t.Fatalf("mixed inbound settings = %T, want *socks.ServerConfig", settings)
+	}
+	user := handler.users["mixed-email"]
+	if user == nil {
+		t.Fatal("mixed user not added")
+	}
+	account, err := user.GetTypedAccount()
+	if err != nil {
+		t.Fatalf("decode user account: %v", err)
+	}
+	if _, ok := account.(*socks.Account); !ok {
+		t.Fatalf("mixed user account = %T, want *socks.Account", account)
 	}
 }
 

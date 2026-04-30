@@ -116,6 +116,8 @@ func protocolFromProto(protocol controlv1.RuntimeProtocol) Protocol {
 		return ProtocolSOCKS5
 	case controlv1.RuntimeProtocol_RUNTIME_PROTOCOL_HTTP:
 		return ProtocolHTTP
+	case controlv1.RuntimeProtocol_RUNTIME_PROTOCOL_MIXED:
+		return ProtocolMixed
 	default:
 		return ""
 	}

@@ -90,6 +90,8 @@ func protocolToProto(protocol Protocol) controlv1.RuntimeProtocol {
 		return controlv1.RuntimeProtocol_RUNTIME_PROTOCOL_SOCKS5
 	case ProtocolHTTP:
 		return controlv1.RuntimeProtocol_RUNTIME_PROTOCOL_HTTP
+	case ProtocolMixed:
+		return controlv1.RuntimeProtocol_RUNTIME_PROTOCOL_MIXED
 	default:
 		return controlv1.RuntimeProtocol_RUNTIME_PROTOCOL_UNSPECIFIED
 	}

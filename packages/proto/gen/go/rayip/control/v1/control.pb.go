@@ -85,6 +85,7 @@ const (
 	RuntimeProtocol_RUNTIME_PROTOCOL_UNSPECIFIED RuntimeProtocol = 0
 	RuntimeProtocol_RUNTIME_PROTOCOL_SOCKS5      RuntimeProtocol = 1
 	RuntimeProtocol_RUNTIME_PROTOCOL_HTTP        RuntimeProtocol = 2
+	RuntimeProtocol_RUNTIME_PROTOCOL_MIXED       RuntimeProtocol = 3
 )
 
 // Enum value maps for RuntimeProtocol.
@@ -93,11 +94,13 @@ var (
 		0: "RUNTIME_PROTOCOL_UNSPECIFIED",
 		1: "RUNTIME_PROTOCOL_SOCKS5",
 		2: "RUNTIME_PROTOCOL_HTTP",
+		3: "RUNTIME_PROTOCOL_MIXED",
 	}
 	RuntimeProtocol_value = map[string]int32{
 		"RUNTIME_PROTOCOL_UNSPECIFIED": 0,
 		"RUNTIME_PROTOCOL_SOCKS5":      1,
 		"RUNTIME_PROTOCOL_HTTP":        2,
+		"RUNTIME_PROTOCOL_MIXED":       3,
 	}
 )
 
@@ -2096,11 +2099,12 @@ const file_rayip_control_v1_control_proto_rawDesc = "" +
 	"$RUNTIME_VERDICT_STATUS_NEEDS_UPGRADE\x10\x02\x12&\n" +
 	"\"RUNTIME_VERDICT_STATUS_QUARANTINED\x10\x03\x121\n" +
 	"-RUNTIME_VERDICT_STATUS_UNSUPPORTED_CAPABILITY\x10\x04\x12*\n" +
-	"&RUNTIME_VERDICT_STATUS_DIGEST_MISMATCH\x10\x05*k\n" +
+	"&RUNTIME_VERDICT_STATUS_DIGEST_MISMATCH\x10\x05*\x87\x01\n" +
 	"\x0fRuntimeProtocol\x12 \n" +
 	"\x1cRUNTIME_PROTOCOL_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17RUNTIME_PROTOCOL_SOCKS5\x10\x01\x12\x19\n" +
-	"\x15RUNTIME_PROTOCOL_HTTP\x10\x02*u\n" +
+	"\x15RUNTIME_PROTOCOL_HTTP\x10\x02\x12\x1a\n" +
+	"\x16RUNTIME_PROTOCOL_MIXED\x10\x03*u\n" +
 	"\x10RuntimeApplyMode\x12\"\n" +
 	"\x1eRUNTIME_APPLY_MODE_UNSPECIFIED\x10\x00\x12\x1c\n" +
 	"\x18RUNTIME_APPLY_MODE_DELTA\x10\x01\x12\x1f\n" +

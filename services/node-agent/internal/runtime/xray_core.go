@@ -240,40 +240,39 @@ func inboundConfig(account Account, tag string) *core.InboundHandlerConfig {
 }
 
 func proxySettings(account Account) proto.Message {
-	switch account.Protocol {
-	case ProtocolHTTP:
+	if account.Protocol == ProtocolHTTP {
 		return &http.ServerConfig{
 			Accounts:      map[string]string{},
 			AccountEmails: map[string]string{},
 			UserLevel:     0,
 		}
-	default:
-		return &socks.ServerConfig{
-			AuthType:      socks.AuthType_PASSWORD,
-			Accounts:      map[string]string{},
-			AccountEmails: map[string]string{},
-			UdpEnabled:    false,
-			UserLevel:     0,
-		}
+	}
+	return &socks.ServerConfig{
+		AuthType:      socks.AuthType_PASSWORD,
+		Accounts:      map[string]string{},
+		AccountEmails: map[string]string{},
+		UdpEnabled:    false,
+		UserLevel:     0,
 	}
 }
 
 func xrayUser(account Account, email string) *protocol.User {
-	switch account.Protocol {
-	case ProtocolHTTP:
+	if account.Protocol == ProtocolHTTP {
 		return &protocol.User{
 			Email:   email,
 			Account: serial.ToTypedMessage(&http.Account{Username: account.Username, Password: account.Password}),
 		}
-	default:
-		return &protocol.User{
-			Email:   email,
-			Account: serial.ToTypedMessage(&socks.Account{Username: account.Username, Password: account.Password}),
-		}
+	}
+	return &protocol.User{
+		Email:   email,
+		Account: serial.ToTypedMessage(&socks.Account{Username: account.Username, Password: account.Password}),
 	}
 }
 
 func inboundTag(account Account) string {
+	if account.Protocol == ProtocolMixed {
+		return "rayip-mixed-" + sanitizeTagPart(account.ListenIP) + "-" + fmt.Sprint(account.Port)
+	}
 	return "rayip-" + strings.ToLower(string(account.Protocol)) + "-" + sanitizeTagPart(account.ListenIP) + "-" + fmt.Sprint(account.Port)
 }
 

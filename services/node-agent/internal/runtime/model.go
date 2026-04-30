@@ -5,6 +5,7 @@ type Protocol string
 const (
 	ProtocolSOCKS5 Protocol = "SOCKS5"
 	ProtocolHTTP   Protocol = "HTTP"
+	ProtocolMixed  Protocol = "MIXED"
 )
 
 type AccountStatus string

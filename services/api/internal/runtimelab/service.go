@@ -52,8 +52,8 @@ func (s *Service) CreateAccount(ctx context.Context, input CreateAccountInput) (
 	if input.NodeID == "" {
 		return Account{}, ApplyResult{}, errors.New("node_id is required")
 	}
-	if input.Protocol != ProtocolSOCKS5 && input.Protocol != ProtocolHTTP {
-		return Account{}, ApplyResult{}, errors.New("protocol must be SOCKS5 or HTTP")
+	if input.Protocol != ProtocolSOCKS5 && input.Protocol != ProtocolHTTP && input.Protocol != ProtocolMixed {
+		return Account{}, ApplyResult{}, errors.New("protocol must be SOCKS5, HTTP, or MIXED")
 	}
 	if input.ListenIP == "" {
 		input.ListenIP = "127.0.0.1"
